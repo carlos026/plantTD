@@ -21,6 +21,7 @@ var isPaused = false;
 var minion_count = 5;
 var interval_id = null;
 var currentWave = 0;
+var isBossWave = 0;
 var currentLevel = 1;
 var currentLives = 10;
 var currentCash = 20;
@@ -90,55 +91,55 @@ function turretDamage(turretID) {
 }
 
 function turretClick(turret) {
-    function tclick(evt) {
-      if (!isRunning || isPaused) {
-        return;
-      }
-
-      // do we have enough money to make a tower?
-      if (currentCash < turretValue(turret.id)) {
-        return;
-      }
-
-      evt = evt || window.evt;
-
-      // find out the window coordinates
-      var x = 0;
-      var y = 0;
-
-      if (evt.pageX) {
-        x = evt.pageX;
-        y = evt.pageY;
-      } else if (evt.clientX) {
-        var offsetX = 0;
-        var offsetY = 0;
-        if (document.documentElement.scrollLeft) {
-          offsetX = document.documentElement.scrollLeft;
-          offsetY = document.documentElement.scrollTop;
-        } else if (document.body) {
-          offsetX = document.body.scrollLeft;
-          offsetY = document.body.scrollTop;
-        }
-        x = evt.clientX + offsetX;
-        y = evt.clientY + offsetY;
-      }
-
-      // create a new shaped turret at the mouse coords	
-      var turretD = document.createElement("div");
-      turretD.setAttribute("id", turret.id + ":" + turretDragCounter++);
-      turretD.setAttribute("class", "turretdrag");
-      turretD.style.left = x + "px";
-      turretD.style.top = y + "px";
-      turretD.style.backgroundColor = turretColor(turret.id);
-      turretD.setAttribute("draggable", "true");
-      listenEvent(turretD, "dragstart", turretDrag(turretD));
-      document.body.appendChild(turretD);
-      // reduce our available cash by what we just spent
-      currentCash -= turretValue(turret.id);
+  function tclick(evt) {
+    if (!isRunning || isPaused) {
+      return;
     }
-    return tclick;
+
+    // do we have enough money to make a tower?
+    if (currentCash < turretValue(turret.id)) {
+      return;
+    }
+
+    evt = evt || window.evt;
+
+    // find out the window coordinates
+    var x = 0;
+    var y = 0;
+
+    if (evt.pageX) {
+      x = evt.pageX;
+      y = evt.pageY;
+    } else if (evt.clientX) {
+      var offsetX = 0;
+      var offsetY = 0;
+      if (document.documentElement.scrollLeft) {
+        offsetX = document.documentElement.scrollLeft;
+        offsetY = document.documentElement.scrollTop;
+      } else if (document.body) {
+        offsetX = document.body.scrollLeft;
+        offsetY = document.body.scrollTop;
+      }
+      x = evt.clientX + offsetX;
+      y = evt.clientY + offsetY;
+    }
+
+    // create a new shaped turret at the mouse coords	
+    var turretD = document.createElement("div");
+    turretD.setAttribute("id", turret.id + ":" + turretDragCounter++);
+    turretD.setAttribute("class", "turretdrag");
+    turretD.style.left = x + "px";
+    turretD.style.top = y + "px";
+    turretD.style.backgroundColor = turretColor(turret.id);
+    turretD.setAttribute("draggable", "true");
+    listenEvent(turretD, "dragstart", turretDrag(turretD));
+    document.body.appendChild(turretD);
+    // reduce our available cash by what we just spent
+    currentCash -= turretValue(turret.id);
   }
-  ////////////////////// END TURRET FUNCTIONS
+  return tclick;
+}
+////////////////////// END TURRET FUNCTIONS
 
 ///////////////////// EVENT HANDLER WRAPPERS
 function listenEvent(eventTarget, eventType, eventHandler) {
@@ -161,13 +162,13 @@ function cancelEvent(event) {
 }
 
 function cancelPropogation(event) {
-    if (event.stopPropogation) {
-      event.stopPropogation();
-    } else {
-      event.cancelBubble = true;
-    }
+  if (event.stopPropogation) {
+    event.stopPropogation();
+  } else {
+    event.cancelBubble = true;
   }
-  ///////////////////// END EVENT HANDLER WRAPPERS
+}
+///////////////////// END EVENT HANDLER WRAPPERS
 
 ////////////////////// DRAG AND DROP
 function dragOver(evt) {
@@ -213,106 +214,106 @@ function turretDrag(turret) {
   return drag;
 }
 
-function nodrag(evt) {}
-  ///////////////////// END DRAG AND DROP
+function nodrag(evt) { }
+///////////////////// END DRAG AND DROP
 
 ////////////////////// MAP CREATION
 function level1(i, j) {
-  if ((i == 0 && (j >= 0 && j <= 2)) || 
-  (j == 2 && (i >= 0 && i < 70)) || 
-  (i == 70 && (j >= 2 && j <= 28)) || 
-  (j == 28 && (i <= 70 && i >= 60)) || 
-  (i == 60 && (j <= 28 && j >= 5)) || 
-  (j == 5 && (i <= 60 && i >= 40)) || 
-  (i == 40 && (j >= 5 && j <= 25)) || 
-  (j == 25 && (i <= 40 && i >= 30)) || 
-  (i == 30 && (j >= 20 && j <= 25)) || 
-  (j == 20 && (i <= 30 && i >= 5)) || 
-  (i == 5 && (j <= 20 && j >= 10)) || 
-  (j == 10 && (i >= 5 && i <= 75)) ||
-  (i == 75 && (j >= 10 && j <= 30))) {
+  if ((i == 0 && (j >= 0 && j <= 2)) ||
+    (j == 2 && (i >= 0 && i < 70)) ||
+    (i == 70 && (j >= 2 && j <= 28)) ||
+    (j == 28 && (i <= 70 && i >= 60)) ||
+    (i == 60 && (j <= 28 && j >= 5)) ||
+    (j == 5 && (i <= 60 && i >= 40)) ||
+    (i == 40 && (j >= 5 && j <= 25)) ||
+    (j == 25 && (i <= 40 && i >= 30)) ||
+    (i == 30 && (j >= 20 && j <= 25)) ||
+    (j == 20 && (i <= 30 && i >= 5)) ||
+    (i == 5 && (j <= 20 && j >= 10)) ||
+    (j == 10 && (i >= 5 && i <= 75)) ||
+    (i == 75 && (j >= 10 && j <= 30))) {
     return true;
   }
   return false;
 }
 
 function level2(x, y) {
-  if ((x == 0 && (y >= 0 && y <= 2)) || 
-  (y == 2 && (x >= 0 && x < 45)) || 
-  (x == 45 && (y >= 2 && y <= 15)) || 
-  (y == 15 && (x <= 45 && x >= 15)) || 
-  (x == 15 && (y <= 15 && y >= 5)) ||
-  (y == 5 && (x <= 15 && x >= 5)) ||
-  (x == 5 && (y >= 5 && y <= 10)) ||
-  (y == 10 && (x >= 5 && x <= 30)) ||
-  (x == 30 && (y >= 10 && y <= 25)) ||
-  (y == 25 && (x >= 30 && x <= 55)) ||
-  (x == 55 && (y <= 25 && y >= 10)) ||
-  (y == 10 && (x >= 55 && x <= 79))) {
+  if ((x == 0 && (y >= 0 && y <= 2)) ||
+    (y == 2 && (x >= 0 && x < 45)) ||
+    (x == 45 && (y >= 2 && y <= 15)) ||
+    (y == 15 && (x <= 45 && x >= 15)) ||
+    (x == 15 && (y <= 15 && y >= 5)) ||
+    (y == 5 && (x <= 15 && x >= 5)) ||
+    (x == 5 && (y >= 5 && y <= 10)) ||
+    (y == 10 && (x >= 5 && x <= 30)) ||
+    (x == 30 && (y >= 10 && y <= 25)) ||
+    (y == 25 && (x >= 30 && x <= 55)) ||
+    (x == 55 && (y <= 25 && y >= 10)) ||
+    (y == 10 && (x >= 55 && x <= 79))) {
     return true;
   }
   return false;
 }
 
 function drawMap() {
-    // create the map zone
-    for (var j = 0; j < MAP_H; j++) {
-      for (var i = 0; i < MAP_W; i++) {
-        var mapzone = document.createElement("div");
-        mapzone.setAttribute("id", "mapzone" + i);
-        mapzone.setAttribute("class", "mapzone");
-        mapzone.style.left = TILE_H * i + "px";
-        mapzone.style.top = TILE_W * j + "px";
-        if (level1(i, j)) {
-          mapzone.style.backgroundColor = "#1E90FF";
-        } else {
-          // if it isn't part of the map, its a drop target for a turret
-          listenEvent(mapzone, "dragenter", cancelEvent);
-          listenEvent(mapzone, "dragover", dragOver);
-          listenEvent(mapzone, "drop", mapDrop(mapzone));
-        }
-        document.body.appendChild(mapzone);
+  // create the map zone
+  for (var j = 0; j < MAP_H; j++) {
+    for (var i = 0; i < MAP_W; i++) {
+      var mapzone = document.createElement("div");
+      mapzone.setAttribute("id", "mapzone" + i);
+      mapzone.setAttribute("class", "mapzone");
+      mapzone.style.left = TILE_H * i + "px";
+      mapzone.style.top = TILE_W * j + "px";
+      if (level1(i, j)) {
+        mapzone.style.backgroundColor = "#1E90FF";
+      } else {
+        // if it isn't part of the map, its a drop target for a turret
+        listenEvent(mapzone, "dragenter", cancelEvent);
+        listenEvent(mapzone, "dragover", dragOver);
+        listenEvent(mapzone, "drop", mapDrop(mapzone));
       }
+      document.body.appendChild(mapzone);
     }
-
-    // create the turrets
-    for (var k = 0; k < 5; k++) {
-      var turret = document.createElement("div");
-      turret.setAttribute("id", "turret" + k);
-      turret.setAttribute("class", "turret");
-      turret.style.left = TURRET_OFFSET + (TURRET_D + TURRET_GAP) * k + "px";
-      turret.style.borderColor = turretColor(turret.id);
-      turret.innerHTML = "<p>" + k + "<br /><br />$" + turretValue(turret.id) + "</p>";
-
-      // turrets are draggable
-      listenEvent(turret, "click", turretClick(turret));
-      document.body.appendChild(turret);
-    }
-
-    // put a start button on
-    var startbutton = document.createElement("div");
-    startbutton.setAttribute("id", "startbutton");
-    startbutton.setAttribute("class", "startbutton");
-    startbutton.innerHTML = "<p> Start! </p>";
-    listenEvent(startbutton, "click", startwave);
-    document.body.appendChild(startbutton);
-
-    // reset button
-    var resetbutton = document.createElement("div");
-    resetbutton.setAttribute("id", "resetbutton");
-    resetbutton.setAttribute("class", "resetbutton");
-    resetbutton.innerHTML = "<p> Reset </p>";
-    listenEvent(resetbutton, "click", resetwave);
-    document.body.appendChild(resetbutton);
-
-    // status  bar
-    var statusbar = document.createElement("div");
-    statusbar.setAttribute("id", "statusbar");
-    statusbar.setAttribute("class", "statusbar");
-    statusbar.innerHTML = '<p> Cash: <span id="cash">$0</span> Score: <span id="score">0</span> Wave: <span id="wave">0</span> Lives: <span id="lives">0</span></p>';
-    document.body.appendChild(statusbar);
   }
-  /////////////////////// END MAP CREATION
+
+  // create the turrets
+  for (var k = 0; k < 5; k++) {
+    var turret = document.createElement("div");
+    turret.setAttribute("id", "turret" + k);
+    turret.setAttribute("class", "turret");
+    turret.style.left = TURRET_OFFSET + (TURRET_D + TURRET_GAP) * k + "px";
+    turret.style.borderColor = turretColor(turret.id);
+    turret.innerHTML = "<p>" + k + "<br /><br />$" + turretValue(turret.id) + "</p>";
+
+    // turrets are draggable
+    listenEvent(turret, "click", turretClick(turret));
+    document.body.appendChild(turret);
+  }
+
+  // put a start button on
+  var startbutton = document.createElement("div");
+  startbutton.setAttribute("id", "startbutton");
+  startbutton.setAttribute("class", "startbutton");
+  startbutton.innerHTML = "<p> Start! </p>";
+  listenEvent(startbutton, "click", startwave);
+  document.body.appendChild(startbutton);
+
+  // reset button
+  var resetbutton = document.createElement("div");
+  resetbutton.setAttribute("id", "resetbutton");
+  resetbutton.setAttribute("class", "resetbutton");
+  resetbutton.innerHTML = "<p> Reset </p>";
+  listenEvent(resetbutton, "click", resetwave);
+  document.body.appendChild(resetbutton);
+
+  // status  bar
+  var statusbar = document.createElement("div");
+  statusbar.setAttribute("id", "statusbar");
+  statusbar.setAttribute("class", "statusbar");
+  statusbar.innerHTML = '<p> Cash: <span id="cash">$0</span> Score: <span id="score">0</span> Wave: <span id="wave">0</span> Lives: <span id="lives">0</span></p>';
+  document.body.appendChild(statusbar);
+}
+/////////////////////// END MAP CREATION
 
 //////////////////////// WAVE HANDLING
 function startwave(evt) {
@@ -372,7 +373,7 @@ function startwave(evt) {
     minion_hp[i] = minionhp();
     first_kill[i] = true;
   }
-  interval_id = setInterval(function() {
+  interval_id = setInterval(function () {
     if (!isPaused) {
       for (var i = 0; i < minion_c; i++) {
         // what direction do we want to go?
@@ -393,9 +394,9 @@ function startwave(evt) {
             break;
           }
           // do we have minions killed?
-          if (minions_killed == minions.length) {
+          if (minions_killed == minions.length || (isBossWave && minions_killed == 1)) {
             // wave over!
-            console.log("F");
+            console.log("Do we have minions killed? Wave Over!");
             wave_over = true;
           }
           continue;
@@ -428,10 +429,14 @@ function startwave(evt) {
           if (first_kill[i]) {
             first_kill[i] = false;
             minions_killed++;
-            // increase your cash a little bit
-            currentCash += minionreward();
+            // increase your cash a little bit  
+            if(isBossWave) {
+              currentCash += bossReward();
+            } else {
+              currentCash += minionreward();
+            }
             currentScore++;
-            if (minions_killed == minions.length) {
+            if (minions_killed == minions.length || (isBossWave && minions_killed == 1)) {
               // wave over!
               console.log("wave over!")
               wave_over = true;
@@ -461,36 +466,59 @@ function startwave(evt) {
         minions_killed = 0;
         wave_over = false;
         currentWave++;
+        isBossWave = currentWave % 3 == 0;
         //Move to next level if current wave = 20
-        if(currentWave > 2){
+        if (currentWave > 2) {
           startLevel2();
         }
-        for (var i = 0; i < minions.length; i++) {
-          movex[i] = 0;
-          movey[i] = 0;
-          currentDir[i] = MOVE_S;
-          minion_release[i] = 0;
-          minions[i].style.display = "none";
-          minion_hp[i] = minionhp();
-          first_kill[i] = true;
+
+        //Boss wave
+        if (isBossWave) {
+          for (var i = 0; i < 1; i++) {
+            movex[i] = 0;
+            movey[i] = 0;
+            currentDir[i] = MOVE_S;
+            minion_release[i] = 0;
+            minions[i].style.display = "none";
+            minions[i].style.color = "#156112";
+            minions[i].style.width = "30px";
+            minions[i].style.height = "30px";
+            minion_hp[i] = bossHp();
+            console.log("Boss Hp: " + minion_hp[i]);
+            first_kill[i] = true;
+          }
+        } else {
+          for (var i = 0; i < minions.length; i++) {
+            movex[i] = 0;
+            movey[i] = 0;
+            currentDir[i] = MOVE_S;
+            minion_release[i] = 0;
+            minions[i].style.display = "none";
+            minions[i].style.color = "#000000";
+            minions[i].style.width = "15px";
+            minions[i].style.height = "15px";
+            minion_hp[i] = minionhp();
+            console.log("Minion Hp: " + minion_hp[i]);
+            first_kill[i] = true;
+          }
         }
       }
     }
   }, 10);
 }
 
-function startLevel2(){
+function startLevel2() {
   currentLevel++;
   console.log("Current wave: " + currentWave);
   var pixels = document.getElementsByClassName('mapzone');
-  
-  for(var i = 0; i < pixels.length; i++) {
+
+  for (var i = 0; i < pixels.length; i++) {
     pixels[i].style.backgroundColor = '#C98D26';
     drawNextMap(pixels[i]);
   }
 }
 
-function drawNextMap(mapzone){
+function drawNextMap(mapzone) {
   var i = mapzone.style.left.replace("px", "") / TILE_H;
   var j = mapzone.style.top.replace("px", "") / TILE_W;
   if (level2(i, j)) {
@@ -522,7 +550,7 @@ function whereToMove(xpos, ypos, currentDir) {
   }
 
   // are we still on the map?
-  if(currentLevel <= 1){
+  if (currentLevel <= 1) {
     if (level1(Math.floor(xnewpos), Math.floor(ynewpos))) {
       // ok! keep going in the same direction
       return currentDir;
@@ -643,11 +671,19 @@ function minionhp() {
   return Math.pow(2, currentWave) * 1;
 }
 
-function minionreward() {
-    return Math.pow(currentWave + 1, 2);
-  }
-  ////////////////////////// END WAVE HANDLING
+function bossHp() {
+  return Math.pow(2, currentWave) * 8;
+}
 
-window.onload = function() {
+function minionreward() {
+  return Math.pow(currentWave + 1, 2);
+}
+
+function bossReward() {
+  return Math.pow(currentWave + 1, 3);
+}
+////////////////////////// END WAVE HANDLING
+
+window.onload = function () {
   drawMap();
 }
