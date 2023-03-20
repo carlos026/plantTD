@@ -1,0 +1,105 @@
+.mapzone {
+    background-color: #130e75;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 15px;
+    height: 15px;
+  }
+
+  .test{
+    color: #e48d0b;
+    color: #614821;
+    color: #1E90FF;
+  }
+  .turret {
+    background-color: #C0C0C0;
+    opacity: 0.7;
+    border: 2px solid #000000;
+    position: absolute;
+    top: 500px;
+    left: 0px;
+    width: 40px;
+    height: 40px;
+    color: #000000;
+    text-align: center;
+    -moz-border-radius: 20px;
+    -webkit-border-radius: 20px;
+  }
+  
+  .turretdrag {
+    background-color: #FFFFFF;
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    font-size: 15px;
+    text-align: center;
+    top: 0px;
+    left: 0px;
+  }
+  
+  .startbutton {
+    background-color: #4682B4;
+    position: absolute;
+    width: 100px;
+    height: 50px;
+    color: #FFFFFF;
+    text-align: center;
+    -moz-border-radius: 15px;
+    -webkit-border-radius: 15px;
+    top: 495px;
+    left: 20px;
+  }
+  
+  .resetbutton {
+    background-color: #4682B4;
+    position: absolute;
+    width: 100px;
+    height: 50px;
+    color: #FFFFFF;
+    text-align: center;
+    -moz-border-radius: 15px;
+    -webkit-border-radius: 15px;
+    top: 560px;
+    left: 20px;
+  }
+  
+  .statusbar {
+    background-color: #4682B4;
+    position: absolute;
+    width: 400px;
+    height: 50px;
+    color: #FFFFFF;
+    text-align: center;
+    -moz-border-radius: 15px;
+    -webkit-border-radius: 15px;
+    top: 495px;
+    left: 500px;
+  }
+  
+  .minion {
+    background-color: #000000;
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    top: 0px;
+    left: 0px;
+  }
+  
+  *[draggable=true] {
+    -moz-user-select: none;
+    -khtml-user-drag: element;
+    cursor: move;
+  }
+  
+  :-khtml-drag {
+    background-color: rgba(238, 238, 238, 238, 0.5);
+  }
+  
+  *:-moz-drag-over {
+    background-color: rgba(238, 238, 238, 0.5);
+  }
