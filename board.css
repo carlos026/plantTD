@@ -84,6 +84,17 @@
     top: 0px;
     left: 0px;
   }
+
+  .hpBar {
+    background-color: #000000;
+    position: absolute;
+    width: 30px;
+    height: 5px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+    top: 0px;
+    left: 0px;
+  }
   
   *[draggable=true] {
     -moz-user-select: none;
