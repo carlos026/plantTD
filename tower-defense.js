@@ -18,7 +18,7 @@ const MOVE_END = -99;
 var turretDragCounter = 0;
 var isRunning = false;
 var isPaused = false;
-var minion_count = 5;
+var minion_count = Math.floor(Math.random() * 12) + 4;
 var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
@@ -331,6 +331,7 @@ function startwave(evt) {
   currentScore = 0;
   turretPos.length = 0;
   numTurrets = 0;
+  minion_count = Math.floor(Math.random() * 12) + 4;
 
   // increase the wave count
   currentWave++;
@@ -345,9 +346,15 @@ function startwave(evt) {
   // create all our minions
   for (var i = 0; i < minion_count; i++) {
     var minion = document.createElement("div");
+    var hpBarMinion = document.createElement("progress");
     minion.setAttribute("id", "minion" + i);
     minion.setAttribute("class", "minion");
+    hpBarMinion.setAttribute("id", "hpBar" + i);
+    hpBarMinion.setAttribute("class", "hpBar");
+    hpBarMinion.setAttribute("value", 0);
+    hpBarMinion.setAttribute("max", minionhp());
     document.body.appendChild(minion);
+    document.body.appendChild(hpBarMinion);
   }
 
   // set up the timers to run
@@ -364,12 +371,15 @@ function startwave(evt) {
   var wave_over = false;
   // get all the minions available
   var minions = document.getElementsByClassName("minion");
+  var hpBarMinions = document.getElementsByClassName("hpBar");
   for (var i = 0; i < minions.length; i++) {
     movex[i] = 0;
     movey[i] = 0;
     currentDir[i] = MOVE_S;
     minion_release[i] = 0;
     minions[i].style.display = "none";
+    hpBarMinions[i].style.display = "none";
+    hpBarMinions[i].setAttribute("max", minionhp());
     minion_hp[i] = minionhp();
     first_kill[i] = true;
   }
@@ -388,6 +398,7 @@ function startwave(evt) {
           }
           // we have reached the end of the map
           minions[i].style.display = "none";
+          hpBarMinions[i].style.display = "none";
           if (currentLives == 0) {
             // game over
             wave_over = true;
@@ -419,23 +430,33 @@ function startwave(evt) {
         minions[i].style.display = "block";
         minions[i].style.top = movey[i] + "px";
         minions[i].style.left = movex[i] + "px";
-
+        hpBarMinions[i].style.display = "block";
+        hpBarMinions[i].style.top = movey[i] + "px";
+        hpBarMinions[i].style.left = movex[i] + "px";
+        if (isBossWave) {
+          hpBarMinions[i].setAttribute("max", bossHp());
+        } else {
+          hpBarMinions[i].setAttribute("max", minionhp());
+        }
         // are there any turrets in range?
         var damage = anyTurretsInRange(minions[i], movex[i], movey[i]);
         // reduce the minion's hit points by the damage
         minion_hp[i] -= damage;
+        hpBarMinions[i].setAttribute("value", minion_hp[i]);
         if (minion_hp[i] <= 0) {
           // goodbye minion!
+          hpBarMinions[i].setAttribute("value", 0);
           if (first_kill[i]) {
             first_kill[i] = false;
             minions_killed++;
             // increase your cash a little bit  
-            if(isBossWave) {
+            if (isBossWave) {
               currentCash += bossReward();
+              currentScore += 8;
             } else {
               currentCash += minionreward();
+              currentScore++;
             }
-            currentScore++;
             if (minions_killed == minions.length || (isBossWave && minions_killed == 1)) {
               // wave over!
               console.log("wave over!")
@@ -443,6 +464,7 @@ function startwave(evt) {
             }
           }
           minions[i].style.display = "none";
+          hpBarMinions[i].style.display = "none";
         }
         // stagger the minions coming out, release one every 15 pixels
         if ((minion_release[i] == 100 * minion_c) && minion_c < minions.length) {
@@ -466,10 +488,15 @@ function startwave(evt) {
         minions_killed = 0;
         wave_over = false;
         currentWave++;
-        isBossWave = currentWave % 3 == 0;
+        isBossWave = currentWave % 10 == 0;
         //Move to next level if current wave = 20
-        if (currentWave > 2) {
+        if (currentWave > 20) {
           startLevel2();
+          // remove all the towers	
+          var turrents = document.querySelectorAll(".turret");
+          for (var i = 0; i < turrents.length; i++) {
+            turrents.body.removeChild(turrents[i]);
+          }
         }
 
         //Boss wave
@@ -480,7 +507,8 @@ function startwave(evt) {
             currentDir[i] = MOVE_S;
             minion_release[i] = 0;
             minions[i].style.display = "none";
-            minions[i].style.color = "#156112";
+            hpBarMinions[i].style.display = "none";
+            minions[i].style.backgroundColor = "#156112";
             minions[i].style.width = "30px";
             minions[i].style.height = "30px";
             minion_hp[i] = bossHp();
@@ -494,7 +522,8 @@ function startwave(evt) {
             currentDir[i] = MOVE_S;
             minion_release[i] = 0;
             minions[i].style.display = "none";
-            minions[i].style.color = "#000000";
+            hpBarMinions[i].style.display = "none";
+            minions[i].style.backgroundColor = "#000000";
             minions[i].style.width = "15px";
             minions[i].style.height = "15px";
             minion_hp[i] = minionhp();
@@ -511,6 +540,10 @@ function startLevel2() {
   currentLevel++;
   console.log("Current wave: " + currentWave);
   var pixels = document.getElementsByClassName('mapzone');
+  //Reset the wave
+  resetwave(null);
+  currentScore += 100;
+  currentCash += 850;
 
   for (var i = 0; i < pixels.length; i++) {
     pixels[i].style.backgroundColor = '#C98D26';
@@ -612,8 +645,10 @@ function resetwave(evt) {
 
   // remove all the minions	
   var minions = document.querySelectorAll(".minion");
+  var hpBarMinions = document.querySelectorAll(".hpBar");
   for (var i = 0; i < minions.length; i++) {
     document.body.removeChild(minions[i]);
+    document.body.removeChild(hpBarMinions[i]);
   }
 
 }
