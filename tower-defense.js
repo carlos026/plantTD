@@ -18,7 +18,7 @@ const MOVE_END = -99;
 var turretDragCounter = 0;
 var isRunning = false;
 var isPaused = false;
-var minion_count = Math.floor(Math.random() * 12) + 4;
+var minion_count = 12;
 var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
@@ -56,7 +56,7 @@ function turretValue(turretID) {
     case "turret3":
       return 1000;
     case "turret4":
-      return 5000;
+      return 3000;
   }
 }
 
@@ -331,7 +331,6 @@ function startwave(evt) {
   currentScore = 0;
   turretPos.length = 0;
   numTurrets = 0;
-  minion_count = Math.floor(Math.random() * 12) + 4;
 
   // increase the wave count
   currentWave++;
@@ -492,11 +491,6 @@ function startwave(evt) {
         //Move to next level if current wave = 20
         if (currentWave > 20) {
           startLevel2();
-          // remove all the towers	
-          var turrents = document.querySelectorAll(".turret");
-          for (var i = 0; i < turrents.length; i++) {
-            turrents.body.removeChild(turrents[i]);
-          }
         }
 
         //Boss wave
@@ -540,10 +534,11 @@ function startLevel2() {
   currentLevel++;
   console.log("Current wave: " + currentWave);
   var pixels = document.getElementsByClassName('mapzone');
-  //Reset the wave
+  var oldScore = currentScore;
+  //Reset the Level
   resetwave(null);
-  currentScore += 100;
-  currentCash += 850;
+  startwave(null);
+  currentScore = oldScore + 100;
 
   for (var i = 0; i < pixels.length; i++) {
     pixels[i].style.backgroundColor = '#C98D26';
@@ -703,11 +698,26 @@ function euclidDistance(x1, x2, y1, y2) {
 }
 
 function minionhp() {
-  return Math.pow(2, currentWave) * 1;
+  var hpMax = 64;
+  hpMax += Math.pow(2, currentWave + 4);
+  if(currentWave > 5){
+    hpMax = Math.pow(2, currentWave + 2) * 1.3;
+  }
+  if(currentWave > 10){
+    hpMax = Math.pow(2, currentWave);
+  }
+  if(currentWave > 15){
+    hpMax = Math.pow(2, currentWave) * 0.60;
+  }
+  return hpMax;
 }
 
 function bossHp() {
-  return Math.pow(2, currentWave) * 8;
+  if(currentWave == 20){
+    return Math.pow(2, currentWave) * 1.5;
+  } else {
+    return Math.pow(2, currentWave) * 10;
+  }
 }
 
 function minionreward() {
