@@ -35,13 +35,15 @@ function turretColor(turretID) {
     case "turret0":
       return "#DDA0DD";
     case "turret1":
-      return "#0000FF";
+      return "#8c00ff";
     case "turret2":
-      return "#008080";
+      return "#ff00ea";
     case "turret3":
-      return "#FF4500";
+      return "#00bcbc";
     case "turret4":
-      return "#FF0000";
+      return "#FF4500";
+    case "turret5":
+      return "#fff700";
   }
 }
 
@@ -54,9 +56,11 @@ function turretValue(turretID) {
     case "turret2":
       return 500;
     case "turret3":
-      return 1000;
+      return 2000;
     case "turret4":
       return 3000;
+    case "turret5":
+      return 5000;
   }
 }
 
@@ -69,8 +73,10 @@ function turretRange(turretID) {
     case "turret2":
       return 10 * TILE_W;
     case "turret3":
-      return 15 * TILE_W;
+      return 10 * TILE_W;
     case "turret4":
+      return 15 * TILE_W;
+    case "turret5":
       return 20 * TILE_W;
   }
 }
@@ -84,8 +90,10 @@ function turretDamage(turretID) {
     case "turret2":
       return 5;
     case "turret3":
-      return 10;
+      return 8;
     case "turret4":
+      return 10;
+    case "turret5":
       return 20;
   }
 }
@@ -277,7 +285,7 @@ function drawMap() {
   }
 
   // create the turrets
-  for (var k = 0; k < 5; k++) {
+  for (var k = 0; k < 6; k++) {
     var turret = document.createElement("div");
     turret.setAttribute("id", "turret" + k);
     turret.setAttribute("class", "turret");
@@ -382,12 +390,11 @@ function startwave(evt) {
     minion_hp[i] = minionhp();
     first_kill[i] = true;
   }
-  interval_id = setInterval(function () {
+  interval_id = setInterval(async function () {
     if (!isPaused) {
       for (var i = 0; i < minion_c; i++) {
         // what direction do we want to go?
         currentDir[i] = whereToMove(movex[i], movey[i], currentDir[i]);
-
         if (currentDir[i] == MOVE_END) {
           // lose a life, one escaped!
           if (minions[i].style.display != "none") {
@@ -557,7 +564,8 @@ function whereToMove(xpos, ypos, currentDir) {
   // convert the xpos and ypos to block coordinates
   xpos = (xpos + TILE_W / 2) / TILE_W;
   ypos = (ypos + TILE_H / 2) / TILE_H;
-
+  console.log("Xpos: " + xpos + "Ypos: " + ypos);
+  
   var xnewpos = Math.floor(xpos);
   var ynewpos = Math.floor(ypos);
 
@@ -620,6 +628,10 @@ function whereToMove(xpos, ypos, currentDir) {
 
   // if all fails, we have reached the end of the map
   return MOVE_END;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function pausewave(evt) {
