@@ -28,6 +28,8 @@ var currentCash = 20;
 var currentScore = 0;
 var turretPos = new Array();
 var numTurrets = 0;
+var minionSpeed = 10;
+var speed = 1
 
 ///////////////// TURRET FUNCTIONS
 function turretColor(turretID) {
@@ -95,6 +97,23 @@ function turretDamage(turretID) {
       return 10;
     case "turret5":
       return 20;
+  }
+}
+
+function turretSlowDown(turretID) {
+  switch (turretID) {
+    case "turret0":
+      return 10;
+    case "turret1":
+      return 10;
+    case "turret2":
+      return 10;
+    case "turret3":
+      return 20;
+    case "turret4":
+      return 10;
+    case "turret5":
+      return 10;
   }
 }
 
@@ -204,7 +223,7 @@ function mapDrop(mapzone) {
     var turretID = turret.id.substring(0, turret.id.indexOf(":"));
 
     // store an entry in the turret position array
-    turretPos[numTurrets++] = new Array(turretRange(turretID), turretDamage(turretID), x, y);
+    turretPos[numTurrets++] = new Array(turretRange(turretID), turretDamage(turretID), turretSlowDown(turretID), x, y);
 
     // once its droppable, you can't move it anymore		
     turret.setAttribute("draggable", "false");
@@ -335,7 +354,7 @@ function startwave(evt) {
   // reset globals	
   currentWave = 0;
   currentLives = 10;
-  currentCash = 20;
+  currentCash = 2000;
   currentScore = 0;
   turretPos.length = 0;
   numTurrets = 0;
@@ -390,8 +409,9 @@ function startwave(evt) {
     minion_hp[i] = minionhp();
     first_kill[i] = true;
   }
-  interval_id = setInterval(async function () {
+  interval_id = setInterval(function () {
     if (!isPaused) {
+      console.log("Passed Here!");
       for (var i = 0; i < minion_c; i++) {
         // what direction do we want to go?
         currentDir[i] = whereToMove(movex[i], movey[i], currentDir[i]);
@@ -419,18 +439,20 @@ function startwave(evt) {
           continue;
         }
 
+        // are there any turrets in range?
+        var damage = anyTurretsInRange(minions[i], movex[i], movey[i]);
         switch (currentDir[i]) {
           case MOVE_N:
-            movey[i] -= 1;
+            movey[i] -= speed;
             break;
           case MOVE_S:
-            movey[i] += 1;
+            movey[i] += speed;
             break;
           case MOVE_E:
-            movex[i] += 1;
+            movex[i] += speed;
             break;
           case MOVE_W:
-            movex[i] -= 1;
+            movex[i] -= speed;
             break;
         }
         minions[i].style.display = "block";
@@ -444,8 +466,6 @@ function startwave(evt) {
         } else {
           hpBarMinions[i].setAttribute("max", minionhp());
         }
-        // are there any turrets in range?
-        var damage = anyTurretsInRange(minions[i], movex[i], movey[i]);
         // reduce the minion's hit points by the damage
         minion_hp[i] -= damage;
         hpBarMinions[i].setAttribute("value", minion_hp[i]);
@@ -560,11 +580,11 @@ function drawNextMap(mapzone) {
     mapzone.style.backgroundColor = "#614821";
   }
 }
+
 function whereToMove(xpos, ypos, currentDir) {
   // convert the xpos and ypos to block coordinates
   xpos = (xpos + TILE_W / 2) / TILE_W;
   ypos = (ypos + TILE_H / 2) / TILE_H;
-  console.log("Xpos: " + xpos + "Ypos: " + ypos);
   
   var xnewpos = Math.floor(xpos);
   var ynewpos = Math.floor(ypos);
@@ -690,16 +710,24 @@ function anyTurretsInRange(minion, x, y) {
   var damage = 0;
   for (var i = 0; i < numTurrets; i++) {
     // get the x and y positions of the turret
-    var xt = turretPos[i][2];
-    var yt = turretPos[i][3];
+    var xt = turretPos[i][3];
+    var yt = turretPos[i][4];
 
     if (euclidDistance(x, xt, y, yt) <= turretPos[i][0]) {
+      if(turretPos[i][2] != minionSpeed){
+        // Slow down the enemy
+        speed = 0.5;
+      } else {
+        speed = 1;
+      }
       minion.style.backgroundColor = "#FF0000";
       damage += turretPos[i][1]; // return the damage
+     
     }
   }
   if (damage == 0) {
     // nothing in range
+    speed = 1;
     minion.style.backgroundColor = "#000000";
   }
   return damage;
