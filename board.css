@@ -18,18 +18,15 @@
     height: 40px;
     color: #000000;
     text-align: center;
-    -moz-border-radius: 20px;
-    -webkit-border-radius: 20px;
+    border-radius: 20px/20px;
   }
   
   .turretdrag {
-    background-color: #FFFFFF;
     position: absolute;
-    width: 15px;
-    height: 15px;
-    -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
-    font-size: 15px;
+    width: 16px;
+    height: 16px;
+    border-radius: 10px/10px;
+    font-size: 16px;
     text-align: center;
     top: 0px;
     left: 0px;
@@ -42,8 +39,7 @@
     height: 50px;
     color: #FFFFFF;
     text-align: center;
-    -moz-border-radius: 15px;
-    -webkit-border-radius: 15px;
+    border-radius: 15px/15px;
     top: 495px;
     left: 20px;
   }
@@ -55,8 +51,7 @@
     height: 50px;
     color: #FFFFFF;
     text-align: center;
-    -moz-border-radius: 15px;
-    -webkit-border-radius: 15px;
+    border-radius: 15px/15px;
     top: 560px;
     left: 20px;
   }
@@ -68,8 +63,7 @@
     height: 50px;
     color: #FFFFFF;
     text-align: center;
-    -moz-border-radius: 15px;
-    -webkit-border-radius: 15px;
+    border-radius: 15px/15px;
     top: 495px;
     left: 500px;
   }
@@ -79,8 +73,7 @@
     position: absolute;
     width: 15px;
     height: 15px;
-    -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
+    border-radius: 15px/15px;
     top: 0px;
     left: 0px;
   }
@@ -90,14 +83,12 @@
     position: absolute;
     width: 30px;
     height: 5px;
-    -moz-border-radius: 8px;
-    -webkit-border-radius: 8px;
+    border-radius: 8px/8px;
     top: 0px;
     left: 0px;
   }
   
   *[draggable=true] {
-    -moz-user-select: none;
     -khtml-user-drag: element;
     cursor: move;
   }
