@@ -49,6 +49,23 @@ function turretColor(turretID) {
   }
 }
 
+function turretImage(turretID) {
+  switch (turretID) {
+    case "turret0":
+      return "url('img/tower0.png')";
+    case "turret1":
+      return "url('img/tower1.png')";
+    case "turret2":
+      return "url('img/tower2.png')";
+    case "turret3":
+      return "url('img/tower3.png')";
+    case "turret4":
+      return "url('img/tower4.png')";
+    case "turret5":
+      return "url('img/tower5.png')";
+  }
+}
+
 function turretValue(turretID) {
   switch (turretID) {
     case "turret0":
@@ -157,7 +174,8 @@ function turretClick(turret) {
     turretD.setAttribute("class", "turretdrag");
     turretD.style.left = x + "px";
     turretD.style.top = y + "px";
-    turretD.style.backgroundColor = turretColor(turret.id);
+    //turretD.style.backgroundColor = turretColor(turret.id);
+    turretD.style.backgroundImage = turretImage(turret.id);
     turretD.setAttribute("draggable", "true");
     listenEvent(turretD, "dragstart", turretDrag(turretD));
     document.body.appendChild(turretD);
@@ -353,8 +371,8 @@ function startwave(evt) {
   listenEvent(sb, "click", pausewave);
   // reset globals	
   currentWave = 0;
-  currentLives = 10;
-  currentCash = 2000;
+  currentLives = 100;
+  currentCash = 20;
   currentScore = 0;
   turretPos.length = 0;
   numTurrets = 0;
