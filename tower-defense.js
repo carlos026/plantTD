@@ -427,9 +427,40 @@ function startwave(evt) {
     minion_hp[i] = minionhp();
     first_kill[i] = true;
   }
+  var projectileMoveInterval = setInterval(function () {
+	  
+	  if (!isPaused) {
+		var projectiles = document.getElementsByClassName("projectile");
+		for (var index = 0; index < projectiles.length; index++) {
+		  var currentX = parseInt(projectiles[index].style.left.split("px")[0]);
+		  var currentY = parseInt(projectiles[index].style.top.split("px")[0]);
+		  var targetMinion = document.getElementById(projectiles[index].getAttribute("targetMinionId"));
+		  var targetX = parseInt(targetMinion.style.left.split("px")[0]);
+		  var targetY = parseInt(targetMinion.style.top.split("px")[0]);
+		  if ((currentX == targetX && currentY == targetY) || targetMinion.style.display == "none") {
+			document.body.removeChild(projectiles[index]);
+		  } else {
+			if (currentX < targetX) projectiles[index].style.left = currentX + 1 + "px";
+			if (currentX > targetX) projectiles[index].style.left = currentX - 1 + "px";
+			if (currentY < targetY) projectiles[index].style.top = currentY + 1 + "px";
+			if (currentY > targetY) projectiles[index].style.top = currentY - 1 + "px";
+		  }
+		}
+	  }
+  }, 0.1);
+  
+  var shootInterval = setInterval(function () {
+	  
+	  if (!isPaused) {
+		
+		for (var i = 0; i < minion_c; i++) {
+		  shoot(minions[i], movex[i], movey[i])
+		}
+	  }
+  }, 200);
+  
   interval_id = setInterval(function () {
     if (!isPaused) {
-      console.log("Passed Here!");
       for (var i = 0; i < minion_c; i++) {
         // what direction do we want to go?
         currentDir[i] = whereToMove(movex[i], movey[i], currentDir[i]);
@@ -740,7 +771,6 @@ function anyTurretsInRange(minion, x, y) {
       }
       minion.style.backgroundColor = "#FF0000";
       damage += turretPos[i][1]; // return the damage
-     
     }
   }
   if (damage == 0) {
@@ -749,6 +779,28 @@ function anyTurretsInRange(minion, x, y) {
     minion.style.backgroundColor = "#000000";
   }
   return damage;
+}
+
+function shoot(minion, x, y) {
+	for (var i = 0; i < numTurrets; i++) {
+      // get the x and y positions of the source turret
+      var turretX = turretPos[i][3];
+      var turretY = turretPos[i][4];
+
+      if (euclidDistance(x, turretX, y, turretY) <= turretPos[i][0]) {
+	    //create projectile
+	    var projectile = document.createElement("div");
+        //projectile.setAttribute("id", turret.id + ":" + turretDragCounter++);
+		projectile.setAttribute("class", "projectile");
+	
+		projectile.setAttribute("targetMinionId", minion.getAttribute("id"));
+		projectile.style.left = turretX + "px";
+		projectile.style.top = turretY + "px";
+		//projectile.style.backgroundColor = turretColor("turret0");
+		//projectile.style.backgroundImage = turretImage("turret0");
+		document.body.appendChild(projectile);
+	  }
+	}
 }
 
 function euclidDistance(x1, x2, y1, y2) {
