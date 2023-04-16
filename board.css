@@ -83,11 +83,11 @@
   }
   
   .minion {
-    background-color: #000000;
     position: absolute;
-    width: 15px;
-    height: 15px;
-    border-radius: 15px/15px;
+    width: 16px;
+    height: 16px;
+    background-image: url("img/min-lv1/min-down.png");
+    border-radius: 2px/2px;
     top: 0px;
     left: 0px;
   }
@@ -95,8 +95,8 @@
   .hpBar {
     background-color: #000000;
     position: absolute;
-    width: 30px;
-    height: 5px;
+    width: 20px;
+    height: 4px;
     border-radius: 8px/8px;
     top: 0px;
     left: 0px;

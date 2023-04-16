@@ -52,17 +52,17 @@ function turretColor(turretID) {
 function turretImage(turretID) {
   switch (turretID) {
     case "turret0":
-      return "url('img/tower0.png')";
+      return "url('img/tw/tower0.png')";
     case "turret1":
-      return "url('img/tower1.png')";
+      return "url('img/tw/tower1.png')";
     case "turret2":
-      return "url('img/tower2.png')";
+      return "url('img/tw/tower2.png')";
     case "turret3":
-      return "url('img/tower3.png')";
+      return "url('img/tw/tower3.png')";
     case "turret4":
-      return "url('img/tower4.png')";
+      return "url('img/tw/tower4.png')";
     case "turret5":
-      return "url('img/tower5.png')";
+      return "url('img/tw/tower5.png')";
   }
 }
 
@@ -463,7 +463,7 @@ function startwave(evt) {
     if (!isPaused) {
       for (var i = 0; i < minion_c; i++) {
         // what direction do we want to go?
-        currentDir[i] = whereToMove(movex[i], movey[i], currentDir[i]);
+        currentDir[i] = whereToMove(movex[i], movey[i], currentDir[i], minions[i], isBossWave);
         if (currentDir[i] == MOVE_END) {
           // lose a life, one escaped!
           if (minions[i].style.display != "none") {
@@ -578,7 +578,8 @@ function startwave(evt) {
             minion_release[i] = 0;
             minions[i].style.display = "none";
             hpBarMinions[i].style.display = "none";
-            minions[i].style.backgroundColor = "#156112";
+            hpBarMinions[i].style.width = "30px"
+            minions[i].style.backgroundImage = "url('img/min-lv1/boss-down.png')" 
             minions[i].style.width = "30px";
             minions[i].style.height = "30px";
             minion_hp[i] = bossHp();
@@ -593,9 +594,10 @@ function startwave(evt) {
             minion_release[i] = 0;
             minions[i].style.display = "none";
             hpBarMinions[i].style.display = "none";
-            minions[i].style.backgroundColor = "#000000";
-            minions[i].style.width = "15px";
-            minions[i].style.height = "15px";
+            hpBarMinions[i].style.width = "20px"
+            minions[i].style.backgroundImage = "url('img/min-lv1/min-down.png')" 
+            minions[i].style.width = "16px";
+            minions[i].style.height = "16px";
             minion_hp[i] = minionhp();
             console.log("Minion Hp: " + minion_hp[i]);
             first_kill[i] = true;
@@ -630,7 +632,19 @@ function drawNextMap(mapzone) {
   }
 }
 
-function whereToMove(xpos, ypos, currentDir) {
+function whereToMove(xpos, ypos, currentDir, minion, c) {
+  //Get direction from the minion asset.
+  var minUp = "url('img/min-lv1/min-up.png')";
+  var minDown = "url('img/min-lv1/min-down.png')";
+  var minRight = "url('img/min-lv1/min-right.png')";
+  var minLeft = "url('img/min-lv1/min-left.png')";
+  if (isBossWave){
+    var minUp = "url('img/min-lv1/boss-up.png')";
+    var minDown = "url('img/min-lv1/boss-down.png')";
+    var minRight = "url('img/min-lv1/boss-right.png')";
+    var minLeft = "url('img/min-lv1/boss-left.png')";
+  }
+
   // convert the xpos and ypos to block coordinates
   xpos = (xpos + TILE_W / 2) / TILE_W;
   ypos = (ypos + TILE_H / 2) / TILE_H;
@@ -641,15 +655,19 @@ function whereToMove(xpos, ypos, currentDir) {
   // test out some possible move locations
   switch (currentDir) {
     case MOVE_N:
+      minion.style.backgroundImage = minUp;
       ynewpos -= 1;
       break;
     case MOVE_S:
+      minion.style.backgroundImage = minDown;
       ynewpos += 1;
       break;
     case MOVE_E:
+      minion.style.backgroundImage = minRight;
       xnewpos += 1;
       break;
     case MOVE_W:
+      minion.style.backgroundImage = minLeft;
       xnewpos -= 1;
       break;
   }
@@ -769,14 +787,12 @@ function anyTurretsInRange(minion, x, y) {
       } else {
         speed = 1;
       }
-      minion.style.backgroundColor = "#FF0000";
       damage += turretPos[i][1]; // return the damage
     }
   }
   if (damage == 0) {
     // nothing in range
     speed = 1;
-    minion.style.backgroundColor = "#000000";
   }
   return damage;
 }
