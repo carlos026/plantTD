@@ -437,17 +437,31 @@ function startwave(evt) {
 		  var targetMinion = document.getElementById(projectiles[index].getAttribute("targetMinionId"));
 		  var targetX = parseInt(targetMinion.style.left.split("px")[0]);
 		  var targetY = parseInt(targetMinion.style.top.split("px")[0]);
-		  if ((currentX == targetX && currentY == targetY) || targetMinion.style.display == "none") {
+		  var xToTarget = Math.abs(currentX - targetX);
+		  var yToTarget = Math.abs(currentY - targetY);
+		  if ((xToTarget <= 7 && yToTarget <= 7) || targetMinion.style.display == "none") {
 			document.body.removeChild(projectiles[index]);
 		  } else {
-			if (currentX < targetX) projectiles[index].style.left = currentX + 1 + "px";
-			if (currentX > targetX) projectiles[index].style.left = currentX - 1 + "px";
-			if (currentY < targetY) projectiles[index].style.top = currentY + 1 + "px";
-			if (currentY > targetY) projectiles[index].style.top = currentY - 1 + "px";
+			// Increases moved distance on specific axis to reduce diagonal visual impact.
+			// If target distance on an axys is higher than double of the other, projectile moves faster on that axys
+			var xToAdd = xToTarget > (yToTarget * 2) ? 7 : 5;
+			var yToAdd = yToTarget > (xToTarget * 2) ? 7 : 5;
+			if (currentX + xToAdd < targetX) {
+			  projectiles[index].style.left = currentX + xToAdd + "px";
+			}
+			if (currentX - xToAdd > targetX) {
+			  projectiles[index].style.left = currentX - xToAdd + "px";
+			}
+			if (currentY + yToAdd < targetY) {
+			  projectiles[index].style.top = currentY + yToAdd + "px";
+			}
+			if (currentY - yToAdd > targetY) {
+			  projectiles[index].style.top = currentY - yToAdd + "px";
+			}
 		  }
 		}
 	  }
-  }, 0.1);
+  }, 10);
   
   var shootInterval = setInterval(function () {
 	  
@@ -488,7 +502,7 @@ function startwave(evt) {
           continue;
         }
 
-        // are there any turrets in range?
+        // are there any turrets in range? @TODO status
         var damage = anyTurretsInRange(minions[i], movex[i], movey[i]);
         switch (currentDir[i]) {
           case MOVE_N:
@@ -781,6 +795,7 @@ function anyTurretsInRange(minion, x, y) {
     var yt = turretPos[i][4];
 
     if (euclidDistance(x, xt, y, yt) <= turretPos[i][0]) {
+	  // @TODO check tower id and apply status
       if(turretPos[i][2] != minionSpeed){
         // Slow down the enemy
         speed = 0.5;
