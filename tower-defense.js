@@ -241,7 +241,7 @@ function mapDrop(mapzone) {
     var turretID = turret.id.substring(0, turret.id.indexOf(":"));
 
     // store an entry in the turret position array
-    turretPos[numTurrets++] = new Array(turretRange(turretID), turretDamage(turretID), turretSlowDown(turretID), x, y);
+    turretPos[numTurrets++] = new Array(turretRange(turretID), turretDamage(turretID), turretSlowDown(turretID), x, y, turret);
 
     // once its droppable, you can't move it anymore		
     turret.setAttribute("draggable", "false");
@@ -428,51 +428,51 @@ function startwave(evt) {
     first_kill[i] = true;
   }
   var projectileMoveInterval = setInterval(function () {
-	  
-	  if (!isPaused) {
-		var projectiles = document.getElementsByClassName("projectile");
-		for (var index = 0; index < projectiles.length; index++) {
-		  var currentX = parseInt(projectiles[index].style.left.split("px")[0]);
-		  var currentY = parseInt(projectiles[index].style.top.split("px")[0]);
-		  var targetMinion = document.getElementById(projectiles[index].getAttribute("targetMinionId"));
-		  var targetX = parseInt(targetMinion.style.left.split("px")[0]);
-		  var targetY = parseInt(targetMinion.style.top.split("px")[0]);
-		  var xToTarget = Math.abs(currentX - targetX);
-		  var yToTarget = Math.abs(currentY - targetY);
-		  if ((xToTarget <= 7 && yToTarget <= 7) || targetMinion.style.display == "none") {
-			document.body.removeChild(projectiles[index]);
-		  } else {
-			// Increases moved distance on specific axis to reduce diagonal visual impact.
-			// If target distance on an axys is higher than double of the other, projectile moves faster on that axys
-			var xToAdd = xToTarget > (yToTarget * 2) ? 7 : 5;
-			var yToAdd = yToTarget > (xToTarget * 2) ? 7 : 5;
-			if (currentX + xToAdd < targetX) {
-			  projectiles[index].style.left = currentX + xToAdd + "px";
-			}
-			if (currentX - xToAdd > targetX) {
-			  projectiles[index].style.left = currentX - xToAdd + "px";
-			}
-			if (currentY + yToAdd < targetY) {
-			  projectiles[index].style.top = currentY + yToAdd + "px";
-			}
-			if (currentY - yToAdd > targetY) {
-			  projectiles[index].style.top = currentY - yToAdd + "px";
-			}
-		  }
-		}
-	  }
+
+    if (!isPaused) {
+      var projectiles = document.getElementsByClassName("projectile");
+      for (var index = 0; index < projectiles.length; index++) {
+        var currentX = parseInt(projectiles[index].style.left.split("px")[0]);
+        var currentY = parseInt(projectiles[index].style.top.split("px")[0]);
+        var targetMinion = document.getElementById(projectiles[index].getAttribute("targetMinionId"));
+        var targetX = parseInt(targetMinion.style.left.split("px")[0]);
+        var targetY = parseInt(targetMinion.style.top.split("px")[0]);
+        var xToTarget = Math.abs(currentX - targetX);
+        var yToTarget = Math.abs(currentY - targetY);
+        if ((xToTarget <= 7 && yToTarget <= 7) || targetMinion.style.display == "none") {
+          document.body.removeChild(projectiles[index]);
+        } else {
+          // Increases moved distance on specific axis to reduce diagonal visual impact.
+          // If target distance on an axys is higher than double of the other, projectile moves faster on that axys
+          var xToAdd = xToTarget > (yToTarget * 2) ? 7 : 5;
+          var yToAdd = yToTarget > (xToTarget * 2) ? 7 : 5;
+          if (currentX + xToAdd < targetX) {
+            projectiles[index].style.left = currentX + xToAdd + "px";
+          }
+          if (currentX - xToAdd > targetX) {
+            projectiles[index].style.left = currentX - xToAdd + "px";
+          }
+          if (currentY + yToAdd < targetY) {
+            projectiles[index].style.top = currentY + yToAdd + "px";
+          }
+          if (currentY - yToAdd > targetY) {
+            projectiles[index].style.top = currentY - yToAdd + "px";
+          }
+        }
+      }
+    }
   }, 10);
-  
+
   var shootInterval = setInterval(function () {
-	  
-	  if (!isPaused) {
-		
-		for (var i = 0; i < minion_c; i++) {
-		  shoot(minions[i], movex[i], movey[i])
-		}
-	  }
+
+    if (!isPaused) {
+
+      for (var i = 0; i < minion_c; i++) {
+        shoot(minions[i], movex[i], movey[i])
+      }
+    }
   }, 200);
-  
+
   interval_id = setInterval(function () {
     if (!isPaused) {
       for (var i = 0; i < minion_c; i++) {
@@ -593,7 +593,7 @@ function startwave(evt) {
             minions[i].style.display = "none";
             hpBarMinions[i].style.display = "none";
             hpBarMinions[i].style.width = "30px"
-            minions[i].style.backgroundImage = "url('img/min-lv1/boss-down.png')" 
+            minions[i].style.backgroundImage = "url('img/min-lv1/boss-down.png')"
             minions[i].style.width = "30px";
             minions[i].style.height = "30px";
             minion_hp[i] = bossHp();
@@ -609,7 +609,7 @@ function startwave(evt) {
             minions[i].style.display = "none";
             hpBarMinions[i].style.display = "none";
             hpBarMinions[i].style.width = "20px"
-            minions[i].style.backgroundImage = "url('img/min-lv1/min-down.png')" 
+            minions[i].style.backgroundImage = "url('img/min-lv1/min-down.png')"
             minions[i].style.width = "16px";
             minions[i].style.height = "16px";
             minion_hp[i] = minionhp();
@@ -652,7 +652,7 @@ function whereToMove(xpos, ypos, currentDir, minion, c) {
   var minDown = "url('img/min-lv1/min-down.png')";
   var minRight = "url('img/min-lv1/min-right.png')";
   var minLeft = "url('img/min-lv1/min-left.png')";
-  if (isBossWave){
+  if (isBossWave) {
     var minUp = "url('img/min-lv1/boss-up.png')";
     var minDown = "url('img/min-lv1/boss-down.png')";
     var minRight = "url('img/min-lv1/boss-right.png')";
@@ -662,7 +662,7 @@ function whereToMove(xpos, ypos, currentDir, minion, c) {
   // convert the xpos and ypos to block coordinates
   xpos = (xpos + TILE_W / 2) / TILE_W;
   ypos = (ypos + TILE_H / 2) / TILE_H;
-  
+
   var xnewpos = Math.floor(xpos);
   var ynewpos = Math.floor(ypos);
 
@@ -795,43 +795,65 @@ function anyTurretsInRange(minion, x, y) {
     var yt = turretPos[i][4];
 
     if (euclidDistance(x, xt, y, yt) <= turretPos[i][0]) {
-	  // @TODO check tower id and apply status
-      if(turretPos[i][2] != minionSpeed){
+      // @TODO check tower id and apply status
+      if (turretPos[i][2] != minionSpeed) {
         // Slow down the enemy
         speed = 0.5;
       } else {
         speed = 1;
       }
+      //Rotate turret to aim the target
+      rotateToTarget(minion, turretPos[i][5]);
       damage += turretPos[i][1]; // return the damage
     }
   }
   if (damage == 0) {
     // nothing in range
+    window.addEventListener("resize", rotateToTarget);
     speed = 1;
   }
   return damage;
 }
 
 function shoot(minion, x, y) {
-	for (var i = 0; i < numTurrets; i++) {
-      // get the x and y positions of the source turret
-      var turretX = turretPos[i][3];
-      var turretY = turretPos[i][4];
+  for (var i = 0; i < numTurrets; i++) {
+    // get the x and y positions of the source turret
+    var turretX = turretPos[i][3];
+    var turretY = turretPos[i][4];
 
-      if (euclidDistance(x, turretX, y, turretY) <= turretPos[i][0]) {
-	    //create projectile
-	    var projectile = document.createElement("div");
-        //projectile.setAttribute("id", turret.id + ":" + turretDragCounter++);
-		projectile.setAttribute("class", "projectile");
-	
-		projectile.setAttribute("targetMinionId", minion.getAttribute("id"));
-		projectile.style.left = turretX + "px";
-		projectile.style.top = turretY + "px";
-		//projectile.style.backgroundColor = turretColor("turret0");
-		//projectile.style.backgroundImage = turretImage("turret0");
-		document.body.appendChild(projectile);
-	  }
-	}
+    if (euclidDistance(x, turretX, y, turretY) <= turretPos[i][0]) {
+      //create projectile
+      var projectile = document.createElement("div");
+      //projectile.setAttribute("id", turret.id + ":" + turretDragCounter++);
+      projectile.setAttribute("class", "projectile");
+
+      projectile.setAttribute("targetMinionId", minion.getAttribute("id"));
+      projectile.style.left = turretX + "px";
+      projectile.style.top = turretY + "px";
+      //projectile.style.backgroundColor = turretColor("turret0");
+      //projectile.style.backgroundImage = turretImage("turret0");
+      document.body.appendChild(projectile);
+    }
+  }
+}
+
+// Function to calculate the angle between turret and minion
+function getAngle(target, looker) {
+  var targetRect = target.getBoundingClientRect();
+  var lookerRect = looker.getBoundingClientRect();
+
+  var x =  lookerRect.left - targetRect.left;
+  var y =  lookerRect.top - targetRect.top;
+  var radians = Math.atan2(y, x);
+  var angle = (radians * (180 / Math.PI)) - 90;
+
+  return angle;
+}
+
+// Function to rotate the turret div to face the minion div
+function rotateToTarget(minion, turret) {
+  var angle = getAngle(minion, turret);
+  turret.style.transform = "rotate(" + angle + "deg)";
 }
 
 function euclidDistance(x1, x2, y1, y2) {
@@ -841,20 +863,20 @@ function euclidDistance(x1, x2, y1, y2) {
 function minionhp() {
   var hpMax = 64;
   hpMax += Math.pow(2, currentWave + 4);
-  if(currentWave > 5){
+  if (currentWave > 5) {
     hpMax = Math.pow(2, currentWave + 2) * 1.3;
   }
-  if(currentWave > 10){
+  if (currentWave > 10) {
     hpMax = Math.pow(2, currentWave);
   }
-  if(currentWave > 15){
+  if (currentWave > 15) {
     hpMax = Math.pow(2, currentWave) * 0.60;
   }
   return hpMax;
 }
 
 function bossHp() {
-  if(currentWave == 20){
+  if (currentWave == 20) {
     return Math.pow(2, currentWave) * 1.5;
   } else {
     return Math.pow(2, currentWave) * 10;
