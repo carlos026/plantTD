@@ -432,31 +432,32 @@ function startwave(evt) {
     if (!isPaused) {
       var projectiles = document.getElementsByClassName("projectile");
       for (var index = 0; index < projectiles.length; index++) {
-        var currentX = parseInt(projectiles[index].style.left.split("px")[0]);
-        var currentY = parseInt(projectiles[index].style.top.split("px")[0]);
-        var targetMinion = document.getElementById(projectiles[index].getAttribute("targetMinionId"));
+		var projectile =  projectiles[index];
+        var currentX = parseInt(projectile.style.left.split("px")[0]);
+        var currentY = parseInt(projectile.style.top.split("px")[0]);
+        var targetMinion = document.getElementById(projectile.getAttribute("targetMinionId"));
         var targetX = parseInt(targetMinion.style.left.split("px")[0]);
         var targetY = parseInt(targetMinion.style.top.split("px")[0]);
         var xToTarget = Math.abs(currentX - targetX);
         var yToTarget = Math.abs(currentY - targetY);
         if ((xToTarget <= 7 && yToTarget <= 7) || targetMinion.style.display == "none") {
-          document.body.removeChild(projectiles[index]);
+          document.body.removeChild(projectile);
         } else {
           // Increases moved distance on specific axis to reduce diagonal visual impact.
           // If target distance on an axys is higher than double of the other, projectile moves faster on that axys
           var xToAdd = xToTarget > (yToTarget * 2) ? 7 : 5;
           var yToAdd = yToTarget > (xToTarget * 2) ? 7 : 5;
           if (currentX + xToAdd < targetX) {
-            projectiles[index].style.left = currentX + xToAdd + "px";
+            projectile.style.left = currentX + xToAdd + "px";
           }
           if (currentX - xToAdd > targetX) {
-            projectiles[index].style.left = currentX - xToAdd + "px";
+            projectile.style.left = currentX - xToAdd + "px";
           }
           if (currentY + yToAdd < targetY) {
-            projectiles[index].style.top = currentY + yToAdd + "px";
+            projectile.style.top = currentY + yToAdd + "px";
           }
           if (currentY - yToAdd > targetY) {
-            projectiles[index].style.top = currentY - yToAdd + "px";
+            projectile.style.top = currentY - yToAdd + "px";
           }
         }
       }
@@ -468,7 +469,10 @@ function startwave(evt) {
     if (!isPaused) {
 
       for (var i = 0; i < minion_c; i++) {
-        shoot(minions[i], movex[i], movey[i])
+		var minion = minions[i];
+		if (minion.style.display != 'none') {
+		  shoot(minions[i], movex[i], movey[i])
+		}
       }
     }
   }, 200);
@@ -808,7 +812,7 @@ function anyTurretsInRange(minion, x, y) {
     }
   }
   if (damage == 0) {
-    // nothing in range
+    // nothing in range (@TODO fix this: rotate(0) to move back to initial position)
     window.addEventListener("resize", rotateToTarget);
     speed = 1;
   }
