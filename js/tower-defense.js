@@ -302,6 +302,7 @@ function startwave(evt) {
           // we have reached the end of the map
           minions[i].style.display = "none";
           hpBarMinions[i].style.display = "none";
+		  deleteProjectilesTargetingMinion(minions[i].id);
           if (currentLives == 0) {
             // game over
             wave_over = true;
@@ -318,7 +319,7 @@ function startwave(evt) {
 		
 		//Projectile's creation happens once every 50 times the common interval.
 		if (timeLapsesSinceLastShot == SHOOT_COOLDOWN && minions[i].style.display != 'none') {
-			shoot(minions[i], movex[i], movey[i]);
+			//shoot(minions[i], movex[i], movey[i]);
 		}
 		
         // are there any turrets in range? @TODO status
@@ -373,6 +374,7 @@ function startwave(evt) {
           }
           minions[i].style.display = "none";
           hpBarMinions[i].style.display = "none";
+		  deleteProjectilesTargetingMinion(minions[i].id);
         }
         // stagger the minions coming out, release one every 15 pixels
         if ((minion_release[i] == 100 * minion_c) && minion_c < minions.length) {
@@ -380,8 +382,8 @@ function startwave(evt) {
         }
         minion_release[i]++;
       }
-	  moveProjectiles();
-		//Reset count since last shot
+	  //moveProjectiles();
+	  //Reset count since last shot
 	  if (timeLapsesSinceLastShot == SHOOT_COOLDOWN) {
 		  timeLapsesSinceLastShot = 0;
 	  }
@@ -418,7 +420,7 @@ function startwave(evt) {
             minions[i].style.display = "none";
             hpBarMinions[i].style.display = "none";
             hpBarMinions[i].style.width = "30px"
-            minions[i].style.backgroundImage = "url('img/min-lv1/boss-down.png')"
+            minions[i].style.backgroundImage = "url('img/min-lv1/boss-up.png')"
             minions[i].style.width = "30px";
             minions[i].style.height = "30px";
             minion_hp[i] = bossHp();
@@ -426,6 +428,7 @@ function startwave(evt) {
             first_kill[i] = true;
           }
         } else {
+		  minions[0].style.backgroundImage = "url('img/min-lv1/min-up.png')"
           for (var i = 0; i < minions.length; i++) {
             movex[i] = 0;
             movey[i] = 0;
@@ -434,7 +437,7 @@ function startwave(evt) {
             minions[i].style.display = "none";
             hpBarMinions[i].style.display = "none";
             hpBarMinions[i].style.width = "20px"
-            minions[i].style.backgroundImage = "url('img/min-lv1/min-down.png')"
+            minions[i].style.backgroundImage = "url('img/min-lv1/min-up.png')"
             minions[i].style.width = "16px";
             minions[i].style.height = "16px";
             minion_hp[i] = minionhp();
@@ -461,17 +464,7 @@ function startNextLevel() {
 
 function whereToMove(xpos, ypos, currentDir, minion, c) {
   //Get direction from the minion asset.
-  var minUp = "url('img/min-lv1/min-up.png')";
-  var minDown = "url('img/min-lv1/min-down.png')";
-  var minRight = "url('img/min-lv1/min-right.png')";
-  var minLeft = "url('img/min-lv1/min-left.png')";
-  if (isBossWave) {
-    var minUp = "url('img/min-lv1/boss-up.png')";
-    var minDown = "url('img/min-lv1/boss-down.png')";
-    var minRight = "url('img/min-lv1/boss-right.png')";
-    var minLeft = "url('img/min-lv1/boss-left.png')";
-  }
-
+  var directionAngle = 0;
   // convert the xpos and ypos to block coordinates
   xpos = (xpos + TILE_W / 2) / TILE_W;
   ypos = (ypos + TILE_H / 2) / TILE_H;
@@ -482,22 +475,23 @@ function whereToMove(xpos, ypos, currentDir, minion, c) {
   // test out some possible move locations
   switch (currentDir) {
     case MOVE_N:
-      minion.style.backgroundImage = minUp;
+      directionAngle = 0;
       ynewpos -= 1;
       break;
     case MOVE_S:
-      minion.style.backgroundImage = minDown;
+      directionAngle = 180;
       ynewpos += 1;
       break;
     case MOVE_E:
-      minion.style.backgroundImage = minRight;
+      directionAngle = 90;
       xnewpos += 1;
       break;
     case MOVE_W:
-      minion.style.backgroundImage = minLeft;
+      directionAngle = 270;
       xnewpos -= 1;
       break;
   }
+  minion.style.transform = "rotate(" + directionAngle + "deg)";
 
 	// are we still on the map?
 	if (isRoad(currentLevel, Math.floor(xnewpos), Math.floor(ynewpos))) {

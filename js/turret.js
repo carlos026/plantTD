@@ -125,7 +125,7 @@ function moveProjectiles() {
 		var targetY = parseInt(targetMinion.style.top.split("px")[0]);
 		var xToTarget = Math.abs(currentX - targetX);
 		var yToTarget = Math.abs(currentY - targetY);
-		if ((xToTarget <= 7 && yToTarget <= 7) || targetMinion.style.display == "none") {
+		if ((xToTarget <= 7 && yToTarget <= 7)) {
 			document.body.removeChild(projectile);
 		} else {
 			// Increases moved distance on specific axis to reduce diagonal visual impact.
@@ -145,5 +145,13 @@ function moveProjectiles() {
 				projectile.style.top = currentY - yToAdd + "px";
 			}
 		}
+	}
+}
+//Method to allow dead minions to call and destroy lost shots
+function deleteProjectilesTargetingMinion(minionId) {
+	var projectiles = document.querySelectorAll(".projectile[targetMinionId='" + minionId + "']");
+	
+	for (var index = 0; index < projectiles.length; index++) {
+		document.body.removeChild(projectiles[index]);
 	}
 }
