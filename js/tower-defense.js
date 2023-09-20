@@ -136,7 +136,7 @@ function drawMap() {
       mapzone.style.left = TILE_H * i + "px";
       mapzone.style.top = TILE_W * j + "px";
       if (isRoad(currentLevel, i, j)) {
-        mapzone.style.backgroundColor = "#1E90FF";
+          mapzone.style.backgroundColor = "#1E90FF";
       } else {
         // if it isn't part of the map, its a drop target for a turret
         listenEvent(mapzone, "dragenter", cancelEvent);
@@ -183,6 +183,38 @@ function drawMap() {
   statusbar.setAttribute("class", "statusbar");
   statusbar.innerHTML = '<p> Cash: <span id="cash">$0</span> Score: <span id="score">0</span> Wave: <span id="wave">0</span> Lives: <span id="lives">0</span></p>';
   document.body.appendChild(statusbar);
+}
+
+function drawTargetMap(targetLevel) {
+	var pixels = document.getElementsByClassName('mapzone');
+	for (var i = 0; i < pixels.length; i++) {
+		var mapzone = pixels[i];
+		var x = mapzone.style.left.replace("px", "") / TILE_H;
+		var y = mapzone.style.top.replace("px", "") / TILE_W;
+		mapzone.removeEventListener("dragenter", cancelEvent);
+		mapzone.removeEventListener("dragover", dragOver);
+		mapzone.removeEventListener("drop", mapDrop(mapzone));
+		if (isRoad(targetLevel, x, y)) {
+			var roadColor = "#FFFFFF";
+			switch(targetLevel) {
+				case 1:
+					roadColor = "#1E90FF";
+				break;
+				case 2:
+					roadColor = "#614821";
+				break;
+			}
+			console.log('isRoad: ' + targetLevel);
+			mapzone.style.backgroundColor = roadColor;
+		} else {
+			mapzone.style.backgroundColor = '#C98D26';
+			console.log('!isRoad: ' + targetLevel);
+			// if it isn't a road, its a drop target for a turret
+			listenEvent(mapzone, "dragenter", cancelEvent);
+			listenEvent(mapzone, "dragover", dragOver);
+			listenEvent(mapzone, "drop", mapDrop(mapzone));
+		}
+	}
 }
 /////////////////////// END MAP CREATION
 
@@ -254,40 +286,6 @@ function startwave(evt) {
     first_kill[i] = true;
   }
   
-	function moveProjectiles() {
-		var projectiles = document.getElementsByClassName("projectile");
-		for (var index = 0; index < projectiles.length; index++) {
-			var projectile =  projectiles[index];
-			var currentX = parseInt(projectile.style.left.split("px")[0]);
-			var currentY = parseInt(projectile.style.top.split("px")[0]);
-			var targetMinion = document.getElementById(projectile.getAttribute("targetMinionId"));
-			var targetX = parseInt(targetMinion.style.left.split("px")[0]);
-			var targetY = parseInt(targetMinion.style.top.split("px")[0]);
-			var xToTarget = Math.abs(currentX - targetX);
-			var yToTarget = Math.abs(currentY - targetY);
-			if ((xToTarget <= 7 && yToTarget <= 7) || targetMinion.style.display == "none") {
-			    document.body.removeChild(projectile);
-			} else {
-			    // Increases moved distance on specific axis to reduce diagonal visual impact.
-			    // If target distance on an axys is higher than double of the other, projectile moves faster on that axys
-			    var xToAdd = xToTarget > (yToTarget * 2) ? 7 : 5;
-			    var yToAdd = yToTarget > (xToTarget * 2) ? 7 : 5;
-			    if (currentX + xToAdd < targetX) {
-					projectile.style.left = currentX + xToAdd + "px";
-			    }
-			    if (currentX - xToAdd > targetX) {
-					projectile.style.left = currentX - xToAdd + "px";
-			    }
-				if (currentY + yToAdd < targetY) {
-					projectile.style.top = currentY + yToAdd + "px";
-				}
-				if (currentY - yToAdd > targetY) {
-					projectile.style.top = currentY - yToAdd + "px";
-				}
-			}
-		}
-	}
-
   interval_id = setInterval(function () {
     if (!isPaused) {
 		timeLapsesSinceLastShot++;
@@ -407,7 +405,7 @@ function startwave(evt) {
         isBossWave = currentWave % 10 == 0;
         //Move to next level if current wave = 20
         if (currentWave > 20) {
-          startLevel2();
+          startNextLevel();
         }
 
         //Boss wave
@@ -449,28 +447,16 @@ function startwave(evt) {
   }, 10);
 }
 
-function startLevel2() {
+function startNextLevel() {
   currentLevel++;
   console.log("Current wave: " + currentWave);
-  var pixels = document.getElementsByClassName('mapzone');
   var oldScore = currentScore;
   //Reset the Level
   resetwave(null);
   startwave(null);
   currentScore = oldScore + 100;
 
-  for (var i = 0; i < pixels.length; i++) {
-    pixels[i].style.backgroundColor = '#C98D26';
-    drawNextMap(pixels[i]);
-  }
-}
-
-function drawNextMap(mapzone) {
-  var i = mapzone.style.left.replace("px", "") / TILE_H;
-  var j = mapzone.style.top.replace("px", "") / TILE_W;
-  if (isRoad(currentLevel, i, j)) {
-    mapzone.style.backgroundColor = "#614821";
-  }
+  drawTargetMap(currentLevel);
 }
 
 function whereToMove(xpos, ypos, currentDir, minion, c) {
@@ -564,7 +550,6 @@ function resetwave(evt) {
     document.body.removeChild(minions[i]);
     document.body.removeChild(hpBarMinions[i]);
   }
-
 }
 
 function updateStatus() {
