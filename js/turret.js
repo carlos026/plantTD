@@ -84,23 +84,6 @@ function turretDamage(turretID) {
   }
 }
 
-function turretSlowDown(turretID) {
-  switch (turretID) {
-    case "turret0":
-      return 10;
-    case "turret1":
-      return 10;
-    case "turret2":
-      return 10;
-    case "turret3":
-      return 20;
-    case "turret4":
-      return 10;
-    case "turret5":
-      return 10;
-  }
-}
-
 // DRAG AND DROP
 function turretDrag(turret) {
   function drag(evt) {

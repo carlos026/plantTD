@@ -12,7 +12,6 @@ var currentCash = 20;
 var currentScore = 0;
 var turretPos = new Array();
 var numTurrets = 0;
-var minionSpeed = 10;
 var speed = 1.5;
 var timeLapsesSinceLastShot = 1;
 
@@ -86,7 +85,7 @@ function mapDrop(mapzone) {
     var turretID = turret.id.substring(0, turret.id.indexOf(":"));
 
     // store an entry in the turret position array
-    turretPos[numTurrets++] = new Array(turretRange(turretID), turretDamage(turretID), turretSlowDown(turretID), x, y, turret);
+    turretPos[numTurrets++] = new Array(turretRange(turretID), turretDamage(turretID), turretID, x, y, turret);
 
     // once its droppable, you can't move it anymore		
     turret.setAttribute("draggable", "false");
@@ -574,28 +573,30 @@ function updateStatus() {
 function anyTurretsInRange(minion, x, y) {
   var score = document.getElementById("score");
   var damage = 0;
+  var hasSlowedThisTurn = false;
   for (var i = 0; i < numTurrets; i++) {
     // get the x and y positions of the turret
     var xt = turretPos[i][3];
     var yt = turretPos[i][4];
 
     if (euclidDistance(x, xt, y, yt) <= turretPos[i][0]) {
-      // @TODO check tower id and apply status
-      if (turretPos[i][2] != minionSpeed) {
+      // Check tower id and apply status
+      if (!hasSlowedThisTurn && turretPos[i][2] == "turret3") {
         // Slow down the enemy
+		hasSlowedThisTurn = true;
         speed = 1;
-      } else {
-        speed = 1.5;
       }
       //Rotate turret to aim the target
       rotateToTarget(minion, turretPos[i][5]);
       damage += turretPos[i][1]; // return the damage
     }
   }
+  if (!hasSlowedThisTurn && speed != 1.5) {
+	  speed = 1.5;
+  }
   if (damage == 0) {
     // nothing in range (@TODO fix this: rotate(0) to move back to initial position)
     window.addEventListener("resize", rotateToTarget);
-    speed = 1.5;
   }
   return damage;
 }
