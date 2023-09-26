@@ -6,5 +6,32 @@
 <script type="text/javascript" src="js/map.js"></script>
 <script type="text/javascript" src="js/turret.js"></script>
 <script type="text/javascript" src="js/tower-defense.js"></script>
-</head><body>
+</head>
+<body>
+    <div id="registrationForm" class="character-info" style="display: none;">
+        <h1>Turret Upgrade</h1>
+        <div class="info-item">
+            <span>id:</span>
+            <span id="upgTurretId"></span>
+        </div>
+        <div class="info-item">
+            <span>Name:</span>
+            <span id="upgName"></span>
+        </div>
+        <div class="info-item">
+            <span>Level:</span>
+            <span id="upgLevel"></span>
+        </div>
+        <div class="info-item">
+            <span>Damage:</span>
+            <span id="upgDamage"></span>
+        </div>
+        <div class="info-item">
+            <span>Price:</span>
+            <span id="upgPrice"></span>
+        </div>
+    
+        <button class="upgradebutton" onclick="btnUpgradeTurretClick()" type="button">Upgrade!</button>
+    </div>
+</body>
 </html>

@@ -114,3 +114,63 @@
   *:-moz-drag-over {
     background-color: rgba(238, 238, 238, 0.5);
   }
+
+  .upgradebutton {
+    background-color: #24547a;
+    position: absolute;
+    width: 90px;
+    height: 25px;
+    color: #FFFFFF;
+    text-align: center;
+    border-radius: 10px/10px;
+  }
+
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #222;
+    color: #fff;
+    text-align: center;
+}
+
+  .character-info {
+    background-color: #4682B4;
+    position: absolute;
+    border: 2px solid #417197;
+    border-radius: 10px;
+    padding: 20px;
+    width: 400px;
+    margin: 50px auto;
+    left: 1205px;
+}
+
+.character-info h1 {
+  font-size: 24px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+  /* Style for the Submit button */
+  button[type="button"] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 10px;
+    font-size: 12px;
+    font:bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    outline: none; /* Remove outline on focus */
+  }
+
+  button[type="button"]:hover {
+    background-color: #004997;
+  }
+
+  button[type="button"]:focus {
+    transform: scale(1.05); /* Scale up slightly on focus */
+  }

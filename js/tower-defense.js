@@ -90,6 +90,7 @@ function mapDrop(mapzone) {
     // once its droppable, you can't move it anymore		
     turret.setAttribute("draggable", "false");
     listenEvent(turret, "dragstart", nodrag);
+    listenEvent(turret, "click", showTurretInfo(turret));
   }
   return drop;
 }
@@ -680,4 +681,21 @@ function bossReward() {
 
 window.onload = function () {
   drawMap();
+}
+
+// @TODO Ver se tem dinheiro
+function btnUpgradeTurretClick() {
+  for (var i = 0; i < numTurrets; i++) {
+    if(turretPos[i][5].id ==  document.getElementById("upgTurretId").innerText){
+      turretPos[i] = upgradeTurret(turretPos[i]);
+      // @TODO Reduzir o dinheiro
+      // @TODO Atualizar dados na interface do upgrade
+      showTurretInfo(turretPos[i][5]);
+    }
+  }
+  //console.log("Turret " + turretId + " has been upgraded!");
+  var turretLevel = turret.getAttribute("upgLevel");
+  turretLevel++;
+  //document.getElementById(turretId).setAttribute("upgLevel", turretLevel);
+  //document.getElementById("upgLevel").setAttribute("value", turretLevel);
 }

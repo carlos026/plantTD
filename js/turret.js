@@ -84,6 +84,40 @@ function turretDamage(turretID) {
   }
 }
 
+function turretName(turretID) {
+  switch (turretID) {
+    case "turret0":
+      return "Machine Gun";
+    case "turret1":
+      return "Laser";
+    case "turret2":
+      return "Flamethrower";
+    case "turret3":
+      return "Blizzard Tower";
+    case "turret4":
+      return "Storm Cannon";
+    case "turret5":
+      return "Rail Cannon";
+  }
+}
+
+function turretUpgPrice(turretID) {
+  switch(turretID) {
+    case "turret0":
+      return machineGunUpgPrice = machineGunDmg == 1 ? machineGunUpgPrice : machineGunUpgPrice * 1.50;
+    case "turret1":
+      return laserUpgPrice = laserDmg == 3 ? laserUpgPrice : laserUpgPrice * 1.30;
+    case "turret2":
+      return flameThrowerUpgPrice = flameThrowerDmg == 10 ? flameThrowerUpgPrice : flameThrowerUpgPrice * 1.20;
+      case "turret3":
+      return blizzardTowerUpgPrice = blizzardTowerDmg == 8 ? blizzardTowerUpgPrice : blizzardTowerUpgPrice * 1.20;
+    case "turret4":
+      return stormCannonUpgPrice = stormCannonDmg == 13 ? stormCannonUpgPrice : stormCannonUpgPrice * 1.15;
+    case "turret5":
+      return railCannonUpgPrice = railCannonDmg == 16 ? railCannonUpgPrice : railCannonUpgPrice * 1.10;
+  }
+}
+
 // DRAG AND DROP
 function turretDrag(turret) {
   function drag(evt) {
@@ -137,4 +171,25 @@ function deleteProjectilesTargetingMinion(minionId) {
 	for (var index = 0; index < projectiles.length; index++) {
 		document.body.removeChild(projectiles[index]);
 	}
+}
+
+// @TODO Passar o array da turret alvo.
+function showTurretInfo(turret){
+  function upgrade(evt) {
+    var turretTypeId = turret.id.substring(0, turret.id.indexOf(":"));
+    var form = document.getElementById("registrationForm");
+    document.getElementById("upgTurretId").innerText = turret.id;
+    document.getElementById("upgName").innerText = turretName(turretTypeId);
+    //document.getElementById("upgLevel").innerText = turret.getAttribute("level");
+    //document.getElementById("upgDamage").innerText = getCurrentTurretDamage(turretTypeId, turret.id.substring(8, turret.id.length), "false");
+    //document.getElementById("upgPrice").innerText = turretUpgPrice(turretTypeId);
+    form.style.display = form.style.display === "none" ? "block" : "none";
+  }
+  return upgrade;
+}
+
+function upgradeTurret(turretDataArray){
+  // Alterar os dados da turreta
+  // Subir o nível (Adicionar no turretPos)
+  return turretDataArray;
 }
