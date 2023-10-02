@@ -11,10 +11,6 @@
     <div id="registrationForm" class="character-info" style="display: none;">
         <h1>Turret Upgrade</h1>
         <div class="info-item">
-            <span>id:</span>
-            <span id="upgTurretId"></span>
-        </div>
-        <div class="info-item">
             <span>Name:</span>
             <span id="upgName"></span>
         </div>
@@ -27,10 +23,14 @@
             <span id="upgDamage"></span>
         </div>
         <div class="info-item">
+            <span>Range:</span>
+            <span id="range"></span>
+        </div>
+        <div class="info-item">
             <span>Price:</span>
             <span id="upgPrice"></span>
         </div>
-    
+        <input class="text" id="upgTurretId" hidden>
         <button class="upgradebutton" onclick="btnUpgradeTurretClick()" type="button">Upgrade!</button>
     </div>
 </body>

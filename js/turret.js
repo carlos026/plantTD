@@ -101,21 +101,29 @@ function turretName(turretID) {
   }
 }
 
-function turretUpgPrice(turretID) {
+function turretUpgradeCosts(turretID, turretLvl) {
+  var upgradeCost = turretLvl * turretValue(turretID);
   switch(turretID) {
     case "turret0":
-      return machineGunUpgPrice = machineGunDmg == 1 ? machineGunUpgPrice : machineGunUpgPrice * 1.50;
+      upgradeCost = upgradeCost * 5;
+      break;
     case "turret1":
-      return laserUpgPrice = laserDmg == 3 ? laserUpgPrice : laserUpgPrice * 1.30;
+      upgradeCost = upgradeCost * 0.8;
+      break;
     case "turret2":
-      return flameThrowerUpgPrice = flameThrowerDmg == 10 ? flameThrowerUpgPrice : flameThrowerUpgPrice * 1.20;
-      case "turret3":
-      return blizzardTowerUpgPrice = blizzardTowerDmg == 8 ? blizzardTowerUpgPrice : blizzardTowerUpgPrice * 1.20;
+      upgradeCost = upgradeCost * 0.3;
+      break;
+    case "turret3":
+      upgradeCost = upgradeCost * 0.2;
+      break;
     case "turret4":
-      return stormCannonUpgPrice = stormCannonDmg == 13 ? stormCannonUpgPrice : stormCannonUpgPrice * 1.15;
+      upgradeCost = upgradeCost * 0.15;
+      break;
     case "turret5":
-      return railCannonUpgPrice = railCannonDmg == 16 ? railCannonUpgPrice : railCannonUpgPrice * 1.10;
+      upgradeCost = upgradeCost * 0.10;
+      break;
   }
+  return upgradeCost;
 }
 
 // DRAG AND DROP
@@ -173,23 +181,61 @@ function deleteProjectilesTargetingMinion(minionId) {
 	}
 }
 
-// @TODO Passar o array da turret alvo.
-function showTurretInfo(turret){
+function showTurretInfo(turretArray){
   function upgrade(evt) {
-    var turretTypeId = turret.id.substring(0, turret.id.indexOf(":"));
     var form = document.getElementById("registrationForm");
-    document.getElementById("upgTurretId").innerText = turret.id;
-    document.getElementById("upgName").innerText = turretName(turretTypeId);
-    //document.getElementById("upgLevel").innerText = turret.getAttribute("level");
-    //document.getElementById("upgDamage").innerText = getCurrentTurretDamage(turretTypeId, turret.id.substring(8, turret.id.length), "false");
-    //document.getElementById("upgPrice").innerText = turretUpgPrice(turretTypeId);
+    document.getElementById("upgTurretId").value = turretArray[5].id;
+    document.getElementById("upgName").innerText = turretName(turretArray[2]);
+    document.getElementById("upgLevel").innerText = turretArray[6];
+    document.getElementById("upgDamage").innerText = turretArray[1];
+    document.getElementById("range").innerText = turretArray[0];
+    document.getElementById("upgPrice").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]);
     form.style.display = form.style.display === "none" ? "block" : "none";
   }
   return upgrade;
 }
 
-function upgradeTurret(turretDataArray){
-  // Alterar os dados da turreta
-  // Subir o nível (Adicionar no turretPos)
+function updateTurretInfo(turretArray){
+    document.getElementById("upgTurretId").value = turretArray[5].id;
+    document.getElementById("upgName").innerText = turretName(turretArray[2]);
+    document.getElementById("upgLevel").innerText = turretArray[6];
+    document.getElementById("upgDamage").innerText = turretArray[1];
+    document.getElementById("range").innerText = turretArray[0];
+    document.getElementById("upgPrice").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]);
+}
+
+// Change turret data
+function upgradeTurretData(turretDataArray){
+  var upgradeDamage = (turretDataArray[6] * (turretDamage(turretDataArray[2])));
+  console.log("Current turret dmg: " + upgradeDamage);
+  var upgradeRange =  (turretDataArray[6] * (turretRange(turretDataArray[2])));
+  console.log("Current turret Range: " + turretDataArray[0]);
+  //Upgrade Damage and range;
+  switch(turretDataArray[2]){
+    case "turret0":
+      turretDataArray[1] += upgradeDamage * 0.5;
+      turretDataArray[0] += upgradeRange * 0.1;
+      break;
+    case "turret1":
+      turretDataArray[1] += upgradeDamage * 0.3;
+      turretDataArray[0] += upgradeRange * 0.05;
+      break;
+    case "turret2":
+      turretDataArray[1] += upgradeDamage * 0.20;
+      turretDataArray[0] += upgradeRange * 0.025;
+      break;
+    case "turret3":
+      turretDataArray[1] += upgradeDamage * 0.15;
+      turretDataArray[0] += upgradeRange * 0.010;
+      break;
+    case "turret4":
+      turretDataArray[1] += upgradeDamage * 0.10;
+      turretDataArray[0] += upgradeRange * 0.005;
+      break;
+    case "turret5":
+      turretDataArray[1] += upgradeDamage * 0.05;
+      turretDataArray[0] += upgradeRange * 0.002;
+      break;
+  }
   return turretDataArray;
 }

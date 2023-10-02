@@ -85,12 +85,12 @@ function mapDrop(mapzone) {
     var turretID = turret.id.substring(0, turret.id.indexOf(":"));
 
     // store an entry in the turret position array
-    turretPos[numTurrets++] = new Array(turretRange(turretID), turretDamage(turretID), turretID, x, y, turret);
-
+    turretPos[numTurrets++] = new Array(turretRange(turretID), turretDamage(turretID), turretID, x, y, turret, 1);
+    // once created it is possible to see the turret upgrade info.
+    listenEvent(turret, "click", showTurretInfo(turretPos[numTurrets-1]));
     // once its droppable, you can't move it anymore		
     turret.setAttribute("draggable", "false");
     listenEvent(turret, "dragstart", nodrag);
-    listenEvent(turret, "click", showTurretInfo(turret));
   }
   return drop;
 }
@@ -683,19 +683,32 @@ window.onload = function () {
   drawMap();
 }
 
-// @TODO Ver se tem dinheiro
+//Identify which turret should be upgraded.
 function btnUpgradeTurretClick() {
+  if (!isRunning || isPaused) {
+    return;
+  }
+  // do we have enough money to make a upgrade?
   for (var i = 0; i < numTurrets; i++) {
-    if(turretPos[i][5].id ==  document.getElementById("upgTurretId").innerText){
-      turretPos[i] = upgradeTurret(turretPos[i]);
-      // @TODO Reduzir o dinheiro
-      // @TODO Atualizar dados na interface do upgrade
-      showTurretInfo(turretPos[i][5]);
+    if(turretPos[i][5].id == document.getElementById("upgTurretId").value) {
+      //Get Current turret upgrade cost.
+      var turretUpgradeCost = turretUpgradeCosts(turretPos[i][2], turretPos[i][6]);
+      if (currentCash > turretUpgradeCost) {
+        //Level up before upgrade the turret.
+        turretPos[i][6]++;
+        turretPos[i] = upgradeTurretData(turretPos[i]);
+        //Money reduce
+        currentCash = currentCash - turretUpgradeCost;
+        
+        //Update inteface upgrade info.
+        updateTurretInfo(turretPos[i]);
+        var levelDown = turretPos[i][6] -1;
+        console.log("Turret " + turretName(turretPos[i][2]) + " has been upgraded from Lv " + levelDown + " to Lv " + turretPos[i][6] + ".");
+        console.log("Now the current damage is " + turretPos[i][1] + " and range is " + turretPos[i][0]);
+      } else {
+        console.log("Not enought cash! Current cash: " +  currentCash + ", upgrade: " + turretUpgradeCost);
+      }
+      break;
     }
   }
-  //console.log("Turret " + turretId + " has been upgraded!");
-  var turretLevel = turret.getAttribute("upgLevel");
-  turretLevel++;
-  //document.getElementById(turretId).setAttribute("upgLevel", turretLevel);
-  //document.getElementById("upgLevel").setAttribute("value", turretLevel);
 }

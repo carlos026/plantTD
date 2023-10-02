@@ -174,3 +174,7 @@
   button[type="button"]:focus {
     transform: scale(1.05); /* Scale up slightly on focus */
   }
+  
+  p {
+    color:#fff;
+  }
