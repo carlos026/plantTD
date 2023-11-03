@@ -584,7 +584,7 @@ function anyTurretsInRange(minion, x, y) {
       // Check tower id and apply status
       if (!hasSlowedThisTurn && turretPos[i][2] == "turret3") {
         // Slow down the enemy
-		hasSlowedThisTurn = true;
+		    hasSlowedThisTurn = true;
         speed = 1;
       }
       //Rotate turret to aim the target

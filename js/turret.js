@@ -189,7 +189,7 @@ function showTurretInfo(turretArray){
     document.getElementById("upgLevel").innerText = turretArray[6];
     document.getElementById("upgDamage").innerText = turretArray[1];
     document.getElementById("range").innerText = turretArray[0];
-    document.getElementById("upgPrice").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]);
+    document.getElementById("upgBtn").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]) + "\nUpgrade!";
     form.style.display = form.style.display === "none" ? "block" : "none";
   }
   return upgrade;
@@ -201,7 +201,7 @@ function updateTurretInfo(turretArray){
     document.getElementById("upgLevel").innerText = turretArray[6];
     document.getElementById("upgDamage").innerText = turretArray[1];
     document.getElementById("range").innerText = turretArray[0];
-    document.getElementById("upgPrice").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]);
+    document.getElementById("upgBtn").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]) + "\nUpgrade!";
 }
 
 // Change turret data
