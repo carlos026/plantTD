@@ -126,6 +126,10 @@ function turretUpgradeCosts(turretID, turretLvl) {
   return upgradeCost;
 }
 
+function getTurretSellPrice(turretID, upgradeTotalValue) {
+  return (turretValue(turretID) * (0.2)) + (upgradeTotalValue * 0.2);
+}
+
 // DRAG AND DROP
 function turretDrag(turret) {
   function drag(evt) {
@@ -189,6 +193,7 @@ function showTurretInfo(turretArray){
     document.getElementById("upgLevel").innerText = turretArray[6];
     document.getElementById("upgDamage").innerText = turretArray[1];
     document.getElementById("range").innerText = turretArray[0];
+    document.getElementById("sellBtn").innerText = getTurretSellPrice(turretArray[2], turretUpgradeCosts(turretArray[2], turretArray[6] - 1)) + "\nSell!";
     document.getElementById("upgBtn").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]) + "\nUpgrade!";
     form.style.display = form.style.display === "none" ? "block" : "none";
   }
@@ -201,6 +206,7 @@ function updateTurretInfo(turretArray){
     document.getElementById("upgLevel").innerText = turretArray[6];
     document.getElementById("upgDamage").innerText = turretArray[1];
     document.getElementById("range").innerText = turretArray[0];
+    document.getElementById("sellBtn").innerText = getTurretSellPrice(turretArray[2], turretUpgradeCosts(turretArray[2], turretArray[6] - 1)) + "\nSell!";
     document.getElementById("upgBtn").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]) + "\nUpgrade!";
 }
 
