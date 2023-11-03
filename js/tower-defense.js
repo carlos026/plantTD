@@ -712,3 +712,24 @@ function btnUpgradeTurretClick() {
     }
   }
 }
+
+//Identify which turret should be sold.
+function btnSellTurretClick(){
+  if (!isRunning || isPaused) {
+    return;
+  }
+  for (var i = 0; i < numTurrets; i++) {
+    if(turretPos[i][5].id == document.getElementById("upgTurretId").value) {
+      //Get Current turret upgrade sell price.
+      var turretSellPrice = getTurretSellPrice(turretPos[i][2], turretUpgradeCosts(turretPos[i][2], turretPos[i][6] - 1));
+      
+      console.log("Turret " + turretName(turretPos[i][2]) + " was sold for " + turretSellPrice + ".");
+      //Hide upgrade info screen
+      document.getElementById("registrationForm").style.display = "none";
+      //Remove selected turret.
+      document.body.removeChild(turretPos[i][5]);
+      //Increases money.
+      currentCash += turretSellPrice;
+    }
+  }
+}
