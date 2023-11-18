@@ -1,143 +1,242 @@
 // Turret functions
-function turretColor(turretID) {
-  switch (turretID) {
-    case "turret0":
-      return "#DDA0DD";
-    case "turret1":
-      return "#8c00ff";
-    case "turret2":
-      return "#ff00ea";
-    case "turret3":
-      return "#00bcbc";
-    case "turret4":
-      return "#FF4500";
-    case "turret5":
-      return "#fff700";
-  }
+function getTurretTypes(){
+	const types = ["machineGun", "laser", "flamethrower", "blizzard", "stormCannon", "railCannon"];
+	return types;
 }
 
-function turretImage(turretID) {
-  switch (turretID) {
-    case "turret0":
-      return "url('img/tw/tower0.png')";
-    case "turret1":
-      return "url('img/tw/tower1.png')";
-    case "turret2":
-      return "url('img/tw/tower2.png')";
-    case "turret3":
-      return "url('img/tw/tower3.png')";
-    case "turret4":
-      return "url('img/tw/tower4.png')";
-    case "turret5":
-      return "url('img/tw/tower5.png')";
-  }
+function turretColor(type) {
+	switch (type) {
+	case "machineGun":
+		return "#DDA0DD";
+	case "laser":
+		return "#8c00ff";
+	case "flamethrower":
+		return "#ff00ea";
+	case "blizzard":
+		return "#00bcbc";
+	case "stormCannon":
+		return "#FF4500";
+	case "railCannon":
+		return "#fff700";
+	}
 }
 
-function turretValue(turretID) {
-  switch (turretID) {
-    case "turret0":
-      return 10;
-    case "turret1":
-      return 100;
-    case "turret2":
-      return 500;
-    case "turret3":
-      return 2000;
-    case "turret4":
-      return 3000;
-    case "turret5":
-      return 5000;
-  }
+function getTurretShotCooldown(type, level){
+	switch (type) {
+	case "machineGun":
+		return 0;
+	case "laser":
+		return 0;
+	case "flamethrower":
+		return 50;
+	case "blizzard":
+		return 101 - level;
+	case "stormCannon":
+		return 0;
+	case "railCannon":
+		return 0;
+	}
 }
 
-function turretRange(turretID) {
-  switch (turretID) {
-    case "turret0":
-      return 3 * TILE_W;
-    case "turret1":
-      return 5 * TILE_W;
-    case "turret2":
-      return 10 * TILE_W;
-    case "turret3":
-      return 10 * TILE_W;
-    case "turret4":
-      return 15 * TILE_W;
-    case "turret5":
-      return 20 * TILE_W;
-  }
+function getTurretAnimationCooldown(type, level){
+	switch (type) {
+	case "machineGun":
+		return 0;
+	case "laser":
+		return 0;
+	case "flamethrower":
+		return 0;
+	case "blizzard":
+		return 0;
+	case "stormCannon":
+		return 0;
+	case "railCannon":
+		return 0;
+	}
 }
 
-function turretDamage(turretID) {
-  switch (turretID) {
-    case "turret0":
-      return 1;
-    case "turret1":
-      return 3;
-    case "turret2":
-      return 5;
-    case "turret3":
-      return 8;
-    case "turret4":
-      return 10;
-    case "turret5":
-      return 20;
-  }
+function updateTurretCooldownPostShooting(turret) {
+	if (turret.shotCd > 0) {
+		console.log("Turret should not shoot! -> " + turret.htmlElement.id);
+	} else {
+		switch (turret.type) {
+		//case "machineGun":
+			//break;
+		//case "laser":
+			//break;
+		case "flamethrower":
+			if (turret.shotCd < -49) {
+				turret.shotCd = getTurretShotCooldown(turret.type, turret.level);
+			} else {
+				turret.shotCd--;
+			}
+			break;
+		case "blizzard":
+			turret.shotCd = -1;
+			break;
+		//case "stormCannon":
+			//break;
+		//case "railCannon":
+			//break;
+		default:
+			turret.shotCd = getTurretShotCooldown(turret.type, turret.level);
+			break;
+		}
+	}
 }
 
-function turretName(turretID) {
-  switch (turretID) {
-    case "turret0":
-      return "Machine Gun";
-    case "turret1":
-      return "Laser";
-    case "turret2":
-      return "Flamethrower";
-    case "turret3":
-      return "Blizzard Tower";
-    case "turret4":
-      return "Storm Cannon";
-    case "turret5":
-      return "Rail Cannon";
-  }
+// Reduces turret cooldown on every tick and deals with specific behaviors too
+function updateTurretCooldownPostTurn(turrets){
+	for (var i = 0; i < turrets.length; i++) {
+		if (turrets[i].shotCd > 0) {
+			turrets[i].shotCd--;
+		} else {
+			switch (turrets[i].type) {
+			case "machineGun":
+				break;
+			case "laser":
+				break;
+			case "flamethrower":
+				if (turrets[i].shotCd < 0) {
+					turrets[i].shotCd++;
+				}
+				break;
+			case "blizzard":
+				if (turrets[i].shotCd == -1) {
+					turrets[i].shotCd = getTurretShotCooldown(turrets[i].type, turrets[i].level);
+				}
+				break;
+			case "stormCannon":
+				break;
+			case "railCannon":
+				break;
+			}
+		}
+	}
 }
 
-function turretUpgradeCosts(turretID, turretLvl) {
-  var upgradeCost = turretLvl * turretValue(turretID);
-  switch(turretID) {
-    case "turret0":
-      upgradeCost = upgradeCost * 5;
-      break;
-    case "turret1":
-      upgradeCost = upgradeCost * 0.8;
-      break;
-    case "turret2":
-      upgradeCost = upgradeCost * 0.3;
-      break;
-    case "turret3":
-      upgradeCost = upgradeCost * 0.2;
-      break;
-    case "turret4":
-      upgradeCost = upgradeCost * 0.15;
-      break;
-    case "turret5":
-      upgradeCost = upgradeCost * 0.10;
-      break;
-  }
-  return upgradeCost;
+function turretImage(type) {
+	switch (type) {
+	case "machineGun":
+		return "url('img/tw/tower0.png')";
+	case "laser":
+		return "url('img/tw/tower1.png')";
+	case "flamethrower":
+		return "url('img/tw/tower2.png')";
+	case "blizzard":
+		return "url('img/tw/tower3.png')";
+	case "stormCannon":
+		return "url('img/tw/tower4.png')";
+	case "railCannon":
+		return "url('img/tw/tower5.png')";
+	}
 }
 
-function getTurretSellPrice(turretID, upgradeTotalValue) {
-  return (turretValue(turretID) * (0.2)) + (upgradeTotalValue * 0.2);
+function turretValue(type) {
+	switch (type) {
+	case "machineGun":
+		return 10;
+	case "laser":
+		return 100;
+	case "flamethrower":
+		return 500;
+	case "blizzard":
+		return 800;
+	case "stormCannon":
+		return 3000;
+	case "railCannon":
+		return 5000;
+	}
+}
+
+function turretRange(type) {
+	switch (type) {
+	case "machineGun":
+		return 3 * TILE_W;
+	case "laser":
+		return 5 * TILE_W;
+	case "flamethrower":
+		return 10 * TILE_W;
+	case "blizzard":
+		return 10 * TILE_W;
+	case "stormCannon":
+		return 15 * TILE_W;
+	case "railCannon":
+		return 20 * TILE_W;
+	}
+}
+
+function turretDamage(type) {
+	switch (type) {
+	case "machineGun":
+		return 1;
+	case "laser":
+		return 3;
+	case "flamethrower":
+		return 5;
+	case "blizzard":
+		return 8;
+	case "stormCannon":
+		return 10;
+	case "railCannon":
+		return 20;
+	}
+}
+
+function turretName(type) {
+	switch (type) {
+	case "machineGun":
+		return "Machine Gun";
+	case "laser":
+		return "Laser";
+	case "flamethrower":
+		return "Flamethrower";
+	case "blizzard":
+		return "Blizzard Tower";
+	case "stormCannon":
+		return "Storm Cannon";
+	case "railCannon":
+		return "Rail Cannon";
+	}
+}
+
+function turretUpgradeCosts(type, turretLvl) {
+	var upgradeCost = turretLvl * turretValue(type);
+	switch(type) {
+	case "machineGun":
+		upgradeCost = upgradeCost * 5;
+		break;
+	case "laser":
+		upgradeCost = upgradeCost * 0.8;
+		break;
+	case "flamethrower":
+		upgradeCost = upgradeCost * 0.3;
+		break;
+	case "blizzard":
+		upgradeCost = upgradeCost * 0.2;
+		break;
+	case "stormCannon":
+		upgradeCost = upgradeCost * 0.15;
+		break;
+	case "railCannon":
+		upgradeCost = upgradeCost * 0.10;
+		break;
+	}
+	return upgradeCost;
+}
+
+function getTurretSellPrice(type, upgradeTotalValue) {
+	return (turretValue(type) * (0.2)) + (upgradeTotalValue * 0.2);
 }
 
 // DRAG AND DROP
-function turretDrag(turret) {
-  function drag(evt) {
-    evt = evt || window.event;
-    evt.dataTransfer.effectAllowed = 'copy';
-    evt.dataTransfer.setData("Text", turret.id);
-  }
-  return drag;
+function turretDrag(turretElement) {
+	function drag(evt) {
+		evt = evt || window.event;
+		evt.dataTransfer.effectAllowed = 'copy';
+		evt.dataTransfer.setData("Text", turretElement.id);
+	}
+	return drag;
 }
 
 function nodrag(evt) { }
@@ -185,63 +284,62 @@ function deleteProjectilesTargetingMinion(minionId) {
 	}
 }
 
-function showTurretInfo(turretArray){
-  function upgrade(evt) {
-    var form = document.getElementById("registrationForm");
-    document.getElementById("upgTurretId").value = turretArray[5].id;
-    document.getElementById("upgName").innerText = turretName(turretArray[2]);
-    document.getElementById("upgLevel").innerText = turretArray[6];
-    document.getElementById("upgDamage").innerText = turretArray[1];
-    document.getElementById("range").innerText = turretArray[0];
-    document.getElementById("sellBtn").innerText = getTurretSellPrice(turretArray[2], turretUpgradeCosts(turretArray[2], turretArray[6] - 1)) + "\nSell!";
-    document.getElementById("upgBtn").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]) + "\nUpgrade!";
-    form.style.display = form.style.display === "none" ? "block" : "none";
-  }
-  return upgrade;
+function showTurretInfo(turret){
+	function upgrade(evt) {
+		var form = document.getElementById("registrationForm");
+		document.getElementById("upgTurretId").value = turret.htmlElement.id;
+		document.getElementById("upgName").innerText = turretName(turret.type);
+		document.getElementById("upgLevel").innerText = turret.level;
+		document.getElementById("upgDamage").innerText = turret.damage;
+		document.getElementById("range").innerText = turret.range;
+		document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
+		document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
+		form.style.display = form.style.display === "none" ? "block" : "none";
+	}
+	return upgrade;
 }
 
-function updateTurretInfo(turretArray){
-    document.getElementById("upgTurretId").value = turretArray[5].id;
-    document.getElementById("upgName").innerText = turretName(turretArray[2]);
-    document.getElementById("upgLevel").innerText = turretArray[6];
-    document.getElementById("upgDamage").innerText = turretArray[1];
-    document.getElementById("range").innerText = turretArray[0];
-    document.getElementById("sellBtn").innerText = getTurretSellPrice(turretArray[2], turretUpgradeCosts(turretArray[2], turretArray[6] - 1)) + "\nSell!";
-    document.getElementById("upgBtn").innerText = turretUpgradeCosts(turretArray[2], turretArray[6]) + "\nUpgrade!";
+function updateTurretInfo(turret){
+    document.getElementById("upgTurretId").value = turret.htmlElement.id;
+    document.getElementById("upgName").innerText = turretName(turret.type);
+    document.getElementById("upgLevel").innerText = turret.level;
+    document.getElementById("upgDamage").innerText = turret.damage;
+    document.getElementById("range").innerText = turret.range;
+    document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
+    document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
 }
 
 // Change turret data
-function upgradeTurretData(turretDataArray){
-  var upgradeDamage = (turretDataArray[6] * (turretDamage(turretDataArray[2])));
-  console.log("Current turret dmg: " + upgradeDamage);
-  var upgradeRange =  (turretDataArray[6] * (turretRange(turretDataArray[2])));
-  console.log("Current turret Range: " + turretDataArray[0]);
-  //Upgrade Damage and range;
-  switch(turretDataArray[2]){
-    case "turret0":
-      turretDataArray[1] += upgradeDamage * 0.5;
-      turretDataArray[0] += upgradeRange * 0.1;
-      break;
-    case "turret1":
-      turretDataArray[1] += upgradeDamage * 0.3;
-      turretDataArray[0] += upgradeRange * 0.05;
-      break;
-    case "turret2":
-      turretDataArray[1] += upgradeDamage * 0.20;
-      turretDataArray[0] += upgradeRange * 0.025;
-      break;
-    case "turret3":
-      turretDataArray[1] += upgradeDamage * 0.15;
-      turretDataArray[0] += upgradeRange * 0.010;
-      break;
-    case "turret4":
-      turretDataArray[1] += upgradeDamage * 0.10;
-      turretDataArray[0] += upgradeRange * 0.005;
-      break;
-    case "turret5":
-      turretDataArray[1] += upgradeDamage * 0.05;
-      turretDataArray[0] += upgradeRange * 0.002;
-      break;
-  }
-  return turretDataArray;
+function upgradeTurretData(turret){
+	var upgradeDamage = (turret.level * (turretDamage(turret.type)));
+	console.log("Current turret dmg: " + upgradeDamage);
+	var upgradeRange =  (turret.level * (turretRange(turret.type)));
+	console.log("Current turret Range: " + turret.range);
+	//Upgrade Damage and range;
+	switch(turret.type){
+		case "machineGun":
+			turret.damage += upgradeDamage * 0.5;
+			turret.range += upgradeRange * 0.1;
+			break;
+		case "laser":
+			turret.damage += upgradeDamage * 0.3;
+			turret.range += upgradeRange * 0.05;
+			break;
+		case "flamethrower":
+			turret.damage += upgradeDamage * 0.20;
+			turret.range += upgradeRange * 0.025;
+			break;
+		case "blizzard":
+			turret.damage += upgradeDamage * 0.15;
+			turret.range += upgradeRange * 0.010;
+			break;
+		case "stormCannon":
+			turret.damage += upgradeDamage * 0.10;
+			turret.range += upgradeRange * 0.005;
+			break;
+		case "railCannon":
+			turret.damage += upgradeDamage * 0.05;
+			turret.range += upgradeRange * 0.002;
+			break;
+	}
 }
