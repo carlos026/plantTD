@@ -34,7 +34,7 @@ function getTurretShotCooldown(type, level){
 	case "stormCannon":
 		return 0;
 	case "railCannon":
-		return 0;
+		return 601 - level;
 	}
 }
 
@@ -145,7 +145,7 @@ function turretValue(type) {
 	case "stormCannon":
 		return 3000;
 	case "railCannon":
-		return 5000;
+		return 1500;
 	}
 }
 
@@ -162,7 +162,7 @@ function turretRange(type) {
 	case "stormCannon":
 		return 15 * TILE_W;
 	case "railCannon":
-		return 20 * TILE_W;
+		return 5 * TILE_W;
 	}
 }
 
@@ -179,7 +179,7 @@ function turretDamage(type) {
 	case "stormCannon":
 		return 10;
 	case "railCannon":
-		return 20;
+		return 2000;
 	}
 }
 
@@ -219,7 +219,7 @@ function turretUpgradeCosts(type, turretLvl) {
 		upgradeCost = upgradeCost * 0.15;
 		break;
 	case "railCannon":
-		upgradeCost = upgradeCost * 0.10;
+		upgradeCost = upgradeCost * 0.2;
 		break;
 	}
 	return upgradeCost;
@@ -318,7 +318,7 @@ function upgradeTurretData(turret){
 			turret.range += upgradeRange * 0.05;
 			break;
 		case "flamethrower":
-			turret.damage += upgradeDamage * 0.20;
+			turret.damage += upgradeDamage * 0.2;
 			turret.range += upgradeRange * 0.025;
 			break;
 		case "blizzard":
@@ -327,12 +327,12 @@ function upgradeTurretData(turret){
 			turret.range = turretRange(turret.type) + turret.level;
 			break;
 		case "stormCannon":
-			turret.damage += upgradeDamage * 0.10;
+			turret.damage += upgradeDamage * 0.1;
 			turret.range += upgradeRange * 0.005;
 			break;
 		case "railCannon":
-			turret.damage += upgradeDamage * 0.05;
-			turret.range += upgradeRange * 0.002;
+			turret.damage += turretDamage(turret.type) * 0.25;
+			turret.range += turretRange(turret.type) * 0.2;
 			break;
 	}
 }

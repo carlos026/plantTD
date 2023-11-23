@@ -239,7 +239,7 @@ function startwave(evt) {
 	// reset globals	
 	currentWave = 0;
 	currentLives = 11;
-	currentCash = 20;
+	currentCash = 2000;
 	currentScore = 0;
 	turretPos = new Array();
 
@@ -600,6 +600,9 @@ function anyTurretsInRange(minion, x, y) {
 			} else {
 				//Rotate turret to aim the target
 				rotateToTarget(minion, turretPos[i].htmlElement);
+				if (turretPos[i].type == "railCannon") {
+					stunMinion(minion, 150 + (turretPos[i].level * 10));
+				}
 			}
 			updateTurretCooldownPostShooting(turretPos[i]);
 			damage += turretPos[i].damage; // return the damage
