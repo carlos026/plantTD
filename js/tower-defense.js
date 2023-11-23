@@ -1,5 +1,5 @@
 // global state
-var turretDragCounter = 0;
+var turretCounter = 0;
 var isRunning = false;
 var isPaused = false;
 var minion_count = 12;
@@ -11,8 +11,6 @@ var currentLives = 10;
 var currentCash = 20;
 var currentScore = 0;
 var turretPos = new Array();
-var numTurrets = 0;
-var speed = 1.5;
 var timeLapsesSinceLastShot = 1;
 
 ////////////////////// TURRET FUNCTIONS that requires global values (others declared on object/turret.js)
@@ -53,7 +51,7 @@ function turretClick(turret) {
 		// create a new shaped turret at the mouse coords	
 		var turretD = document.createElement("div");
 		var turretType = turret.getAttribute("type");
-		turretD.setAttribute("id", turretType + ":" + turretDragCounter++);
+		turretD.setAttribute("id", turretType + ":" + turretCounter++);
 		turretD.setAttribute("class", "turretdrag");
 		turretD.style.left = x + "px";
 		turretD.style.top = y + "px";
@@ -97,9 +95,9 @@ function mapDrop(mapzone) {
 			shotCd:0,
 			audioCd:0
 		};
-		turretPos[numTurrets++] = turretObj;
+		turretPos[turretPos.length] = turretObj;
 		// once created it is possible to see the turret upgrade info.
-		listenEvent(turret, "click", showTurretInfo(turretPos[numTurrets-1]));
+		listenEvent(turret, "click", showTurretInfo(turretPos[turretPos.length - 1]));
 		// once its droppable, you can't move it anymore		
 		turret.setAttribute("draggable", "false");
 		listenEvent(turret, "dragstart", nodrag);
@@ -217,11 +215,9 @@ function drawTargetMap(targetLevel) {
 					roadColor = "#614821";
 				break;
 			}
-			console.log('isRoad: ' + targetLevel);
 			mapzone.style.backgroundColor = roadColor;
 		} else {
 			mapzone.style.backgroundColor = '#C98D26';
-			console.log('!isRoad: ' + targetLevel);
 			// if it isn't a road, its a drop target for a turret
 			listenEvent(mapzone, "dragenter", cancelEvent);
 			listenEvent(mapzone, "dragover", dragOver);
@@ -245,8 +241,7 @@ function startwave(evt) {
 	currentLives = 11;
 	currentCash = 20;
 	currentScore = 0;
-	turretPos.length = 0;
-	numTurrets = 0;
+	turretPos = new Array();
 
 	// increase the wave count
 	currentWave++;
@@ -301,7 +296,7 @@ function startwave(evt) {
 
 	interval_id = setInterval(function () {
 		if (!isPaused) {
-			timeLapsesSinceLastShot++;
+			//timeLapsesSinceLastShot++;
 			for (var i = 0; i < minion_c; i++) {
 				// what direction do we want to go?
 				currentDir[i] = whereToMove(movex[i], movey[i], currentDir[i], minions[i], isBossWave);
@@ -324,7 +319,7 @@ function startwave(evt) {
 					// do we have minions killed?
 					if (minions_killed == minions.length || (isBossWave && minions_killed == 1)) {
 						// wave over!
-						console.log("Do we have minions killed? Wave Over!");
+						console.log("Wave Over!");
 						wave_over = true;
 					}
 					continue;
@@ -337,6 +332,7 @@ function startwave(evt) {
 
 				// are there any turrets in range? @TODO status
 				var damage = anyTurretsInRange(minions[i], movex[i], movey[i]);
+				let speed = getMinionSpeed(minions[i]);
 				switch (currentDir[i]) {
 				case MOVE_N:
 					movey[i] -= speed;
@@ -368,6 +364,7 @@ function startwave(evt) {
 				if (minion_hp[i] <= 0) {
 					// goodbye minion!
 					hpBarMinions[i].setAttribute("value", 0);
+					removeDebuffs(minions[i], hpBarMinions[i]);
 					if (first_kill[i]) {
 						first_kill[i] = false;
 						minions_killed++;
@@ -388,6 +385,8 @@ function startwave(evt) {
 					minions[i].style.display = "none";
 					hpBarMinions[i].style.display = "none";
 					//deleteProjectilesTargetingMinion(minions[i].id);
+				} else {
+					tickDownMinionDebuffs(minions[i], hpBarMinions[i]);
 				}
 				// stagger the minions coming out, release one every 15 pixels
 				if ((minion_release[i] == 100 * minion_c) && minion_c < minions.length) {
@@ -588,30 +587,23 @@ function updateStatus() {
 function anyTurretsInRange(minion, x, y) {
 	var score = document.getElementById("score");
 	var damage = 0;
-	var hasSlowedThisTurn = false;
-	for (var i = 0; i < numTurrets; i++) {
+	for (var i = 0; i < turretPos.length; i++) {
 		// get the x and y positions of the turret
 		var xt = turretPos[i].x;
 		var yt = turretPos[i].y;
 
 		if (euclidDistance(x, xt, y, yt) <= turretPos[i].range && turretPos[i].shotCd <= 0) {
 			// Check tower id and apply status
-			if (!hasSlowedThisTurn && turretPos[i].type == "blizzard") {
+			if (turretPos[i].type == "blizzard") {
 				// Slow down the enemy
-				hasSlowedThisTurn = true;
-				speed = 1;
-				updateTurretCooldownPostShooting(turretPos[i]);
+				freezeMinion(minion, 100 + turretPos[i].level);
+			} else {
+				//Rotate turret to aim the target
+				rotateToTarget(minion, turretPos[i].htmlElement);
 			}
-			if (turretPos[i].type != "blizzard") {
-				updateTurretCooldownPostShooting(turretPos[i]);
-			}
-			//Rotate turret to aim the target
-			rotateToTarget(minion, turretPos[i].htmlElement);
+			updateTurretCooldownPostShooting(turretPos[i]);
 			damage += turretPos[i].damage; // return the damage
 		}
-	}
-	if (!hasSlowedThisTurn && speed != 1.5) {
-		speed = 1.5;
 	}
 	if (damage == 0) {
 		// nothing in range (@TODO fix this: rotate(0) to move back to initial position)
@@ -621,7 +613,7 @@ function anyTurretsInRange(minion, x, y) {
 }
 
 function shoot(minion, x, y) {
-	for (var i = 0; i < numTurrets; i++) {
+	for (var i = 0; i < turretPos.length; i++) {
 		// get the x and y positions of the source turret
 		var turretX = turretPos[i].x;
 		var turretY = turretPos[i].y;
@@ -629,7 +621,7 @@ function shoot(minion, x, y) {
 		if (euclidDistance(x, turretX, y, turretY) <= turretPos[i].range) {
 			//create projectile
 			var projectile = document.createElement("div");
-			//projectile.setAttribute("id", turret.id + ":" + turretDragCounter++);
+			//projectile.setAttribute("id", turret.id + ":" + turretCounter++);
 			projectile.setAttribute("class", "projectile");
 
 			projectile.setAttribute("targetMinionId", minion.getAttribute("id"));
@@ -706,7 +698,7 @@ function btnUpgradeTurretClick() {
 		return;
 	}
 	// do we have enough money to make a upgrade?
-	for (var i = 0; i < numTurrets; i++) {
+	for (var i = 0; i < turretPos.length; i++) {
 		if(turretPos[i].htmlElement.id == document.getElementById("upgTurretId").value) {
 			//Get Current turret upgrade cost.
 			var turretUpgradeCost = turretUpgradeCosts(turretPos[i].type, turretPos[i].level);
@@ -719,10 +711,10 @@ function btnUpgradeTurretClick() {
 				
 				//Update inteface upgrade info.
 				updateTurretInfo(turretPos[i]);
-				console.log("Turret " + turretName(turretPos[i].type) + " has been upgraded to Lv " + turretPos[i].level + ".");
-				console.log("Now the current damage is " + turretPos[i].damage + " and range is " + turretPos[i].range);
+				console.log("Turret " + turretName(turretPos[i].type) + " upgraded to Lv " + turretPos[i].level + ".");
+				console.log("New damage is " + turretPos[i].damage + " and range is " + turretPos[i].range);
 			} else {
-				console.log("Not enought cash! Current cash: " +  currentCash + ", upgrade: " + turretUpgradeCost);
+				console.log("Not enough cash: " +  currentCash + ", upgrade: " + turretUpgradeCost);
 			}
 			break;
 		}
@@ -734,16 +726,17 @@ function btnSellTurretClick(){
 	if (!isRunning || isPaused) {
 		return;
 	}
-	for (var i = 0; i < numTurrets; i++) {
+	for (var i = 0; i < turretPos.length; i++) {
 		if(turretPos[i].htmlElement.id == document.getElementById("upgTurretId").value) {
 			//Get Current turret upgrade sell price.
 			var turretSellPrice = getTurretSellPrice(turretPos[i].type, turretUpgradeCosts(turretPos[i].type, turretPos[i].level - 1));
 		  
-			console.log("Turret " + turretName(turretPos[i].type) + " was sold for " + turretSellPrice + ".");
+			console.log("Turret " + turretName(turretPos[i].type) + " sold for " + turretSellPrice + ".");
 			//Hide upgrade info screen
 			document.getElementById("registrationForm").style.display = "none";
 			//Remove selected turret.
 			document.body.removeChild(turretPos[i].htmlElement);
+			turretPos.splice(i, 1);
 			//Increases money.
 			currentCash += turretSellPrice;
 		}

@@ -102,6 +102,14 @@
     left: 0px;
   }
   
+  progress.frozen::-webkit-progress-value {
+    background: #3E84F8;
+  }
+  
+  progress.stunned::-webkit-progress-value {
+    background: #2C2C2C;
+  }
+  
   *[draggable=true] {
     -khtml-user-drag: element;
     cursor: move;

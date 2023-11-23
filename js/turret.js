@@ -30,7 +30,7 @@ function getTurretShotCooldown(type, level){
 	case "flamethrower":
 		return 50;
 	case "blizzard":
-		return 101 - level;
+		return 202 - (level * 2);
 	case "stormCannon":
 		return 0;
 	case "railCannon":
@@ -213,7 +213,7 @@ function turretUpgradeCosts(type, turretLvl) {
 		upgradeCost = upgradeCost * 0.3;
 		break;
 	case "blizzard":
-		upgradeCost = upgradeCost * 0.2;
+		upgradeCost = upgradeCost * 0.15;
 		break;
 	case "stormCannon":
 		upgradeCost = upgradeCost * 0.15;
@@ -287,13 +287,7 @@ function deleteProjectilesTargetingMinion(minionId) {
 function showTurretInfo(turret){
 	function upgrade(evt) {
 		var form = document.getElementById("registrationForm");
-		document.getElementById("upgTurretId").value = turret.htmlElement.id;
-		document.getElementById("upgName").innerText = turretName(turret.type);
-		document.getElementById("upgLevel").innerText = turret.level;
-		document.getElementById("upgDamage").innerText = turret.damage;
-		document.getElementById("range").innerText = turret.range;
-		document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
-		document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
+		updateTurretInfo(turret);
 		form.style.display = form.style.display === "none" ? "block" : "none";
 	}
 	return upgrade;
@@ -311,10 +305,8 @@ function updateTurretInfo(turret){
 
 // Change turret data
 function upgradeTurretData(turret){
-	var upgradeDamage = (turret.level * (turretDamage(turret.type)));
-	console.log("Current turret dmg: " + upgradeDamage);
-	var upgradeRange =  (turret.level * (turretRange(turret.type)));
-	console.log("Current turret Range: " + turret.range);
+	var upgradeDamage = turret.level * turretDamage(turret.type);
+	var upgradeRange =  turret.level * turretRange(turret.type);
 	//Upgrade Damage and range;
 	switch(turret.type){
 		case "machineGun":
@@ -330,8 +322,9 @@ function upgradeTurretData(turret){
 			turret.range += upgradeRange * 0.025;
 			break;
 		case "blizzard":
-			turret.damage += upgradeDamage * 0.15;
-			turret.range += upgradeRange * 0.010;
+			// Cooldown reduction is this upgrade focus
+			turret.damage += upgradeDamage * 0.1;
+			turret.range = turretRange(turret.type) + turret.level;
 			break;
 		case "stormCannon":
 			turret.damage += upgradeDamage * 0.10;
