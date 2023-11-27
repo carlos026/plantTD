@@ -66,41 +66,41 @@ function turretClick(turret) {
 	return tclick;
 }
 
-function mapDrop(mapzone) {
+function mapDrop(mapzone, x, y) {
 	function drop(evt) {
-		cancelPropogation(evt);
-		evt = evt || window.event;
-		evt.dataTransfer.dropEffect = 'copy';
-		var id = evt.dataTransfer.getData("Text");
-		var turret = document.getElementById(id);
-		turret.style.left = mapzone.style.left;
-		turret.style.top = mapzone.style.top;
-
 		// get the drop coordinates
-		var xPos = mapzone.style.left.replace(/\D/g, "");
-		var yPos = mapzone.style.top.replace(/\D/g, "");
+		if(!isRoad(currentLevel, x, y)) {
+			cancelPropogation(evt);
+			evt = evt || window.event;
+			evt.dataTransfer.dropEffect = 'copy';
+			var id = evt.dataTransfer.getData("Text");
+			var turret = document.getElementById(id);
+			turret.style.left = mapzone.style.left;
+			turret.style.top = mapzone.style.top;
+			let xPos = mapzone.style.left.replace(/\D/g, "");
+			let yPos = mapzone.style.top.replace(/\D/g, "");
+			// the id is up to the colon in the string
+			var turretType = turret.id.substring(0, turret.id.indexOf(":"));
 
-		// the id is up to the colon in the string
-		var turretType = turret.id.substring(0, turret.id.indexOf(":"));
-
-		// store an entry in the turret position array
-		const turretObj = {
-			range:turretRange(turretType),
-			damage:turretDamage(turretType),
-			type:turretType,
-			x:xPos,
-			y:yPos,
-			htmlElement:turret,
-			level:1,
-			shotCd:0,
-			audioCd:0
-		};
-		turretPos[turretPos.length] = turretObj;
-		// once created it is possible to see the turret upgrade info.
-		listenEvent(turret, "click", showTurretInfo(turretPos[turretPos.length - 1]));
-		// once its droppable, you can't move it anymore		
-		turret.setAttribute("draggable", "false");
-		listenEvent(turret, "dragstart", nodrag);
+			// store an entry in the turret position array
+			const turretObj = {
+				range:turretRange(turretType),
+				damage:turretDamage(turretType),
+				type:turretType,
+				x:xPos,
+				y:yPos,
+				htmlElement:turret,
+				level:1,
+				shotCd:0,
+				audioCd:0
+			};
+			turretPos[turretPos.length] = turretObj;
+			// once created it is possible to see the turret upgrade info.
+			listenEvent(turret, "click", showTurretInfo(turretPos[turretPos.length - 1]));
+			// once its droppable, you can't move it anymore		
+			turret.setAttribute("draggable", "false");
+			listenEvent(turret, "dragstart", nodrag);
+		}
 	}
 	return drop;
 }
@@ -118,12 +118,31 @@ function listenEvent(eventTarget, eventType, eventHandler) {
 	}
 }
 
-function cancelEvent(event) {
-	if (event.preventDefault) {
-		event.preventDefault();
-	} else {
-		event.returnValue = false;
+
+// DRAG AND DROP
+function dragOver(xPos, yPos){
+	function dragover(evt) {
+		if(!isRoad(currentLevel, xPos, yPos)) {
+			if (evt.preventDefault) evt.preventDefault();
+				evt = evt || window.event;
+				evt.dataTransfer.dropEffect = 'copy';
+				return false;
+			}
+		}
+	return dragover;
+}
+
+function cancelEvent(xPos, yPos){
+	function dragenter(event) {
+		if(!isRoad(currentLevel, xPos, yPos)){
+			if (event.preventDefault) {
+				event.preventDefault();
+			} else {
+				event.returnValue = false;
+			}
+		}
 	}
+	return dragenter;
 }
 
 function cancelPropogation(event) {
@@ -145,14 +164,12 @@ function drawMap() {
 			mapzone.setAttribute("class", "mapzone");
 			mapzone.style.left = TILE_H * i + "px";
 			mapzone.style.top = TILE_W * j + "px";
+			listenEvent(mapzone, "drop", mapDrop(mapzone, i, j));
+			listenEvent(mapzone, "dragenter", cancelEvent(i, j));
+			listenEvent(mapzone, "dragover", dragOver(i, j));
 			if (isRoad(currentLevel, i, j)) {
 				mapzone.style.backgroundColor = "#1E90FF";
-			} else {
-				// if it isn't part of the map, its a drop target for a turret
-				listenEvent(mapzone, "dragenter", cancelEvent);
-				listenEvent(mapzone, "dragover", dragOver);
-				listenEvent(mapzone, "drop", mapDrop(mapzone));
-			}
+			} 
 			document.body.appendChild(mapzone);
 		}
 	}
@@ -202,9 +219,6 @@ function drawTargetMap(targetLevel) {
 		var mapzone = pixels[i];
 		var x = mapzone.style.left.replace("px", "") / TILE_H;
 		var y = mapzone.style.top.replace("px", "") / TILE_W;
-		mapzone.removeEventListener("dragenter", cancelEvent);
-		mapzone.removeEventListener("dragover", dragOver);
-		mapzone.removeEventListener("drop", mapDrop(mapzone));
 		if (isRoad(targetLevel, x, y)) {
 			var roadColor = "#FFFFFF";
 			switch(targetLevel) {
@@ -218,10 +232,6 @@ function drawTargetMap(targetLevel) {
 			mapzone.style.backgroundColor = roadColor;
 		} else {
 			mapzone.style.backgroundColor = '#C98D26';
-			// if it isn't a road, its a drop target for a turret
-			listenEvent(mapzone, "dragenter", cancelEvent);
-			listenEvent(mapzone, "dragover", dragOver);
-			listenEvent(mapzone, "drop", mapDrop(mapzone));
 		}
 	}
 }
@@ -549,6 +559,9 @@ function resetwave(evt) {
 
 	// stop the timers
 	clearInterval(interval_id);
+
+	//Hide upgrade info screen
+	document.getElementById("registrationForm").style.display = "none";
 
 	// remove all the minions	
 	var minions = document.querySelectorAll(".minion");

@@ -3,7 +3,7 @@ function isRoad(mapId, x, y) {
 	
 	switch(mapId) {
 		case 1:
-			isRoad =((x == 0 && (y >= 0 && y <= 2)) ||
+			isRoad = ((x == 0 && (y >= 0 && y <= 2)) ||
 				(y == 2 && (x >= 0 && x < 70)) ||
 				(x == 70 && (y >= 2 && y <= 28)) ||
 				(y == 28 && (x <= 70 && x >= 60)) ||
@@ -35,10 +35,3 @@ function isRoad(mapId, x, y) {
 	return isRoad;
 }
 
-// DRAG AND DROP
-function dragOver(evt) {
-  if (evt.preventDefault) evt.preventDefault();
-  evt = evt || window.event;
-  evt.dataTransfer.dropEffect = 'copy';
-  return false;
-}

@@ -287,6 +287,7 @@ function deleteProjectilesTargetingMinion(minionId) {
 function showTurretInfo(turret){
 	function upgrade(evt) {
 		var form = document.getElementById("registrationForm");
+		console.log("Display upgrade form: " + form.style.display);
 		updateTurretInfo(turret);
 		form.style.display = form.style.display === "none" ? "block" : "none";
 	}
