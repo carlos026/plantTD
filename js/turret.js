@@ -24,11 +24,11 @@ function turretColor(type) {
 function getTurretShotCooldown(type, level){
 	switch (type) {
 	case "machineGun":
-		return 0;
+		return 10;
 	case "laser":
-		return 0;
+		return 152 - (level * 2);
 	case "flamethrower":
-		return 50;
+		return 25;
 	case "blizzard":
 		return 202 - (level * 2);
 	case "stormCannon":
@@ -115,6 +115,57 @@ function updateTurretCooldownPostTurn(turrets){
 	}
 }
 
+// Reduces turret cooldown on every tick and deals with specific behaviors too
+function updateTurretSoundPostShooting(turrets){
+		console.log(turrets.audioCd);
+		if (turrets.audioCd < 0) {
+			switch (turrets.type) {
+				case "machineGun":
+					turrets.audioFile.play();
+					turrets.audioCd = getTurretShotCooldown(turrets.type, turrets.level);
+					break;
+				case "laser":
+					turrets.audioFile.play();
+					turrets.audioCd = getTurretShotCooldown(turrets.type, turrets.level);
+					break;
+				case "flamethrower":
+					if (turrets.audioCd < 0) {
+						turrets.audioCd++;
+					}
+					break;
+				case "blizzard":
+					if (turrets.audioCd == -1) {
+						turrets.shotCd = getTurretShotCooldown(turrets.type, turrets.level);
+					}
+					break;
+				case "stormCannon":
+					break;
+				case "railCannon":
+					break;
+				};
+		} else {
+			turrets.audioCd--;
+			turrets.audioFile.play();
+		}
+}
+
+function turretSoundEffect(type){
+	switch (type) {
+		case "machineGun":
+			return new Audio("sound/MachineGun.wav");
+		case "laser":
+			return new Audio("sound/Laser.wav");
+		case "flamethrower":
+			return "url('img/tw/tower2.png')";
+		case "blizzard":
+			return "url('img/tw/tower3.png')";
+		case "stormCannon":
+			return "url('img/tw/tower4.png')";
+		case "railCannon":
+			return "url('img/tw/tower5.png')";
+		}
+}
+
 function turretImage(type) {
 	switch (type) {
 	case "machineGun":
@@ -154,11 +205,11 @@ function turretRange(type) {
 	case "machineGun":
 		return 3 * TILE_W;
 	case "laser":
-		return 5 * TILE_W;
+		return 7 * TILE_W;
 	case "flamethrower":
-		return 10 * TILE_W;
+		return 2 * TILE_W;
 	case "blizzard":
-		return 10 * TILE_W;
+		return 5 * TILE_W;
 	case "stormCannon":
 		return 15 * TILE_W;
 	case "railCannon":
@@ -169,15 +220,15 @@ function turretRange(type) {
 function turretDamage(type) {
 	switch (type) {
 	case "machineGun":
-		return 1;
+		return 8;
 	case "laser":
-		return 3;
+		return 96;
 	case "flamethrower":
-		return 5;
+		return 48;
 	case "blizzard":
 		return 8;
 	case "stormCannon":
-		return 10;
+		return 20;
 	case "railCannon":
 		return 2000;
 	}
@@ -289,6 +340,7 @@ function showTurretInfo(turret){
 		var form = document.getElementById("registrationForm");
 		console.log("Display upgrade form: " + form.style.display);
 		updateTurretInfo(turret);
+		document.getElementById("upgBtn").style.display = turret.level <= 4 ? "block" : "none";
 		form.style.display = form.style.display === "none" ? "block" : "none";
 	}
 	return upgrade;

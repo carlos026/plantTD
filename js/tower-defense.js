@@ -1,6 +1,7 @@
 // global state
 var turretCounter = 0;
 var isRunning = false;
+var outOfRange = false;
 var isPaused = false;
 var minion_count = 12;
 var interval_id = null;
@@ -92,7 +93,8 @@ function mapDrop(mapzone, x, y) {
 				htmlElement:turret,
 				level:1,
 				shotCd:0,
-				audioCd:0
+				audioCd:0,
+				audioFile:turretSoundEffect(turretType)
 			};
 			turretPos[turretPos.length] = turretObj;
 			// once created it is possible to see the turret upgrade info.
@@ -249,7 +251,7 @@ function startwave(evt) {
 	// reset globals	
 	currentWave = 0;
 	currentLives = 11;
-	currentCash = 2000;
+	currentCash = 20;
 	currentScore = 0;
 	turretPos = new Array();
 
@@ -341,7 +343,10 @@ function startwave(evt) {
 				}
 
 				// are there any turrets in range? @TODO status
-				var damage = anyTurretsInRange(minions[i], movex[i], movey[i]);
+				var damage = 0;
+				if(minions[i].style.display != 'none'){
+					damage = anyTurretsInRange(minions[i], movex[i], movey[i]);
+				}
 				let speed = getMinionSpeed(minions[i]);
 				switch (currentDir[i]) {
 				case MOVE_N:
@@ -604,8 +609,7 @@ function anyTurretsInRange(minion, x, y) {
 		// get the x and y positions of the turret
 		var xt = turretPos[i].x;
 		var yt = turretPos[i].y;
-
-		if (euclidDistance(x, xt, y, yt) <= turretPos[i].range && turretPos[i].shotCd <= 0) {
+		if ((euclidDistance(x, xt, y, yt) <= turretPos[i].range) && turretPos[i].shotCd <= 0) {
 			// Check tower id and apply status
 			if (turretPos[i].type == "blizzard") {
 				// Slow down the enemy
@@ -613,17 +617,29 @@ function anyTurretsInRange(minion, x, y) {
 			} else {
 				//Rotate turret to aim the target
 				rotateToTarget(minion, turretPos[i].htmlElement);
+				if(turretPos[i].type == "machineGun"){
+					turretPos[i].htmlElement.style.borderTop = "1px solid #cdfb00";
+					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+				}
 				if (turretPos[i].type == "railCannon") {
 					stunMinion(minion, 150 + (turretPos[i].level * 10));
 				}
 			}
+			updateTurretSoundPostShooting(turretPos[i]);
 			updateTurretCooldownPostShooting(turretPos[i]);
 			damage += turretPos[i].damage; // return the damage
 		}
 	}
 	if (damage == 0) {
 		// nothing in range (@TODO fix this: rotate(0) to move back to initial position)
-		window.addEventListener("resize", rotateToTarget);
+		//window.addEventListener("resize", rotateToTarget);
+		for (var j = 0; j < turretPos.length; j++) {
+			if(turretPos[j].shotCd == 0 && turretPos[j].type == "machineGun"){
+				rotate(0, turretPos[j].htmlElement);
+				turretPos[j].htmlElement.style.borderTop = "1px solid #000000";
+				turretPos[j].htmlElement.style.borderRadius = "20px/20px";
+			}
+		}
 	}
 	return damage;
 }
@@ -666,6 +682,10 @@ function getAngle(target, looker) {
 // Function to rotate the turret div to face the minion div
 function rotateToTarget(minion, turret) {
 	var angle = getAngle(minion, turret);
+	turret.style.transform = "rotate(" + angle + "deg)";
+}
+
+function rotate(angle, turret){
 	turret.style.transform = "rotate(" + angle + "deg)";
 }
 
@@ -719,16 +739,18 @@ function btnUpgradeTurretClick() {
 			//Get Current turret upgrade cost.
 			var turretUpgradeCost = turretUpgradeCosts(turretPos[i].type, turretPos[i].level);
 			if (currentCash > turretUpgradeCost) {
-				//Level up before upgrade the turret.
-				turretPos[i].level++;
-				upgradeTurretData(turretPos[i]);
-				//Money reduce
-				currentCash = currentCash - turretUpgradeCost;
-				
-				//Update inteface upgrade info.
-				updateTurretInfo(turretPos[i]);
-				console.log("Turret " + turretName(turretPos[i].type) + " upgraded to Lv " + turretPos[i].level + ".");
-				console.log("New damage is " + turretPos[i].damage + " and range is " + turretPos[i].range);
+				if(turretPos[i].level <= 4){
+					//Level up before upgrade the turret.
+					turretPos[i].level++;
+					upgradeTurretData(turretPos[i]);
+					//Money reduce
+					currentCash = currentCash - turretUpgradeCost;
+					
+					//Update inteface upgrade info.
+					updateTurretInfo(turretPos[i]);
+					console.log("Turret " + turretName(turretPos[i].type) + " upgraded to Lv " + turretPos[i].level + ".");
+					console.log("New damage is " + turretPos[i].damage + " and range is " + turretPos[i].range);
+				} 
 			} else {
 				console.log("Not enough cash: " +  currentCash + ", upgrade: " + turretUpgradeCost);
 			}
