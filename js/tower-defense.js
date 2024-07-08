@@ -1,7 +1,6 @@
 // global state
 var turretCounter = 0;
 var isRunning = false;
-var outOfRange = false;
 var isPaused = false;
 var minion_count = 12;
 var interval_id = null;
@@ -251,7 +250,7 @@ function startwave(evt) {
 	// reset globals	
 	currentWave = 0;
 	currentLives = 11;
-	currentCash = 20;
+	currentCash = 3000;
 	currentScore = 0;
 	turretPos = new Array();
 
@@ -613,6 +612,7 @@ function anyTurretsInRange(minion, x, y) {
 			// Check tower id and apply status
 			if (turretPos[i].type == "blizzard") {
 				// Slow down the enemy
+				turretPos[i].htmlElement.style.border = "2px solid rgba(0, 153, 255, 0.5)";
 				freezeMinion(minion, 100 + turretPos[i].level);
 			} else {
 				//Rotate turret to aim the target
@@ -621,27 +621,50 @@ function anyTurretsInRange(minion, x, y) {
 					turretPos[i].htmlElement.style.borderTop = "1px solid #cdfb00";
 					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
 				}
+				if(turretPos[i].type == "laser"){
+					turretPos[i].htmlElement.style.borderTop = "1px solid #ff0000";
+					turretPos[i].htmlElement.style.borderRadius = "10px/10px";
+				}
+				if(turretPos[i].type == "flamethrower"){
+					turretPos[i].htmlElement.style.borderTop = "8px solid #b00101";
+					turretPos[i].htmlElement.style.borderRadius = "10px/10px";
+				}
+				if(turretPos[i].type == "stormCannon"){
+					turretPos[i].htmlElement.style.borderTop = "3px solid #0905eb";
+					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+				}
 				if (turretPos[i].type == "railCannon") {
+					turretPos[i].htmlElement.style.borderTop = "3px solid #6600ff";
+					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
 					stunMinion(minion, 150 + (turretPos[i].level * 10));
 				}
 			}
 			updateTurretSoundPostShooting(turretPos[i]);
 			updateTurretCooldownPostShooting(turretPos[i]);
 			damage += turretPos[i].damage; // return the damage
+		} else if(turretPos[i].shotCd == 0) {
+			rotate(0, turretPos[i].htmlElement);
+			resetShotEffect(turretPos[i].htmlElement);
+		} else if(turretPos[i].type == "railCannon" && turretPos[i].shotCd < (getTurretShotCooldown(turretPos[i].type, turretPos[i].level)-50)){
+			resetShotEffect(turretPos[i].htmlElement);
 		}
 	}
 	if (damage == 0) {
 		// nothing in range (@TODO fix this: rotate(0) to move back to initial position)
 		//window.addEventListener("resize", rotateToTarget);
 		for (var j = 0; j < turretPos.length; j++) {
-			if(turretPos[j].shotCd == 0 && turretPos[j].type == "machineGun"){
+			if(turretPos[j].shotCd == 0){
 				rotate(0, turretPos[j].htmlElement);
-				turretPos[j].htmlElement.style.borderTop = "1px solid #000000";
-				turretPos[j].htmlElement.style.borderRadius = "20px/20px";
 			}
 		}
 	}
 	return damage;
+}
+
+function resetShotEffect(turret){
+	turret.style.borderTop = "1px solid #000000";
+	turret.style.border = "1px solid #000000";
+	turret.style.borderRadius = "20px/20px";
 }
 
 function shoot(minion, x, y) {

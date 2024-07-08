@@ -32,7 +32,7 @@ function getTurretShotCooldown(type, level){
 	case "blizzard":
 		return 202 - (level * 2);
 	case "stormCannon":
-		return 0;
+		return 10;
 	case "railCannon":
 		return 601 - level;
 	}
@@ -115,34 +115,11 @@ function updateTurretCooldownPostTurn(turrets){
 	}
 }
 
-// Reduces turret cooldown on every tick and deals with specific behaviors too
+// It plays the sound effect while the turret is firing.
 function updateTurretSoundPostShooting(turrets){
-		console.log(turrets.audioCd);
 		if (turrets.audioCd < 0) {
-			switch (turrets.type) {
-				case "machineGun":
-					turrets.audioFile.play();
-					turrets.audioCd = getTurretShotCooldown(turrets.type, turrets.level);
-					break;
-				case "laser":
-					turrets.audioFile.play();
-					turrets.audioCd = getTurretShotCooldown(turrets.type, turrets.level);
-					break;
-				case "flamethrower":
-					if (turrets.audioCd < 0) {
-						turrets.audioCd++;
-					}
-					break;
-				case "blizzard":
-					if (turrets.audioCd == -1) {
-						turrets.shotCd = getTurretShotCooldown(turrets.type, turrets.level);
-					}
-					break;
-				case "stormCannon":
-					break;
-				case "railCannon":
-					break;
-				};
+			turrets.audioFile.play();
+			turrets.audioCd = getTurretShotCooldown(turrets.type, turrets.level);
 		} else {
 			turrets.audioCd--;
 			turrets.audioFile.play();
@@ -156,13 +133,13 @@ function turretSoundEffect(type){
 		case "laser":
 			return new Audio("sound/Laser.wav");
 		case "flamethrower":
-			return "url('img/tw/tower2.png')";
+			return new Audio("sound/Flamethrower.wav");
 		case "blizzard":
-			return "url('img/tw/tower3.png')";
+			return new Audio("sound/Blizzard.wav");
 		case "stormCannon":
-			return "url('img/tw/tower4.png')";
+			return new Audio("sound/StormCannon.wav");
 		case "railCannon":
-			return "url('img/tw/tower5.png')";
+			return new Audio("sound/RailCannon.wav");
 		}
 }
 
@@ -228,7 +205,7 @@ function turretDamage(type) {
 	case "blizzard":
 		return 8;
 	case "stormCannon":
-		return 20;
+		return 200;
 	case "railCannon":
 		return 2000;
 	}
