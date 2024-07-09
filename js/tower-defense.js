@@ -12,6 +12,7 @@ var currentCash = 20;
 var currentScore = 0;
 var turretPos = new Array();
 var timeLapsesSinceLastShot = 1;
+var soundtrack = new Audio("sound/map1Soundtrack.mp3");
 
 ////////////////////// TURRET FUNCTIONS that requires global values (others declared on object/turret.js)
 function turretClick(turret) {
@@ -212,6 +213,29 @@ function drawMap() {
 	statusbar.setAttribute("class", "statusbar");
 	statusbar.innerHTML = '<p> Cash: <span id="cash">$0</span> Score: <span id="score">0</span> Wave: <span id="wave">0</span> Lives: <span id="lives">0</span></p>';
 	document.body.appendChild(statusbar);
+
+	//Play map Soundtrack
+	playMapSoundtrack();
+}
+
+function playMapSoundtrack(){
+	switch(currentLevel){
+		//@TODO Soundtrack to others maps.
+		case 1:
+		break;
+	}
+}
+
+function playAudio() {
+    soundtrack.play();
+	document.getElementById("play").style.display = "none";
+	document.getElementById("pause").style.display = "block";
+}
+
+function pauseAudio() {
+    soundtrack.pause();
+	document.getElementById("play").style.display = "block";
+	document.getElementById("pause").style.display = "none";
 }
 
 function drawTargetMap(targetLevel) {
@@ -242,6 +266,10 @@ function drawTargetMap(targetLevel) {
 function startwave(evt) {
 	if (isRunning) return;
 	isRunning = true;
+
+	if(soundtrack.paused){
+		playAudio();
+	}
 
 	// make the pause button visible
 	var sb = document.getElementById("startbutton");
