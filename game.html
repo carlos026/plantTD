@@ -1,6 +1,9 @@
 <html>
 <head>
-<title>Tower Defense</title>
+<title>Plant TD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap">
 <link rel="stylesheet" href="board.css" type="text/css">
 <script type="text/javascript" src="js/constants.js"></script>
 <script type="text/javascript" src="js/map.js"></script>
@@ -10,30 +13,29 @@
 </head>
 <body>
     <div class="character-info">
-        <button class="soundtrackbtn" onclick="playAudio()" id="play"  style="display: block;">Play</button>
-        <button class="soundtrackbtn" onclick="pauseAudio()" id="pause" style="display: none;">Pause</button>
+        <p class="panel-title">&#9834; Soundtrack</p>
+        <button class="soundtrackbtn" onclick="playAudio()" id="play"  style="display: block;">&#9654; Play</button>
+        <button class="soundtrackbtn" onclick="pauseAudio()" id="pause" style="display: none;">&#9646;&#9646; Pause</button>
     </div>
     <div id="registrationForm" class="character-info" style="display: none;">
         <h1>Turret Upgrade</h1>
         <div class="info-item">
-            <span>Name:</span>
+            <span>Name</span>
             <span id="upgName"></span>
         </div>
         <div class="info-item">
-            <span>Level:</span>
+            <span>Level</span>
             <span id="upgLevel"></span>
         </div>
         <div class="info-item">
-            <span>Damage:</span>
+            <span>Damage</span>
             <span id="upgDamage"></span>
         </div>
         <div class="info-item">
-            <span>Range:</span>
+            <span>Range</span>
             <span id="range"></span>
         </div>
-
-        <div class="info-item">
-            <!--TODO: Sell button logic -->
+        <div class="info-item btn-row">
             <button class="sellbtn" id="sellBtn" onclick="btnSellTurretClick()" type="sellbutton">Sell!</button>
             <button class="upgradebutton" id="upgBtn" onclick="btnUpgradeTurretClick()" type="button">Upgrade!</button>
         </div>

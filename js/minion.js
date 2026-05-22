@@ -3,6 +3,8 @@ const FROZEN_STATUS_ATTRIBUTE = "frozen";
 const FROZEN_MINION_SPEED = 1;
 const STUN_STATUS_ATTRIBUTE = "stunned";
 const STUNNED_MINION_SPEED = 0;
+const TOXIC_STATUS_ATTRIBUTE = "toxic";
+const TOXIC_MINION_DAMAGE = 20;
 
 // Minion status related functions
 function freezeMinion(minionElement, duration) {
@@ -11,6 +13,10 @@ function freezeMinion(minionElement, duration) {
 
 function stunMinion(minionElement, duration) {
 	minionElement.setAttribute(STUN_STATUS_ATTRIBUTE, duration);
+}
+
+function toxicMinion(minionElement, duration) {
+	minionElement.setAttribute(TOXIC_STATUS_ATTRIBUTE, duration);
 }
 
 function applyDebuff(debuff, minionElement, duration) {
@@ -47,11 +53,13 @@ function addToDebuffDuration(debuff, minionElement, hpBarElement, quantity) {
 function tickDownMinionDebuffs(minionElement, hpBarElement){
 	addToDebuffDuration(FROZEN_STATUS_ATTRIBUTE, minionElement, hpBarElement, -1);
 	addToDebuffDuration(STUN_STATUS_ATTRIBUTE, minionElement, hpBarElement, -1);
+	addToDebuffDuration(TOXIC_STATUS_ATTRIBUTE, minionElement, hpBarElement, -1);
 }
 
 function removeDebuffs(minionElement, hpBarElement) {
 	removeDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement, hpBarElement);
 	removeDebuff(STUN_STATUS_ATTRIBUTE, minionElement, hpBarElement);
+	removeDebuff(TOXIC_STATUS_ATTRIBUTE, minionElement, hpBarElement);
 }
 
 function getMinionSpeed(minionElement) {
@@ -62,4 +70,13 @@ function getMinionSpeed(minionElement) {
 		speed = FROZEN_MINION_SPEED;
 	}
 	return speed;
+}
+
+
+function getToxicDamage(minionElement) {
+	let damage = 0;
+	if (hasDebuff(TOXIC_STATUS_ATTRIBUTE, minionElement)) {
+		damage = TOXIC_MINION_DAMAGE;
+	}
+	return damage;
 }

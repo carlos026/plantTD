@@ -2,6 +2,8 @@
 var turretCounter = 0;
 var isRunning = false;
 var isPaused = false;
+var rangeIndicator = null;
+var isDraggingNewTurret = false;
 var minion_count = 12;
 var interval_id = null;
 var currentWave = 0;
@@ -13,6 +15,39 @@ var currentScore = 0;
 var turretPos = new Array();
 var timeLapsesSinceLastShot = 1;
 var soundtrack = new Audio("sound/map1Soundtrack.mp3");
+
+////////////////////// RANGE INDICATOR
+function hexToRgba(hex, alpha) {
+	var r = parseInt(hex.slice(1, 3), 16);
+	var g = parseInt(hex.slice(3, 5), 16);
+	var b = parseInt(hex.slice(5, 7), 16);
+	return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+}
+
+function showRangeIndicator(cx, cy, range, color) {
+	hideRangeIndicator();
+	var el = document.createElement("div");
+	el.id = "rangeIndicator";
+	el.className = "range-indicator";
+	var diameter = range * 2;
+	el.style.width           = diameter + "px";
+	el.style.height          = diameter + "px";
+	el.style.left            = cx + "px";
+	el.style.top             = cy + "px";
+	el.style.borderColor     = color;
+	el.style.backgroundColor = hexToRgba(color, 0.07);
+	el.style.boxShadow       = "0 0 8px " + hexToRgba(color, 0.35) + ", inset 0 0 16px " + hexToRgba(color, 0.1);
+	document.body.appendChild(el);
+	rangeIndicator = el;
+}
+
+function hideRangeIndicator() {
+	if (rangeIndicator && rangeIndicator.parentNode) {
+		document.body.removeChild(rangeIndicator);
+	}
+	rangeIndicator = null;
+}
+////////////////////// END RANGE INDICATOR
 
 ////////////////////// TURRET FUNCTIONS that requires global values (others declared on object/turret.js)
 function turretClick(turret) {
@@ -61,6 +96,17 @@ function turretClick(turret) {
 		turretD.setAttribute("draggable", "true");
 		listenEvent(turretD, "dragstart", turretDrag(turretD));
 		document.body.appendChild(turretD);
+
+		// mostra range indicator durante o drag
+		isDraggingNewTurret = true;
+		showRangeIndicator(x, y, turretRange(turretType), turretColor(turretType));
+
+		// ao soltar (com ou sem drop válido), limpa o indicator
+		listenEvent(turretD, "dragend", function() {
+			isDraggingNewTurret = false;
+			hideRangeIndicator();
+		});
+
 		// reduce our available cash by what we just spent
 		currentCash -= turretValue(turretType);
 	}
@@ -99,9 +145,13 @@ function mapDrop(mapzone, x, y) {
 			turretPos[turretPos.length] = turretObj;
 			// once created it is possible to see the turret upgrade info.
 			listenEvent(turret, "click", showTurretInfo(turretPos[turretPos.length - 1]));
-			// once its droppable, you can't move it anymore		
+			// once its droppable, you can't move it anymore
 			turret.setAttribute("draggable", "false");
 			listenEvent(turret, "dragstart", nodrag);
+
+			// remove o range do drag; será mostrado novamente ao clicar na torre
+			isDraggingNewTurret = false;
+			hideRangeIndicator();
 		}
 	}
 	return drop;
@@ -184,7 +234,7 @@ function drawMap() {
 		turret.setAttribute("class", "turret");
 		turret.style.left = TURRET_OFFSET + (TURRET_D + TURRET_GAP) * k + "px";
 		turret.style.borderColor = turretColor(turret.getAttribute("type"));
-		turret.innerHTML = "<p>" + k + "<br /><br />$" + turretValue(turret.getAttribute("type")) + "</p>";
+		turret.innerHTML = '<div class="turret-icon" style="background-image:' + turretImage(turretTypes[k]) + ';"></div><span class="turret-cost">$' + turretValue(turretTypes[k]) + '</span>';
 
 		// turrets are draggable
 		listenEvent(turret, "click", turretClick(turret));
@@ -195,7 +245,7 @@ function drawMap() {
 	var startbutton = document.createElement("div");
 	startbutton.setAttribute("id", "startbutton");
 	startbutton.setAttribute("class", "startbutton");
-	startbutton.innerHTML = "<p> Start! </p>";
+	startbutton.innerHTML = "&#9654; START";
 	listenEvent(startbutton, "click", startwave);
 	document.body.appendChild(startbutton);
 
@@ -203,7 +253,7 @@ function drawMap() {
 	var resetbutton = document.createElement("div");
 	resetbutton.setAttribute("id", "resetbutton");
 	resetbutton.setAttribute("class", "resetbutton");
-	resetbutton.innerHTML = "<p> Reset </p>";
+	resetbutton.innerHTML = "&#8635; RESET";
 	listenEvent(resetbutton, "click", resetwave);
 	document.body.appendChild(resetbutton);
 
@@ -211,7 +261,11 @@ function drawMap() {
 	var statusbar = document.createElement("div");
 	statusbar.setAttribute("id", "statusbar");
 	statusbar.setAttribute("class", "statusbar");
-	statusbar.innerHTML = '<p> Cash: <span id="cash">$0</span> Score: <span id="score">0</span> Wave: <span id="wave">0</span> Lives: <span id="lives">0</span></p>';
+	statusbar.innerHTML =
+		'<div class="stat-block"><span class="stat-label">Cash</span><span class="stat-value gold" id="cash">$0</span></div>' +
+		'<div class="stat-block"><span class="stat-label">Score</span><span class="stat-value score" id="score">0</span></div>' +
+		'<div class="stat-block"><span class="stat-label">Wave</span><span class="stat-value wave" id="wave">0</span></div>' +
+		'<div class="stat-block"><span class="stat-label">Lives</span><span class="stat-value lives" id="lives">0</span></div>';
 	document.body.appendChild(statusbar);
 
 	//Play map Soundtrack
@@ -273,7 +327,7 @@ function startwave(evt) {
 
 	// make the pause button visible
 	var sb = document.getElementById("startbutton");
-	sb.innerHTML = "<p> Pause </p>";
+	sb.innerHTML = "&#9646;&#9646; PAUSE";
 	listenEvent(sb, "click", pausewave);
 	// reset globals	
 	currentWave = 0;
@@ -586,7 +640,7 @@ function resetwave(evt) {
 
 	// make the start button visible
 	var sb = document.getElementById("startbutton");
-	sb.innerHTML = "<p> Start! </p>";
+	sb.innerHTML = "&#9654; START";
 	listenEvent(sb, "click", startwave);
 
 	// stop the timers
@@ -594,6 +648,7 @@ function resetwave(evt) {
 
 	//Hide upgrade info screen
 	document.getElementById("registrationForm").style.display = "none";
+	hideRangeIndicator();
 
 	// remove all the minions	
 	var minions = document.querySelectorAll(".minion");
@@ -630,46 +685,72 @@ function updateStatus() {
 }
 
 function anyTurretsInRange(minion, x, y) {
-	var score = document.getElementById("score");
 	var damage = 0;
 	for (var i = 0; i < turretPos.length; i++) {
-		// get the x and y positions of the turret
 		var xt = turretPos[i].x;
 		var yt = turretPos[i].y;
-		if ((euclidDistance(x, xt, y, yt) <= turretPos[i].range) && turretPos[i].shotCd <= 0) {
-			// Check tower id and apply status
-			if (turretPos[i].type == "blizzard") {
-				// Slow down the enemy
-				turretPos[i].htmlElement.style.border = "2px solid rgba(0, 153, 255, 0.5)";
-				freezeMinion(minion, 100 + turretPos[i].level);
-			} else {
-				//Rotate turret to aim the target
-				rotateToTarget(minion, turretPos[i].htmlElement);
-				if(turretPos[i].type == "machineGun"){
-					turretPos[i].htmlElement.style.borderTop = "1px solid #cdfb00";
-					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+
+		// Blizzard dispara em área — trata separado para não re-disparar por minion
+		if (turretPos[i].type == "blizzard") {
+			var inRange = euclidDistance(x, xt, y, yt) <= turretPos[i].range;
+			if (inRange && turretPos[i].shotCd === 0) {
+				var aoeMinions = document.getElementsByClassName("minion");
+				for (var m = 0; m < aoeMinions.length; m++) {
+					if (aoeMinions[m].style.display === "none") continue;
+					var mx = parseFloat(aoeMinions[m].style.left) || 0;
+					var my = parseFloat(aoeMinions[m].style.top)  || 0;
+					if (euclidDistance(mx, xt, my, yt) <= turretPos[i].range) {
+						freezeMinion(aoeMinions[m], 100 + turretPos[i].level);
+					}
 				}
-				if(turretPos[i].type == "laser"){
-					turretPos[i].htmlElement.style.borderTop = "1px solid #ff0000";
-					turretPos[i].htmlElement.style.borderRadius = "10px/10px";
-				}
-				if(turretPos[i].type == "flamethrower"){
-					turretPos[i].htmlElement.style.borderTop = "8px solid #b00101";
-					turretPos[i].htmlElement.style.borderRadius = "10px/10px";
-				}
-				if(turretPos[i].type == "stormCannon"){
-					turretPos[i].htmlElement.style.borderTop = "3px solid #0905eb";
-					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
-				}
-				if (turretPos[i].type == "railCannon") {
-					turretPos[i].htmlElement.style.borderTop = "3px solid #6600ff";
-					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
-					stunMinion(minion, 150 + (turretPos[i].level * 10));
-				}
+				createFrostBurst(turretPos[i]);
+				turretPos[i].htmlElement.classList.add("blizzard-firing");
+				(function(el) {
+					setTimeout(function() { el.classList.remove("blizzard-firing"); }, 650);
+				})(turretPos[i].htmlElement);
+				updateTurretSoundPostShooting(turretPos[i]);
+				damage += turretPos[i].damage;
+				turretPos[i].shotCd = getTurretShotCooldown(turretPos[i].type, turretPos[i].level);
 			}
+			if (inRange) {
+				turretPos[i].htmlElement.style.border = "2px solid rgba(0, 153, 255, 0.5)";
+			} else if (turretPos[i].shotCd === 0) {
+				resetShotEffect(turretPos[i].htmlElement);
+			}
+			continue;
+		}
+
+		if ((euclidDistance(x, xt, y, yt) <= turretPos[i].range) && turretPos[i].shotCd <= 0) {
+			rotateToTarget(minion, turretPos[i].htmlElement);
+			if(turretPos[i].type == "machineGun"){
+				turretPos[i].htmlElement.style.borderTop = "1px solid #cdfb00";
+				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+			}
+			if(turretPos[i].type == "laser"){
+				turretPos[i].htmlElement.style.borderTop = "1px solid #ff0000";
+				turretPos[i].htmlElement.style.borderRadius = "10px/10px";
+			}
+			if(turretPos[i].type == "flamethrower"){
+				turretPos[i].htmlElement.style.borderTop = "8px solid #b00101";
+				turretPos[i].htmlElement.style.borderRadius = "10px/10px";
+			}
+			if(turretPos[i].type == "stormCannon"){
+				turretPos[i].htmlElement.style.borderTop = "3px solid #0905eb";
+				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+			}
+			if(turretPos[i].type == "toxic"){
+				turretPos[i].htmlElement.style.borderTop = "3px solid #4CAF50";
+				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+			}
+			if (turretPos[i].type == "railCannon") {
+				turretPos[i].htmlElement.style.borderTop = "3px solid #6600ff";
+				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+				stunMinion(minion, 150 + (turretPos[i].level * 10));
+			}
+			damage = shootingTrigger(turretPos[i], minion, turretPos[i].htmlElement.style);
 			updateTurretSoundPostShooting(turretPos[i]);
 			updateTurretCooldownPostShooting(turretPos[i]);
-			damage += turretPos[i].damage; // return the damage
+			damage += turretPos[i].damage;
 		} else if(turretPos[i].shotCd == 0) {
 			rotate(0, turretPos[i].htmlElement);
 			resetShotEffect(turretPos[i].htmlElement);
@@ -678,15 +759,29 @@ function anyTurretsInRange(minion, x, y) {
 		}
 	}
 	if (damage == 0) {
-		// nothing in range (@TODO fix this: rotate(0) to move back to initial position)
-		//window.addEventListener("resize", rotateToTarget);
 		for (var j = 0; j < turretPos.length; j++) {
 			if(turretPos[j].shotCd == 0){
 				rotate(0, turretPos[j].htmlElement);
 			}
 		}
 	}
-	return damage;
+	return damage + getToxicDamage(minion);
+}
+
+function createFrostBurst(turretObj) {
+	var burst = document.createElement("div");
+	burst.className = "frost-burst";
+	var diameter = turretObj.range * 2;
+	var centerX = parseInt(turretObj.x) + 8;
+	var centerY = parseInt(turretObj.y) + 8;
+	burst.style.width  = diameter + "px";
+	burst.style.height = diameter + "px";
+	burst.style.left   = centerX + "px";
+	burst.style.top    = centerY + "px";
+	document.body.appendChild(burst);
+	setTimeout(function() {
+		if (burst.parentNode) document.body.removeChild(burst);
+	}, 680);
 }
 
 function resetShotEffect(turret){
@@ -777,6 +872,18 @@ function bossReward() {
 
 window.onload = function () {
 	drawMap();
+
+	// atualiza posição do range indicator enquanto arrasta uma nova torre
+	document.addEventListener("dragover", function(e) {
+		if (isDraggingNewTurret && rangeIndicator) {
+			var px = e.pageX || e.clientX;
+			var py = e.pageY || e.clientY;
+			if (px > 0 || py > 0) {
+				rangeIndicator.style.left = px + "px";
+				rangeIndicator.style.top  = py + "px";
+			}
+		}
+	});
 }
 
 //Identify which turret should be upgraded.
@@ -799,6 +906,12 @@ function btnUpgradeTurretClick() {
 					
 					//Update inteface upgrade info.
 					updateTurretInfo(turretPos[i]);
+					showRangeIndicator(
+						parseInt(turretPos[i].x) + 8,
+						parseInt(turretPos[i].y) + 8,
+						turretPos[i].range,
+						turretColor(turretPos[i].type)
+					);
 					console.log("Turret " + turretName(turretPos[i].type) + " upgraded to Lv " + turretPos[i].level + ".");
 					console.log("New damage is " + turretPos[i].damage + " and range is " + turretPos[i].range);
 				} 
@@ -823,6 +936,7 @@ function btnSellTurretClick(){
 			console.log("Turret " + turretName(turretPos[i].type) + " sold for " + turretSellPrice + ".");
 			//Hide upgrade info screen
 			document.getElementById("registrationForm").style.display = "none";
+			hideRangeIndicator();
 			//Remove selected turret.
 			document.body.removeChild(turretPos[i].htmlElement);
 			turretPos.splice(i, 1);

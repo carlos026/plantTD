@@ -1,233 +1,571 @@
-.mapzone {
-    background-color: #130e75;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 15px;
-    height: 15px;
-  }
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap');
 
-  .turret {
-    background-color: #C0C0C0;
-    opacity: 0.7;
-    border: 2px solid #000000;
-    position: absolute;
-    top: 500px;
-    left: 0px;
-    width: 40px;
-    height: 40px;
-    color: #000000;
-    text-align: center;
-    border-radius: 20px/20px;
-  }
-  
-  .projectile {
-    background-color: #C0C0C0;
-    opacity: 0.7;
-    border: 1px solid #000000;
-    position: absolute;
-    top: 500px;
-    left: 0px;
-    width: 8px;
-    height: 8px;
-    color: #000000;
-    text-align: center;
-    border-radius: 20px/20px;
-  }
-  
-  .turretdrag {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border-radius: 10px/10px;
-    font-size: 16px;
-    text-align: center;
-    top: 0px;
-    left: 0px;
-  }
-  
-  .startbutton {
-    background-color: #4682B4;
-    position: absolute;
-    width: 100px;
-    height: 50px;
-    color: #FFFFFF;
-    text-align: center;
-    border-radius: 15px/15px;
-    top: 495px;
-    left: 20px;
-  }
-  
-  .resetbutton {
-    background-color: #4682B4;
-    position: absolute;
-    width: 100px;
-    height: 50px;
-    color: #FFFFFF;
-    text-align: center;
-    border-radius: 15px/15px;
-    top: 560px;
-    left: 20px;
-  }
-  
-  .statusbar {
-    background-color: #4682B4;
-    position: absolute;
-    width: 400px;
-    height: 50px;
-    color: #FFFFFF;
-    text-align: center;
-    border-radius: 15px/15px;
-    top: 495px;
-    left: 500px;
-  }
-  
-  .minion {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    background-image: url("img/min-lv1/min-up.png");
-    border-radius: 2px/2px;
-    top: 0px;
-    left: 0px;
-  }
-
-  .hpBar {
-    background-color: #000000;
-    position: absolute;
-    width: 20px;
-    height: 4px;
-    border-radius: 8px/8px;
-    top: 0px;
-    left: 0px;
-  }
-  
-  progress.frozen::-webkit-progress-value {
-    background: #3E84F8;
-  }
-  
-  progress.stunned::-webkit-progress-value {
-    background: #2C2C2C;
-  }
-  
-  *[draggable=true] {
-    -khtml-user-drag: element;
-    cursor: move;
-  }
-  
-  :-khtml-drag {
-    background-color: rgba(238, 238, 238, 238, 0.5);
-  }
-  
-  *:-moz-drag-over {
-    background-color: rgba(238, 238, 238, 0.5);
-  }
-
-  .upgradebutton {
-    background-color: #24547a;
-    position: relative;
-    width: 90px;
-    height: 40px;
-    color: #FFFFFF;
-    text-align: center;
-    border-radius: 10px/10px;
-  }
-
-  .sellbtn{
-    background-color: #e00e0e;
-    width: 90px;
-    height: 40px;
-    color: #FFFFFF;
-    text-align: center;
-    border-radius: 10px/10px;
-  }
-
-  .soundtrackbtn {
-    background-color: #4CAF50;
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    cursor: pointer;
-    border-radius: 12px;
-    transition: background-color 0.3s ease;
-  }
-
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #222;
-    color: #fff;
-    text-align: center;
+:root {
+  --bg:           #07091a;
+  --panel:        rgba(4, 10, 30, 0.92);
+  --border:       rgba(0, 180, 255, 0.2);
+  --border-hi:    rgba(0, 220, 255, 0.55);
+  --accent:       #00ccff;
+  --accent-glow:  rgba(0, 200, 255, 0.45);
+  --gold:         #ffcc00;
+  --gold-dim:     rgba(255, 204, 0, 0.18);
+  --success:      #00e676;
+  --danger:       #ff3d55;
+  --purple:       #a78bfa;
+  --text:         #cce8f4;
+  --text-muted:   #4a7090;
+  --shadow:       0 8px 32px rgba(0, 0, 0, 0.7);
+  --radius:       10px;
 }
 
-  .character-info {
-    background-color: #000000;
-    position: absolute;
-    border: 2px solid #417197;
-    border-radius: 10px;
-    padding: 20px;
-    width: 400px;
-    margin: 50px auto;
-    left: 1205px;
+/* ── BASE ──────────────────────────────────────────── */
+body {
+  font-family: 'Exo 2', 'Segoe UI', system-ui, sans-serif;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 55% 0%, rgba(0, 80, 200, 0.13) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 100%, rgba(80, 0, 200, 0.08) 0%, transparent 50%);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+}
+
+p {
+  color: var(--text);
+  margin: 0;
+}
+
+/* ── MAP TILES ─────────────────────────────────────── */
+.mapzone {
+  background-color: #0b1035;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+}
+
+/* ── PLACED TURRET ─────────────────────────────────── */
+.turretdrag {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 0;
+  left: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 4px var(--accent-glow));
+  cursor: default;
+}
+
+/* ── PROJECTILE ────────────────────────────────────── */
+.projectile {
+  background-color: #fff;
+  opacity: 0.9;
+  border: 1px solid #9ef;
+  position: absolute;
+  top: 500px;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent);
+}
+
+/* ── TURRET SELECTOR CARDS ─────────────────────────── */
+.turret {
+  position: absolute;
+  top: 458px;
+  left: 0;
+  width: 40px;
+  height: 72px;
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 5px;
+  box-sizing: border-box;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+}
+
+.turret:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-hi);
+  box-shadow: 0 6px 24px var(--accent-glow);
+}
+
+.turret-icon {
+  width: 28px;
+  height: 28px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.turret-cost {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.3px;
+  margin-top: 3px;
+  text-shadow: 0 0 8px rgba(255, 200, 0, 0.6);
+}
+
+/* ── CONTROL BUTTONS (Start / Reset) ───────────────── */
+.startbutton,
+.resetbutton {
+  position: absolute;
+  width: 118px;
+  height: 38px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  color: #fff;
+}
+
+.startbutton {
+  top: 458px;
+  left: 10px;
+  background: linear-gradient(135deg, #004eb3 0%, #0088ee 100%);
+  box-shadow: 0 0 18px rgba(0, 140, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.startbutton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 28px rgba(0, 160, 255, 0.75), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.startbutton:active {
+  transform: scale(0.97);
+}
+
+.resetbutton {
+  top: 506px;
+  left: 10px;
+  background: linear-gradient(135deg, #7a1a00 0%, #c03000 100%);
+  box-shadow: 0 0 18px rgba(200, 60, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.resetbutton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 28px rgba(220, 80, 0, 0.7), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.resetbutton:active {
+  transform: scale(0.97);
+}
+
+/* ── STATUS BAR HUD ────────────────────────────────── */
+.statusbar {
+  position: absolute;
+  top: 458px;
+  left: 480px;
+  height: 80px;
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 0;
+  box-shadow: var(--shadow);
+}
+
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  padding: 0 12px;
+  gap: 2px;
+}
+
+.stat-block + .stat-block {
+  border-left: 1px solid var(--border);
+}
+
+.stat-label {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-value.gold   { color: var(--gold);    text-shadow: 0 0 10px rgba(255, 200, 0, 0.5);   }
+.stat-value.lives  { color: var(--success); text-shadow: 0 0 10px rgba(0, 230, 118, 0.5);   }
+.stat-value.score  { color: var(--purple);  text-shadow: 0 0 10px rgba(167, 139, 250, 0.5); }
+.stat-value.wave   { color: var(--accent);  text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);   }
+
+/* ── RANGE INDICATOR ───────────────────────────────── */
+@keyframes rangeAppear {
+  from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+}
+
+.range-indicator {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 200;
+  transform: translate(-50%, -50%);
+  border: 1.5px dashed;
+  animation: rangeAppear 0.2s ease-out;
+}
+
+/* ── BLIZZARD AOE FROST BURST ──────────────────────── */
+@keyframes frostRing {
+  0%   { transform: translate(-50%, -50%) scale(0);    opacity: 1; }
+  65%  { opacity: 0.65; }
+  100% { transform: translate(-50%, -50%) scale(1);    opacity: 0; }
+}
+
+@keyframes frostFill {
+  0%   { transform: translate(-50%, -50%) scale(0);    opacity: 0.45; }
+  100% { transform: translate(-50%, -50%) scale(1);    opacity: 0; }
+}
+
+.frost-burst {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  border: 2px solid rgba(130, 220, 255, 0.95);
+  background: radial-gradient(
+    circle,
+    rgba(0, 210, 255, 0.28) 0%,
+    rgba(0, 160, 255, 0.12) 55%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px rgba(0, 200, 255, 0.5),
+    inset 0 0 20px rgba(0, 200, 255, 0.15);
+  animation: frostRing 0.6s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+  z-index: 50;
+}
+
+.frost-burst::after {
+  content: '';
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(180, 235, 255, 0.35) 0%,
+    rgba(0, 180, 255, 0.08) 70%,
+    transparent 100%
+  );
+  animation: frostFill 0.6s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
+/* glow pulsante na torre de gelo ao disparar */
+@keyframes blizzardGlow {
+  0%   { filter: drop-shadow(0 0  3px rgba(0, 200, 255, 0.4)); }
+  40%  { filter: drop-shadow(0 0 14px rgba(0, 230, 255, 1))
+                 drop-shadow(0 0  4px rgba(180, 240, 255, 0.8)); }
+  100% { filter: drop-shadow(0 0  3px rgba(0, 200, 255, 0.4)); }
+}
+
+.blizzard-firing {
+  animation: blizzardGlow 0.65s ease-out !important;
+}
+
+/* ── MINION ────────────────────────────────────────── */
+.minion {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-image: url("img/min-lv1/min-up.png");
+  background-size: contain;
+  border-radius: 2px;
+  top: 0;
+  left: 0;
+  image-rendering: pixelated;
+}
+
+/* ── HP BARS ───────────────────────────────────────── */
+.hpBar {
+  background-color: rgba(0, 0, 0, 0.55);
+  position: absolute;
+  width: 20px;
+  height: 4px;
+  border-radius: 2px;
+  top: 0;
+  left: 0;
+}
+
+progress.hpBar::-webkit-progress-bar {
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+}
+
+progress.hpBar::-webkit-progress-value {
+  background: linear-gradient(90deg, #00b84a, #00ff88);
+  border-radius: 2px;
+}
+
+progress.frozen::-webkit-progress-value {
+  background: linear-gradient(90deg, #1a5cf0, #3ea8ff);
+}
+
+progress.stunned::-webkit-progress-value {
+  background: #2a2a2a;
+}
+
+progress.toxic::-webkit-progress-value {
+    background: #8c037a;
+}
+
+/* ── DRAG ──────────────────────────────────────────── */
+*[draggable=true] {
+  -khtml-user-drag: element;
+  cursor: move;
+}
+
+:-khtml-drag {
+  background-color: rgba(238, 238, 238, 0.3);
+}
+
+*:-moz-drag-over {
+  background-color: rgba(238, 238, 238, 0.3);
+}
+
+/* ── SIDE PANELS (glassmorphism) ───────────────────── */
+.character-info {
+  position: absolute;
+  left: 1212px;
+  top: 8px;
+  width: 210px;
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(0, 180, 255, 0.04);
+}
+
+#registrationForm.character-info {
+  top: 110px;
+}
+
+.panel-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+  text-align: center;
 }
 
 .character-info h1 {
-  font-size: 24px;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  text-shadow: 0 0 12px var(--accent-glow);
 }
 
+/* ── UPGRADE PANEL STATS ───────────────────────────── */
 .info-item {
   display: flex;
   justify-content: space-between;
-  margin-top: 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0, 180, 255, 0.07);
 }
 
-  /* Style for the Submit button */
-  button[type="button"] {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 10px 10px;
-    font-size: 12px;
-    font:bold;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-    outline: none; /* Remove outline on focus */
-  }
+.info-item span:first-child {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
-  button[type="button"]:hover {
-    background-color: #004997;
-  }
+.info-item span:last-child {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
 
-  button[type="button"]:focus {
-    transform: scale(1.05); /* Scale up slightly on focus */
-  }
+/* button row inside upgrade panel */
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  border-bottom: none !important;
+}
 
-  button[type="sellbutton"] {
-    background-color: #ff0000;
-    color: #fff;
-    border: none;
-    padding: 10px 10px;
-    font-size: 12px;
-    font:bold;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.2s;
-    outline: none; /* Remove outline on focus */
-  }
+/* ── UPGRADE BUTTON ────────────────────────────────── */
+.upgradebutton {
+  flex: 1;
+  height: 44px;
+  background: linear-gradient(135deg, #003d99, #0077ee);
+  color: #fff;
+  border: 1px solid rgba(0, 140, 255, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  white-space: pre-line;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 14px rgba(0, 100, 255, 0.4);
+}
 
-  button[type="sellbutton"]:hover {
-    background-color: #970000;
-  }
+.upgradebutton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 22px rgba(0, 140, 255, 0.65);
+}
 
-  button[type="sellbutton"]:focus {
-    transform: scale(1.05); /* Scale up slightly on focus */
-  }
-  
-  p {
-    color:#fff;
-  }
+.upgradebutton:active {
+  transform: scale(0.97);
+}
+
+/* ── SELL BUTTON ───────────────────────────────────── */
+.sellbtn {
+  flex: 1;
+  height: 44px;
+  background: linear-gradient(135deg, #7a001a, #cc0030);
+  color: #fff;
+  border: 1px solid rgba(220, 0, 50, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  white-space: pre-line;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 14px rgba(200, 0, 40, 0.4);
+}
+
+.sellbtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 22px rgba(230, 0, 50, 0.65);
+}
+
+.sellbtn:active {
+  transform: scale(0.97);
+}
+
+/* ── SOUNDTRACK BUTTONS ────────────────────────────── */
+.soundtrackbtn {
+  width: 100%;
+  padding: 9px 0;
+  background: linear-gradient(135deg, #003d22, #007744);
+  border: 1px solid rgba(0, 200, 80, 0.3);
+  color: #fff;
+  border-radius: 8px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 12px rgba(0, 180, 60, 0.3);
+  display: block;
+}
+
+.soundtrackbtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 22px rgba(0, 210, 80, 0.55);
+}
+
+.soundtrackbtn:active {
+  transform: scale(0.97);
+}
+
+/* ── GENERIC BUTTON ────────────────────────────────── */
+button[type="button"] {
+  background: linear-gradient(135deg, #003d99, #0077ee);
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  outline: none;
+  box-shadow: 0 0 10px rgba(0, 100, 255, 0.35);
+}
+
+button[type="button"]:hover {
+  box-shadow: 0 0 18px rgba(0, 140, 255, 0.6);
+}
+
+button[type="button"]:active {
+  transform: scale(0.97);
+}
+
+button[type="sellbutton"] {
+  background: linear-gradient(135deg, #7a001a, #cc0030);
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  outline: none;
+  box-shadow: 0 0 10px rgba(200, 0, 40, 0.35);
+}
+
+button[type="sellbutton"]:hover {
+  box-shadow: 0 0 18px rgba(230, 0, 50, 0.6);
+}
+
+button[type="sellbutton"]:active {
+  transform: scale(0.97);
+}

@@ -1,6 +1,6 @@
 // Turret functions
 function getTurretTypes(){
-	const types = ["machineGun", "laser", "flamethrower", "blizzard", "stormCannon", "railCannon"];
+	const types = ["machineGun", "laser", "flamethrower", "blizzard", "toxic", "stormCannon", "railCannon"];
 	return types;
 }
 
@@ -14,6 +14,8 @@ function turretColor(type) {
 		return "#ff00ea";
 	case "blizzard":
 		return "#00bcbc";
+	case "toxic":
+		return "#27752b";
 	case "stormCannon":
 		return "#FF4500";
 	case "railCannon":
@@ -26,15 +28,17 @@ function getTurretShotCooldown(type, level){
 	case "machineGun":
 		return 10;
 	case "laser":
-		return 152 - (level * 2);
+		return 152 - (level * 10);
 	case "flamethrower":
 		return 25;
 	case "blizzard":
-		return 202 - (level * 2);
+		return 202 - (level * 20);
+	case "toxic":
+		return 201 - (level * 10);
 	case "stormCannon":
 		return 10;
 	case "railCannon":
-		return 601 - level;
+		return 601 - (level * 30);
 	}
 }
 
@@ -47,6 +51,8 @@ function getTurretAnimationCooldown(type, level){
 	case "flamethrower":
 		return 0;
 	case "blizzard":
+		return 0;
+	case "toxic":
 		return 0;
 	case "stormCannon":
 		return 0;
@@ -72,8 +78,7 @@ function updateTurretCooldownPostShooting(turret) {
 			}
 			break;
 		case "blizzard":
-			turret.shotCd = -1;
-			break;
+			break; // cooldown gerenciado diretamente no disparo AoE
 		//case "stormCannon":
 			//break;
 		//case "railCannon":
@@ -106,6 +111,8 @@ function updateTurretCooldownPostTurn(turrets){
 					turrets[i].shotCd = getTurretShotCooldown(turrets[i].type, turrets[i].level);
 				}
 				break;
+			case "toxic":
+				break;
 			case "stormCannon":
 				break;
 			case "railCannon":
@@ -136,6 +143,8 @@ function turretSoundEffect(type){
 			return new Audio("sound/Flamethrower.wav");
 		case "blizzard":
 			return new Audio("sound/Blizzard.wav");
+		case "toxic":
+			return new Audio("sound/Toxic.wav");
 		case "stormCannon":
 			return new Audio("sound/StormCannon.wav");
 		case "railCannon":
@@ -153,6 +162,8 @@ function turretImage(type) {
 		return "url('img/tw/tower2.png')";
 	case "blizzard":
 		return "url('img/tw/tower3.png')";
+	case "toxic":
+		return "url('img/tw/Toxic.png')";
 	case "stormCannon":
 		return "url('img/tw/tower4.png')";
 	case "railCannon":
@@ -163,15 +174,17 @@ function turretImage(type) {
 function turretValue(type) {
 	switch (type) {
 	case "machineGun":
-		return 10;
+		return 20;
 	case "laser":
 		return 100;
 	case "flamethrower":
-		return 500;
+		return 400;
 	case "blizzard":
+		return 600;
+	case "toxic":
 		return 800;
 	case "stormCannon":
-		return 3000;
+		return 2000;
 	case "railCannon":
 		return 1500;
 	}
@@ -187,6 +200,8 @@ function turretRange(type) {
 		return 2 * TILE_W;
 	case "blizzard":
 		return 5 * TILE_W;
+	case "toxic":
+		return 7 * TILE_W;
 	case "stormCannon":
 		return 15 * TILE_W;
 	case "railCannon":
@@ -197,17 +212,19 @@ function turretRange(type) {
 function turretDamage(type) {
 	switch (type) {
 	case "machineGun":
-		return 8;
+		return 20;
 	case "laser":
-		return 96;
+		return 120;
 	case "flamethrower":
-		return 48;
+		return 60;
 	case "blizzard":
-		return 8;
+		return 10;
+	case "toxic":
+		return 300;
 	case "stormCannon":
-		return 200;
+		return 220;
 	case "railCannon":
-		return 2000;
+		return 3000;
 	}
 }
 
@@ -223,6 +240,8 @@ function turretName(type) {
 		return "Blizzard Tower";
 	case "stormCannon":
 		return "Storm Cannon";
+	case "toxic":
+		return "Toxic Tower";
 	case "railCannon":
 		return "Rail Cannon";
 	}
@@ -241,6 +260,9 @@ function turretUpgradeCosts(type, turretLvl) {
 		upgradeCost = upgradeCost * 0.3;
 		break;
 	case "blizzard":
+		upgradeCost = upgradeCost * 0.15;
+		break;
+	case "toxic":
 		upgradeCost = upgradeCost * 0.15;
 		break;
 	case "stormCannon":
@@ -315,10 +337,20 @@ function deleteProjectilesTargetingMinion(minionId) {
 function showTurretInfo(turret){
 	function upgrade(evt) {
 		var form = document.getElementById("registrationForm");
-		console.log("Display upgrade form: " + form.style.display);
 		updateTurretInfo(turret);
 		document.getElementById("upgBtn").style.display = turret.level <= 4 ? "block" : "none";
-		form.style.display = form.style.display === "none" ? "block" : "none";
+		if (form.style.display === "none") {
+			form.style.display = "block";
+			showRangeIndicator(
+				parseInt(turret.x) + 8,
+				parseInt(turret.y) + 8,
+				turret.range,
+				turretColor(turret.type)
+			);
+		} else {
+			form.style.display = "none";
+			hideRangeIndicator();
+		}
 	}
 	return upgrade;
 }
@@ -356,6 +388,10 @@ function upgradeTurretData(turret){
 			turret.damage += upgradeDamage * 0.1;
 			turret.range = turretRange(turret.type) + turret.level;
 			break;
+		case "toxic":
+			turret.damage += upgradeDamage * 0.3;
+			turret.range += upgradeRange * 0.1;
+			break;
 		case "stormCannon":
 			turret.damage += upgradeDamage * 0.1;
 			turret.range += upgradeRange * 0.005;
@@ -365,4 +401,54 @@ function upgradeTurretData(turret){
 			turret.range += turretRange(turret.type) * 0.2;
 			break;
 	}
+}
+
+function shootingTrigger(turret, minion, turretStyle, damage){
+	//return 0 to deactivate critical hit.
+	switch(turret.type){
+		case "machineGun":
+			turretStyle.borderTop = "1px solid #cdfb00";
+			turretStyle.borderRadius = "20px/20px";
+			return calculateCriticalHitDamage(10, turret.damage);
+		case "laser":
+			turretStyle.borderTop = "1px solid #ff0000";
+			turretStyle.borderRadius = "10px/10px";
+			return calculateCriticalHitDamage(30, turret.damage);
+		case "flamethrower":
+			turretStyle.borderTop = "8px solid #b00101";
+			turretStyle.borderRadius = "10px/10px";
+			return 0;
+		case "blizzard":
+			// Slow down the enemy
+			turretStyle.border = "2px solid rgba(0, 153, 255, 0.5)";
+			freezeMinion(minion, 100 + (turret.level * 10));
+			return 0;
+		case "toxic":
+			turretStyle.borderTop = "3px solid #4CAF50";
+			turretStyle.borderRadius = "20px/20px";
+			toxicMinion(minion, 125 + (turret.level * 20));
+			return calculateCriticalHitDamage(10, turret.damage);
+		case "stormCannon":
+			turretStyle.borderTop = "3px solid #0905eb";
+			turretStyle.borderRadius = "20px/20px";
+			return calculateCriticalHitDamage(3, turret.damage);
+		case "railCannon":
+			turretStyle.borderTop = "3px solid #6600ff";
+			turretStyle.borderRadius = "20px/20px";
+			stunMinion(minion, 150 + (turret.level * 50));
+			return calculateCriticalHitDamage(20, turret.damage);
+	}
+}
+
+function calculateCriticalHitDamage(criticalChance, turretDamage) {
+    // Generate a random number between 0 and 1
+    let randomNumber = Math.random();
+	let criticalDmg = turretDamage;
+    // Compare the random number with critical chance
+    // Convert criticalChance from percentage to decimal
+	if (randomNumber < (criticalChance / 100)) {
+		criticalDmg = turretDamage * 2;
+	}
+
+	return criticalDmg;
 }
