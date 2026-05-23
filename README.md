@@ -36,7 +36,8 @@ Strategically place turrets on the map to stop waves of incoming minions from re
 | 1–5 | `64 + 2^(wave + 4)` |
 | 6–10 | `2^(wave + 2) × 1.3` |
 | 11–15 | `2^wave` |
-| 16+ | `2^wave × 0.6` |
+| 16 and 17 | `2^wave × 0.6` |
+| 18+ | `2^wave × 0.4` |
 | Boss (every 10th wave) | `2^wave × 10` |
 
 Killing a regular minion rewards `(wave + 1)²` cash; a boss rewards `(wave + 1)³`.

@@ -9,12 +9,20 @@ var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
 var currentLevel = 1;
-var currentLives = 10;
+var currentLives = 30;
 var currentCash = 20;
 var currentScore = 0;
 var turretPos = new Array();
 var timeLapsesSinceLastShot = 1;
 var soundtrack = new Audio("sound/map1Soundtrack.mp3");
+
+// enemy info dialog state
+var selectedMinionIdx = -1;
+var selectedMinionEl = null;
+var selectedHpBarEl = null;
+
+// damage stats panel state
+var damageStatsTick = 0;
 
 ////////////////////// RANGE INDICATOR
 function hexToRgba(hex, alpha) {
@@ -48,6 +56,120 @@ function hideRangeIndicator() {
 	rangeIndicator = null;
 }
 ////////////////////// END RANGE INDICATOR
+
+////////////////////// ENEMY INFO DIALOG
+function showEnemyInfoDialog(idx, minionEl, hpBarEl) {
+	var dialog = document.getElementById("enemyInfoDialog");
+	if (selectedMinionIdx === idx && dialog.style.display !== "none") {
+		dialog.style.display = "none";
+		selectedMinionIdx = -1;
+		selectedMinionEl = null;
+		selectedHpBarEl = null;
+		return;
+	}
+	selectedMinionIdx = idx;
+	selectedMinionEl = minionEl;
+	selectedHpBarEl = hpBarEl;
+	updateEnemyInfoDialog();
+	dialog.style.display = "block";
+}
+
+function updateEnemyInfoDialog() {
+	if (selectedMinionIdx < 0 || !selectedMinionEl || !selectedHpBarEl) return;
+	var dialog = document.getElementById("enemyInfoDialog");
+	if (selectedMinionEl.style.display === "none") {
+		dialog.style.display = "none";
+		selectedMinionIdx = -1;
+		selectedMinionEl = null;
+		selectedHpBarEl = null;
+		return;
+	}
+	var currentHp = Math.max(0, parseFloat(selectedHpBarEl.getAttribute("value")) || 0);
+	var maxHp = parseFloat(selectedHpBarEl.getAttribute("max")) || 1;
+	var speed = getMinionSpeed(selectedMinionEl);
+	var name = isBossWave ? "Boss" : "Minion";
+
+	document.getElementById("enemyName").innerText = name;
+	var hpBar = document.getElementById("enemyHpBar");
+	hpBar.value = currentHp;
+	hpBar.max = maxHp;
+	document.getElementById("enemyHpText").innerText = Math.ceil(currentHp) + " / " + Math.ceil(maxHp);
+
+	var speedLabel = speed === 0 ? "0 (Stunned)" : speed === 1 ? "1 (Frozen)" : "1.5";
+	document.getElementById("enemySpeed").innerText = speedLabel;
+}
+
+function hideEnemyInfoDialog() {
+	document.getElementById("enemyInfoDialog").style.display = "none";
+	selectedMinionIdx = -1;
+	selectedMinionEl = null;
+	selectedHpBarEl = null;
+}
+////////////////////// END ENEMY INFO DIALOG
+
+////////////////////// DAMAGE STATS PANEL
+function showDamageStatsPanel() {
+	var panel = document.getElementById("damageStatsPanel");
+	if (panel.style.display === "none") {
+		updateDamageStatsPanel(true);
+		panel.style.display = "block";
+	} else {
+		panel.style.display = "none";
+	}
+}
+
+function updateDamageStatsPanel(force) {
+	var panel = document.getElementById("damageStatsPanel");
+	if (panel.style.display === "none") return;
+	damageStatsTick++;
+	if (!force && damageStatsTick % 30 !== 0) return;
+
+	// aggregate totalDamage by tower type
+	var byType = {};
+	for (var i = 0; i < turretPos.length; i++) {
+		var type = turretPos[i].type;
+		byType[type] = (byType[type] || 0) + turretPos[i].totalDamage;
+	}
+
+	var entries = [];
+	for (var type in byType) {
+		entries.push({ type: type, totalDamage: byType[type] });
+	}
+	entries.sort(function(a, b) { return b.totalDamage - a.totalDamage; });
+
+	var list = document.getElementById("damageStatsList");
+	list.innerHTML = "";
+
+	if (entries.length === 0) {
+		list.innerHTML = '<div class="dmg-empty">No turrets placed yet.</div>';
+		return;
+	}
+
+	var maxDmg = entries[0].totalDamage || 0;
+	for (var i = 0; i < entries.length; i++) {
+		var e = entries[i];
+		var pct = maxDmg > 0 ? Math.round(e.totalDamage / maxDmg * 100) : 0;
+		var entry = document.createElement("div");
+		entry.className = "dmg-entry" + (i === 0 && maxDmg > 0 ? " dmg-top" : "");
+		entry.innerHTML =
+			'<div class="dmg-rank">#' + (i + 1) + '</div>' +
+			'<div class="dmg-info">' +
+				'<span class="dmg-name">' + turretName(e.type) + '</span>' +
+				'<div class="dmg-bar-wrap">' +
+					'<div class="dmg-bar" style="width:' + pct + '%;background:' + turretColor(e.type) + '"></div>' +
+				'</div>' +
+				'<span class="dmg-value">' + formatDamage(e.totalDamage) + '</span>' +
+			'</div>';
+		list.appendChild(entry);
+	}
+}
+
+function formatDamage(n) {
+	if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+	if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+	return Math.round(n).toString();
+}
+////////////////////// END DAMAGE STATS PANEL
 
 ////////////////////// TURRET FUNCTIONS that requires global values (others declared on object/turret.js)
 function turretClick(turret) {
@@ -140,7 +262,8 @@ function mapDrop(mapzone, x, y) {
 				level:1,
 				shotCd:0,
 				audioCd:0,
-				audioFile:turretSoundEffect(turretType)
+				audioFile:turretSoundEffect(turretType),
+				totalDamage:0
 			};
 			turretPos[turretPos.length] = turretObj;
 			// once created it is possible to see the turret upgrade info.
@@ -257,6 +380,14 @@ function drawMap() {
 	listenEvent(resetbutton, "click", resetwave);
 	document.body.appendChild(resetbutton);
 
+	// damage stats button
+	var statsbutton = document.createElement("div");
+	statsbutton.setAttribute("id", "statsbutton");
+	statsbutton.setAttribute("class", "statsbutton");
+	statsbutton.innerHTML = "&#9881; DMG STATS";
+	listenEvent(statsbutton, "click", showDamageStatsPanel);
+	document.body.appendChild(statsbutton);
+
 	// status  bar
 	var statusbar = document.createElement("div");
 	statusbar.setAttribute("id", "statusbar");
@@ -332,7 +463,7 @@ function startwave(evt) {
 	// reset globals	
 	currentWave = 0;
 	currentLives = 11;
-	currentCash = 3000;
+	currentCash = 20;
 	currentScore = 0;
 	turretPos = new Array();
 
@@ -358,6 +489,12 @@ function startwave(evt) {
 		hpBarMinion.setAttribute("max", minionhp());
 		document.body.appendChild(minion);
 		document.body.appendChild(hpBarMinion);
+		listenEvent(minion, "click", (function(idx, mEl, hEl) {
+			return function() {
+				if (!isRunning || isPaused) return;
+				showEnemyInfoDialog(idx, mEl, hEl);
+			};
+		})(i, minion, hpBarMinion));
 	}
 
 	// set up the timers to run
@@ -499,6 +636,8 @@ function startwave(evt) {
 		  
 			// update the status
 			updateStatus();
+			updateEnemyInfoDialog();
+			updateDamageStatsPanel(false);
 
 			// is the wave over?
 			if (wave_over) {
@@ -649,6 +788,7 @@ function resetwave(evt) {
 	//Hide upgrade info screen
 	document.getElementById("registrationForm").style.display = "none";
 	hideRangeIndicator();
+	hideEnemyInfoDialog();
 
 	// remove all the minions	
 	var minions = document.querySelectorAll(".minion");
@@ -695,12 +835,14 @@ function anyTurretsInRange(minion, x, y) {
 			var inRange = euclidDistance(x, xt, y, yt) <= turretPos[i].range;
 			if (inRange && turretPos[i].shotCd === 0) {
 				var aoeMinions = document.getElementsByClassName("minion");
+				var aoeHits = 0;
 				for (var m = 0; m < aoeMinions.length; m++) {
 					if (aoeMinions[m].style.display === "none") continue;
 					var mx = parseFloat(aoeMinions[m].style.left) || 0;
 					var my = parseFloat(aoeMinions[m].style.top)  || 0;
 					if (euclidDistance(mx, xt, my, yt) <= turretPos[i].range) {
 						freezeMinion(aoeMinions[m], 100 + turretPos[i].level);
+						aoeHits++;
 					}
 				}
 				createFrostBurst(turretPos[i]);
@@ -709,7 +851,9 @@ function anyTurretsInRange(minion, x, y) {
 					setTimeout(function() { el.classList.remove("blizzard-firing"); }, 650);
 				})(turretPos[i].htmlElement);
 				updateTurretSoundPostShooting(turretPos[i]);
+				var blizzardDmg = turretPos[i].damage * Math.max(1, aoeHits);
 				damage += turretPos[i].damage;
+				turretPos[i].totalDamage += blizzardDmg;
 				turretPos[i].shotCd = getTurretShotCooldown(turretPos[i].type, turretPos[i].level);
 			}
 			if (inRange) {
@@ -747,10 +891,12 @@ function anyTurretsInRange(minion, x, y) {
 				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
 				stunMinion(minion, 150 + (turretPos[i].level * 10));
 			}
-			damage = shootingTrigger(turretPos[i], minion, turretPos[i].htmlElement.style);
+			var triggerDmg = shootingTrigger(turretPos[i], minion, turretPos[i].htmlElement.style);
+			var shotTotal = triggerDmg + turretPos[i].damage;
+			turretPos[i].totalDamage += shotTotal;
+			damage = shotTotal;
 			updateTurretSoundPostShooting(turretPos[i]);
 			updateTurretCooldownPostShooting(turretPos[i]);
-			damage += turretPos[i].damage;
 		} else if(turretPos[i].shotCd == 0) {
 			rotate(0, turretPos[i].htmlElement);
 			resetShotEffect(turretPos[i].htmlElement);
@@ -765,7 +911,16 @@ function anyTurretsInRange(minion, x, y) {
 			}
 		}
 	}
-	return damage + getToxicDamage(minion);
+	var toxicDmg = getToxicDamage(minion);
+	if (toxicDmg > 0) {
+		for (var t = 0; t < turretPos.length; t++) {
+			if (turretPos[t].type === "toxic") {
+				turretPos[t].totalDamage += toxicDmg;
+				break;
+			}
+		}
+	}
+	return damage + toxicDmg;
 }
 
 function createFrostBurst(turretObj) {
@@ -850,12 +1005,15 @@ function minionhp() {
 	if (currentWave > 15) {
 		hpMax = Math.pow(2, currentWave) * 0.60;
 	}
+	if (currentWave > 17) {
+		hpMax = Math.pow(2, currentWave) * 0.40;
+	}
 	return hpMax;
 }
 
 function bossHp() {
 	if (currentWave == 20) {
-		return Math.pow(2, currentWave) * 1.5;
+		return Math.pow(2, currentWave);
 	} else {
 		return Math.pow(2, currentWave) * 10;
 	}
@@ -912,8 +1070,6 @@ function btnUpgradeTurretClick() {
 						turretPos[i].range,
 						turretColor(turretPos[i].type)
 					);
-					console.log("Turret " + turretName(turretPos[i].type) + " upgraded to Lv " + turretPos[i].level + ".");
-					console.log("New damage is " + turretPos[i].damage + " and range is " + turretPos[i].range);
 				} 
 			} else {
 				console.log("Not enough cash: " +  currentCash + ", upgrade: " + turretUpgradeCost);

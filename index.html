@@ -41,5 +41,27 @@
         </div>
         <input class="text" id="upgTurretId" hidden>
     </div>
+    <div id="damageStatsPanel" class="character-info" style="display: none;">
+        <h1>Damage Stats</h1>
+        <div id="damageStatsList" class="dmg-list"></div>
+    </div>
+    <div id="enemyInfoDialog" class="character-info" style="display: none;">
+        <h1>Enemy Info</h1>
+        <div class="info-item">
+            <span>Name</span>
+            <span id="enemyName"></span>
+        </div>
+        <div class="info-item enemy-hp-item">
+            <span>HP</span>
+            <div class="enemy-hp-wrap">
+                <progress id="enemyHpBar" class="enemy-hp-bar" value="0" max="100"></progress>
+                <span id="enemyHpText" class="enemy-hp-text"></span>
+            </div>
+        </div>
+        <div class="info-item">
+            <span>Speed</span>
+            <span id="enemySpeed"></span>
+        </div>
+    </div>
 </body>
 </html>

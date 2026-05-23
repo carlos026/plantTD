@@ -152,6 +152,40 @@ p {
   box-shadow: 0 0 18px rgba(0, 140, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.15);
 }
 
+/* ── DMG STATS BUTTON ──────────────────────────────── */
+.statsbutton {
+  position: absolute;
+  width: 118px;
+  height: 38px;
+  top: 554px;
+  left: 10px;
+  background: linear-gradient(135deg, #2d0073 0%, #6a00cc 100%);
+  box-shadow: 0 0 18px rgba(100, 0, 220, 0.45), inset 0 1px 0 rgba(255,255,255,0.1);
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.statsbutton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 28px rgba(130, 0, 255, 0.7), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.statsbutton:active {
+  transform: scale(0.97);
+}
+
 .startbutton:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 28px rgba(0, 160, 255, 0.75), inset 0 1px 0 rgba(255,255,255,0.15);
@@ -309,10 +343,21 @@ p {
   height: 16px;
   background-image: url("img/min-lv1/min-up.png");
   background-size: contain;
+  background-repeat: no-repeat;
+  background-origin: content-box;
+  background-clip: content-box;
   border-radius: 2px;
   top: 0;
   left: 0;
   image-rendering: pixelated;
+  padding: 8px;
+  margin: -8px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+
+.minion:hover {
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.85)) brightness(1.3);
 }
 
 /* ── HP BARS ───────────────────────────────────────── */
@@ -378,6 +423,66 @@ progress.toxic::-webkit-progress-value {
 
 #registrationForm.character-info {
   top: 110px;
+}
+
+#damageStatsPanel.character-info {
+  top: 110px;
+  left: 1432px;
+  width: 220px;
+}
+
+#enemyInfoDialog.character-info {
+  top: 350px;
+  left: 1500px;
+}
+
+/* ── ENEMY INFO DIALOG ─────────────────────────────── */
+.enemy-hp-item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.enemy-hp-item > span:first-child {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.enemy-hp-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+}
+
+.enemy-hp-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  appearance: none;
+  overflow: hidden;
+}
+
+.enemy-hp-bar::-webkit-progress-bar {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+}
+
+.enemy-hp-bar::-webkit-progress-value {
+  background: linear-gradient(90deg, #00b84a, #00ff88);
+  border-radius: 4px;
+}
+
+.enemy-hp-text {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--success);
+  text-shadow: 0 0 8px rgba(0, 230, 118, 0.5);
 }
 
 .panel-title {
@@ -568,4 +673,97 @@ button[type="sellbutton"]:hover {
 
 button[type="sellbutton"]:active {
   transform: scale(0.97);
+}
+
+/* ── DAMAGE STATS LIST ─────────────────────────────── */
+.dmg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.dmg-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  border-radius: 6px;
+  background: rgba(0, 180, 255, 0.04);
+  transition: background 0.15s ease;
+}
+
+.dmg-entry.dmg-top {
+  background: rgba(255, 200, 0, 0.07);
+  border: 1px solid rgba(255, 200, 0, 0.18);
+}
+
+.dmg-rank {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 20px;
+  text-align: center;
+}
+
+.dmg-entry.dmg-top .dmg-rank {
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(255, 200, 0, 0.5);
+}
+
+.dmg-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dmg-name {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dmg-bar-wrap {
+  width: 100%;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dmg-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  filter: brightness(1.1);
+}
+
+.dmg-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dmg-entry.dmg-top .dmg-value {
+  color: var(--gold);
+}
+
+.dmg-empty {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 12px 0;
 }
