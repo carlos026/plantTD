@@ -183,10 +183,10 @@ function turretValue(type) {
 		return 600;
 	case "toxic":
 		return 800;
-	case "stormCannon":
-		return 2000;
 	case "railCannon":
 		return 1500;
+	case "stormCannon":
+		return 2000;
 	}
 }
 
@@ -386,7 +386,7 @@ function upgradeTurretData(turret){
 		case "blizzard":
 			// Cooldown reduction is this upgrade focus
 			turret.damage += upgradeDamage * 0.1;
-			turret.range = turretRange(turret.type) + turret.level;
+			turret.range += upgradeRange * 0.02;
 			break;
 		case "toxic":
 			turret.damage += upgradeDamage * 0.3;

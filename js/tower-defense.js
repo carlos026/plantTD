@@ -9,11 +9,12 @@ var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
 var currentLevel = 1;
-var currentLives = 30;
+var currentLives = 15;
 var currentCash = 20;
 var currentScore = 0;
 var turretPos = new Array();
 var timeLapsesSinceLastShot = 1;
+var blizzardPendingDamage = {};
 var soundtrack = new Audio("sound/map1Soundtrack.mp3");
 
 // enemy info dialog state
@@ -462,7 +463,7 @@ function startwave(evt) {
 	listenEvent(sb, "click", pausewave);
 	// reset globals	
 	currentWave = 0;
-	currentLives = 11;
+	currentLives = 15;
 	currentCash = 20;
 	currentScore = 0;
 	turretPos = new Array();
@@ -526,6 +527,7 @@ function startwave(evt) {
 
 	interval_id = setInterval(function () {
 		if (!isPaused) {
+			blizzardPendingDamage = {};
 			//timeLapsesSinceLastShot++;
 			for (var i = 0; i < minion_c; i++) {
 				// what direction do we want to go?
@@ -564,6 +566,11 @@ function startwave(evt) {
 				var damage = 0;
 				if(minions[i].style.display != 'none'){
 					damage = anyTurretsInRange(minions[i], movex[i], movey[i]);
+				}
+				var blizzAoe = blizzardPendingDamage[minions[i].id] || 0;
+				if (blizzAoe > 0) {
+					damage += blizzAoe;
+					delete blizzardPendingDamage[minions[i].id];
 				}
 				let speed = getMinionSpeed(minions[i]);
 				switch (currentDir[i]) {
@@ -842,6 +849,7 @@ function anyTurretsInRange(minion, x, y) {
 					var my = parseFloat(aoeMinions[m].style.top)  || 0;
 					if (euclidDistance(mx, xt, my, yt) <= turretPos[i].range) {
 						freezeMinion(aoeMinions[m], 100 + turretPos[i].level);
+						blizzardPendingDamage[aoeMinions[m].id] = (blizzardPendingDamage[aoeMinions[m].id] || 0) + turretPos[i].damage;
 						aoeHits++;
 					}
 				}
@@ -851,9 +859,7 @@ function anyTurretsInRange(minion, x, y) {
 					setTimeout(function() { el.classList.remove("blizzard-firing"); }, 650);
 				})(turretPos[i].htmlElement);
 				updateTurretSoundPostShooting(turretPos[i]);
-				var blizzardDmg = turretPos[i].damage * Math.max(1, aoeHits);
-				damage += turretPos[i].damage;
-				turretPos[i].totalDamage += blizzardDmg;
+				turretPos[i].totalDamage += turretPos[i].damage * Math.max(1, aoeHits);
 				turretPos[i].shotCd = getTurretShotCooldown(turretPos[i].type, turretPos[i].level);
 			}
 			if (inRange) {
