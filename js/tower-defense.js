@@ -4,7 +4,8 @@ var isRunning = false;
 var isPaused = false;
 var rangeIndicator = null;
 var isDraggingNewTurret = false;
-var minion_count = 12;
+var minion_count = 16;
+var currentWaveEnemyCount = 12;
 var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
@@ -96,7 +97,7 @@ function updateEnemyInfoDialog() {
 	hpBar.max = maxHp;
 	document.getElementById("enemyHpText").innerText = Math.ceil(currentHp) + " / " + Math.ceil(maxHp);
 
-	var speedLabel = speed === 0 ? "0 (Stunned)" : speed === 1 ? "1 (Frozen)" : "1.5";
+	var speedLabel = speed === 0 ? "0 (Stunned)" : speed === 0.5 ? "0.5 (Frozen)" : "1.0";
 	document.getElementById("enemySpeed").innerText = speedLabel;
 }
 
@@ -439,10 +440,32 @@ function drawTargetMap(targetLevel) {
 				case 2:
 					roadColor = "#614821";
 				break;
+				case 3:
+					roadColor = "#15f7b3";
+				break;
+				case 4:
+					roadColor = "#949494";
+				break;
+				case 5:
+					roadColor = "#04545f";
+				break;
 			}
 			mapzone.style.backgroundColor = roadColor;
 		} else {
-			mapzone.style.backgroundColor = '#C98D26';
+			switch(targetLevel) {
+				case 2:
+					mapzone.style.backgroundColor = '#C98D26';
+				break;
+				case 3:
+					mapzone.style.backgroundColor = '#035f17';
+				break;
+				case 4:
+					mapzone.style.backgroundColor = '#942104';
+				break;
+				case 5:
+					mapzone.style.backgroundColor = '#002e13';
+				break;
+			}
 		}
 	}
 }
@@ -549,7 +572,7 @@ function startwave(evt) {
 						break;
 					}
 					// do we have minions killed?
-					if (minions_killed == minions.length || (isBossWave && minions_killed == 1)) {
+					if (minions_killed == currentWaveEnemyCount || (isBossWave && minions_killed == 1)) {
 						// wave over!
 						console.log("Wave Over!");
 						wave_over = true;
@@ -616,7 +639,7 @@ function startwave(evt) {
 							currentCash += minionreward();
 							currentScore++;
 						}
-						if (minions_killed == minions.length || (isBossWave && minions_killed == 1)) {
+						if (minions_killed == currentWaveEnemyCount || (isBossWave && minions_killed == 1)) {
 							// wave over!
 							console.log("wave over!")
 							wave_over = true;
@@ -629,7 +652,7 @@ function startwave(evt) {
 					tickDownMinionDebuffs(minions[i], hpBarMinions[i]);
 				}
 				// stagger the minions coming out, release one every 15 pixels
-				if ((minion_release[i] == 100 * minion_c) && minion_c < minions.length) {
+				if ((minion_release[i] == 100 * minion_c) && minion_c < currentWaveEnemyCount) {
 					minion_c++;
 				}
 				minion_release[i]++;
@@ -660,6 +683,11 @@ function startwave(evt) {
 				wave_over = false;
 				currentWave++;
 				isBossWave = currentWave % 10 == 0;
+				if (!isBossWave) {
+					currentWaveEnemyCount = currentWave >= 10
+						? Math.floor(Math.random() * 7) + 10
+						: 12;
+				}
 				//Move to next level if current wave = 20
 				if (currentWave > 20) {
 					startNextLevel();
@@ -683,7 +711,6 @@ function startwave(evt) {
 						first_kill[i] = true;
 					}
 				} else {
-					minions[0].style.backgroundImage = "url('img/min-lv1/min-up.png')"
 					for (var i = 0; i < minions.length; i++) {
 						movex[i] = 0;
 						movey[i] = 0;
@@ -691,13 +718,19 @@ function startwave(evt) {
 						minion_release[i] = 0;
 						minions[i].style.display = "none";
 						hpBarMinions[i].style.display = "none";
-						hpBarMinions[i].style.width = "20px"
-						minions[i].style.backgroundImage = "url('img/min-lv1/min-up.png')"
+						hpBarMinions[i].style.width = "20px";
 						minions[i].style.width = "16px";
 						minions[i].style.height = "16px";
 						minion_hp[i] = minionhp();
-						console.log("Minion Hp: " + minion_hp[i]);
 						first_kill[i] = true;
+						var usePlane = currentWave >= 11 && Math.random() < 0.5;
+						if (usePlane) {
+							minions[i].setAttribute(PLANE_STATUS_ATTRIBUTE, PLANE_TYPE_VALUE);
+							minions[i].style.backgroundImage = "url('img/pla-lv2/pla-up.png')";
+						} else {
+							minions[i].removeAttribute(PLANE_STATUS_ATTRIBUTE);
+							minions[i].style.backgroundImage = "url('img/min-lv1/min-up.png')";
+						}
 					}
 				}
 			}
@@ -870,6 +903,10 @@ function anyTurretsInRange(minion, x, y) {
 			continue;
 		}
 
+		if (turretPos[i].type === "flamethrower" && isPlaneMinion(minion)) {
+			continue;
+		}
+
 		if ((euclidDistance(x, xt, y, yt) <= turretPos[i].range) && turretPos[i].shotCd <= 0) {
 			rotateToTarget(minion, turretPos[i].htmlElement);
 			if(turretPos[i].type == "machineGun"){
@@ -899,6 +936,10 @@ function anyTurretsInRange(minion, x, y) {
 			}
 			var triggerDmg = shootingTrigger(turretPos[i], minion, turretPos[i].htmlElement.style);
 			var shotTotal = triggerDmg + turretPos[i].damage;
+			if (isPlaneMinion(minion) &&
+				(turretPos[i].type === "machineGun" || turretPos[i].type === "laser" || turretPos[i].type === "railCannon")) {
+				shotTotal *= 2;
+			}
 			turretPos[i].totalDamage += shotTotal;
 			damage = shotTotal;
 			updateTurretSoundPostShooting(turretPos[i]);
@@ -1055,8 +1096,10 @@ function btnUpgradeTurretClick() {
 	if (!isRunning || isPaused) {
 		return;
 	}
+	
 	// do we have enough money to make a upgrade?
 	for (var i = 0; i < turretPos.length; i++) {
+		document.getElementById("upgBtn").style.display = turretPos[i].level <= 3 ? "block" : "none";
 		if(turretPos[i].htmlElement.id == document.getElementById("upgTurretId").value) {
 			//Get Current turret upgrade cost.
 			var turretUpgradeCost = turretUpgradeCosts(turretPos[i].type, turretPos[i].level);

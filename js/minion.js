@@ -1,17 +1,26 @@
 // Minion constants
 const FROZEN_STATUS_ATTRIBUTE = "frozen";
-const FROZEN_MINION_SPEED = 1;
+const FROZEN_MINION_SPEED = 0.5;
 const STUN_STATUS_ATTRIBUTE = "stunned";
 const STUNNED_MINION_SPEED = 0;
 const TOXIC_STATUS_ATTRIBUTE = "toxic";
 const TOXIC_MINION_DAMAGE = 20;
+const PLANE_STATUS_ATTRIBUTE = "miniontype";
+const PLANE_TYPE_VALUE = "plane";
+const PLANE_SPEED = 3.0;
+const PLANE_FROZEN_SPEED = 1.0;
 
 // Minion status related functions
 function freezeMinion(minionElement, duration) {
 	minionElement.setAttribute(FROZEN_STATUS_ATTRIBUTE, duration);
 }
 
+function isPlaneMinion(minionElement) {
+	return minionElement.getAttribute(PLANE_STATUS_ATTRIBUTE) === PLANE_TYPE_VALUE;
+}
+
 function stunMinion(minionElement, duration) {
+	if (isPlaneMinion(minionElement)) return;
 	minionElement.setAttribute(STUN_STATUS_ATTRIBUTE, duration);
 }
 
@@ -63,13 +72,19 @@ function removeDebuffs(minionElement, hpBarElement) {
 }
 
 function getMinionSpeed(minionElement) {
-	let speed = 1.5;
-	if (hasDebuff(STUN_STATUS_ATTRIBUTE, minionElement)) {
-		speed = STUNNED_MINION_SPEED;
-	} else if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) {
-		speed = FROZEN_MINION_SPEED;
+	if (isPlaneMinion(minionElement)) {
+		if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) {
+			return PLANE_FROZEN_SPEED;
+		}
+		return PLANE_SPEED;
 	}
-	return speed;
+	if (hasDebuff(STUN_STATUS_ATTRIBUTE, minionElement)) {
+		return STUNNED_MINION_SPEED;
+	}
+	if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) {
+		return FROZEN_MINION_SPEED;
+	}
+	return 1.0;
 }
 
 

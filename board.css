@@ -426,9 +426,9 @@ progress.toxic::-webkit-progress-value {
 }
 
 #damageStatsPanel.character-info {
-  top: 110px;
-  left: 1432px;
-  width: 220px;
+  top: 380px;
+  left: 1212px;
+  width: 210px;
 }
 
 #enemyInfoDialog.character-info {
