@@ -247,6 +247,25 @@ function turretName(type) {
 	}
 }
 
+function turretDescription(type) {
+	switch (type) {
+	case "machineGun":
+		return "Rapid fire with low damage. Great against swarms of weak enemies.";
+	case "laser":
+		return "Sustained beam dealing high damage. Effective against tanky targets.";
+	case "flamethrower":
+		return "Short-range flames dealing damage over time. Ideal for chokepoints.";
+	case "blizzard":
+		return "Freezing shots that slow enemies and deal cold damage.";
+	case "toxic":
+		return "Long-range poison with massive damage. Effective against single targets.";
+	case "stormCannon":
+		return "Hits all enemies in range simultaneously with electric bursts.";
+	case "railCannon":
+		return "Extreme single-target damage with a very slow fire rate. Destroys bosses.";
+	}
+}
+
 function turretUpgradeCosts(type, turretLvl) {
 	var upgradeCost = turretLvl * turretValue(type);
 	switch(type) {
@@ -361,6 +380,7 @@ function updateTurretInfo(turret){
     document.getElementById("upgLevel").innerText = turret.level;
     document.getElementById("upgDamage").innerText = turret.damage;
     document.getElementById("range").innerText = turret.range;
+    document.getElementById("upgCooldown").innerText = (getTurretShotCooldown(turret.type, turret.level) / 100).toFixed(2) + " s";
     document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
     document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
 }

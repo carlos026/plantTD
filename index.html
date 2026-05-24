@@ -35,6 +35,10 @@
             <span>Range</span>
             <span id="range"></span>
         </div>
+        <div class="info-item">
+            <span>Cooldown</span>
+            <span id="upgCooldown"></span>
+        </div>
         <div class="info-item btn-row">
             <button class="sellbtn" id="sellBtn" onclick="btnSellTurretClick()" type="sellbutton">Sell!</button>
             <button class="upgradebutton" id="upgBtn" onclick="btnUpgradeTurretClick()" type="button">Upgrade!</button>
@@ -44,6 +48,32 @@
     <div id="damageStatsPanel" class="character-info" style="display: none;">
         <h1>Damage Stats</h1>
         <div id="damageStatsList" class="dmg-list"></div>
+    </div>
+    <div id="turretShopInfoDialog" class="character-info" style="display: none;">
+        <h1>Turret Info</h1>
+        <div class="info-item">
+            <span>Name</span>
+            <span id="shopInfoName"></span>
+        </div>
+        <div class="shop-info-desc">
+            <span id="shopInfoDesc"></span>
+        </div>
+        <div class="info-item">
+            <span>Damage</span>
+            <span id="shopInfoDamage"></span>
+        </div>
+        <div class="info-item">
+            <span>Range</span>
+            <span id="shopInfoRange"></span>
+        </div>
+        <div class="info-item">
+            <span>Cooldown</span>
+            <span id="shopInfoCooldown"></span>
+        </div>
+        <div class="info-item">
+            <span>Cost</span>
+            <span id="shopInfoCost"></span>
+        </div>
     </div>
     <div id="enemyInfoDialog" class="character-info" style="display: none;">
         <h1>Enemy Info</h1>

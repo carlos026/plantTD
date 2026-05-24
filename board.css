@@ -123,6 +123,42 @@ p {
   text-shadow: 0 0 8px rgba(255, 200, 0, 0.6);
 }
 
+/* ── TURRET SHOP INFO BUTTON ───────────────────────── */
+.turret-shop-info-btn {
+  position: absolute;
+  top: 534px;
+  width: 40px;
+  height: 20px;
+  background: rgba(0, 180, 255, 0.10);
+  border: 1px solid rgba(0, 180, 255, 0.30);
+  border-radius: 0 0 var(--radius) var(--radius);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.turret-shop-info-btn:hover {
+  background: rgba(0, 180, 255, 0.25);
+  border-color: var(--border-hi);
+}
+
+/* ── TURRET SHOP INFO DIALOG ───────────────────────── */
+#turretShopInfoDialog.character-info {
+  top: 8px;
+}
+
+.shop-info-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
 /* ── CONTROL BUTTONS (Start / Reset) ───────────────── */
 .startbutton,
 .resetbutton {
@@ -432,8 +468,8 @@ progress.toxic::-webkit-progress-value {
 }
 
 #enemyInfoDialog.character-info {
-  top: 350px;
-  left: 1500px;
+  top: 400px;
+  left: 1212px;
 }
 
 /* ── ENEMY INFO DIALOG ─────────────────────────────── */

@@ -89,7 +89,8 @@ function updateEnemyInfoDialog() {
 	var currentHp = Math.max(0, parseFloat(selectedHpBarEl.getAttribute("value")) || 0);
 	var maxHp = parseFloat(selectedHpBarEl.getAttribute("max")) || 1;
 	var speed = getMinionSpeed(selectedMinionEl);
-	var name = isBossWave ? "Boss" : "Minion";
+	var isPlane = isPlaneMinion(selectedMinionEl);
+	var name = isBossWave ? "Boss" : isPlane ? "Airplane" : "Minion";
 
 	document.getElementById("enemyName").innerText = name;
 	var hpBar = document.getElementById("enemyHpBar");
@@ -97,7 +98,16 @@ function updateEnemyInfoDialog() {
 	hpBar.max = maxHp;
 	document.getElementById("enemyHpText").innerText = Math.ceil(currentHp) + " / " + Math.ceil(maxHp);
 
-	var speedLabel = speed === 0 ? "0 (Stunned)" : speed === 0.5 ? "0.5 (Frozen)" : "1.0";
+	var speedLabel;
+	if (speed === 0) {
+		speedLabel = "0 (Stunned)";
+	} else if (speed === 0.5) {
+		speedLabel = "0.5 (Frozen)";
+	} else if (isPlane && speed === PLANE_FROZEN_SPEED) {
+		speedLabel = PLANE_FROZEN_SPEED.toFixed(1) + " (Frozen)";
+	} else {
+		speedLabel = speed.toFixed(1);
+	}
 	document.getElementById("enemySpeed").innerText = speedLabel;
 }
 
@@ -108,6 +118,27 @@ function hideEnemyInfoDialog() {
 	selectedHpBarEl = null;
 }
 ////////////////////// END ENEMY INFO DIALOG
+
+////////////////////// TURRET SHOP INFO DIALOG
+var shopInfoOpenType = null;
+
+function showShopTurretInfo(type) {
+	var dialog = document.getElementById("turretShopInfoDialog");
+	if (shopInfoOpenType === type && dialog.style.display !== "none") {
+		dialog.style.display = "none";
+		shopInfoOpenType = null;
+		return;
+	}
+	shopInfoOpenType = type;
+	document.getElementById("shopInfoName").innerText = turretName(type);
+	document.getElementById("shopInfoDesc").innerText = turretDescription(type);
+	document.getElementById("shopInfoDamage").innerText = turretDamage(type);
+	document.getElementById("shopInfoRange").innerText = (turretRange(type) / 15) + " tiles";
+	document.getElementById("shopInfoCooldown").innerText = (getTurretShotCooldown(type, 1) / 100).toFixed(2) + " s";
+	document.getElementById("shopInfoCost").innerText = "$" + turretValue(type);
+	dialog.style.display = "block";
+}
+////////////////////// END TURRET SHOP INFO DIALOG
 
 ////////////////////// DAMAGE STATS PANEL
 function showDamageStatsPanel() {
@@ -364,6 +395,19 @@ function drawMap() {
 		// turrets are draggable
 		listenEvent(turret, "click", turretClick(turret));
 		document.body.appendChild(turret);
+
+		// info button below each turret card
+		var infoBtn = document.createElement("button");
+		infoBtn.setAttribute("class", "turret-shop-info-btn");
+		infoBtn.style.left = turret.style.left;
+		infoBtn.innerHTML = "&#9432;";
+		listenEvent(infoBtn, "click", (function(t) {
+			return function(e) {
+				e.stopPropagation();
+				showShopTurretInfo(t);
+			};
+		})(turretTypes[k]));
+		document.body.appendChild(infoBtn);
 	}
 
 	// put a start button on
