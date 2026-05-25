@@ -123,6 +123,36 @@ p {
   text-shadow: 0 0 8px rgba(255, 200, 0, 0.6);
 }
 
+/* ── STORM CANNON OVERHEAT BAR ─────────────────────── */
+.overheat-bar {
+  position: absolute;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.overheat-bar::-webkit-progress-bar {
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+}
+
+.overheat-bar::-webkit-progress-value {
+  background: linear-gradient(90deg, #ff8800, #ff2200);
+  border-radius: 2px;
+}
+
+.overheat-bar::-moz-progress-bar {
+  background: linear-gradient(90deg, #ff8800, #ff2200);
+  border-radius: 2px;
+}
+
+.overheat-text {
+  color: #ff4500;
+  font-weight: 700;
+}
+
 /* ── TURRET SHOP INFO BUTTON ───────────────────────── */
 .turret-shop-info-btn {
   position: absolute;
@@ -634,6 +664,41 @@ progress.toxic::-webkit-progress-value {
 
 .sellbtn:active {
   transform: scale(0.97);
+}
+
+/* ── STORM CANNON TOGGLE BUTTON ────────────────────── */
+.storm-toggle-btn {
+  padding: 5px 16px;
+  border-radius: 6px;
+  border: none;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.storm-toggle-on {
+  background: linear-gradient(135deg, #15803d, #22c55e);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+}
+
+.storm-toggle-on:hover {
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.8);
+  transform: translateY(-1px);
+}
+
+.storm-toggle-off {
+  background: linear-gradient(135deg, #374151, #6b7280);
+  color: #d1d5db;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+.storm-toggle-off:hover {
+  box-shadow: 0 0 12px rgba(107, 114, 128, 0.6);
+  transform: translateY(-1px);
 }
 
 /* ── SOUNDTRACK BUTTONS ────────────────────────────── */

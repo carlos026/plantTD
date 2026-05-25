@@ -7,6 +7,8 @@ const TURRET_OFFSET = 148;
 const TURRET_GAP = 5;
 const TURRET_D = 40;
 const SHOOT_COOLDOWN = 30;
+const STORM_OVERHEAT_MAX = 100;
+const STORM_OVERHEAT_PER_SHOT = 1;
 
 // move direction
 const MOVE_N = 1;

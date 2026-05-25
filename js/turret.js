@@ -119,6 +119,21 @@ function updateTurretCooldownPostTurn(turrets){
 				break;
 			}
 		}
+		if (turrets[i].type === "stormCannon" && turrets[i].overheat > 0) {
+			if (turrets[i].overheatCoolTick > 0) {
+				turrets[i].overheatCoolTick--;
+			} else {
+				turrets[i].overheat = Math.max(0, turrets[i].overheat - STORM_OVERHEAT_PER_SHOT);
+				turrets[i].overheatBar.setAttribute("value", turrets[i].overheat);
+				// When idle (no enemies in range), cool faster based on level
+				var baseCoolTick = getTurretShotCooldown("stormCannon", 1);
+				if (!turrets[i].firedThisTurn) {
+					baseCoolTick = Math.ceil(baseCoolTick / turrets[i].level);
+				}
+				turrets[i].overheatCoolTick = baseCoolTick;
+			}
+			turrets[i].firedThisTurn = false;
+		}
 	}
 }
 
@@ -185,8 +200,8 @@ function turretValue(type) {
 		return 800;
 	case "railCannon":
 		return 1500;
-	case "stormCannon":
-		return 2000;
+	case "stormCannon": 
+		return 1000;
 	}
 }
 
@@ -214,17 +229,17 @@ function turretDamage(type) {
 	case "machineGun":
 		return 20;
 	case "laser":
-		return 120;
+		return 150;
 	case "flamethrower":
-		return 60;
+		return 80;
 	case "blizzard":
 		return 10;
 	case "toxic":
-		return 300;
+		return 320;
 	case "stormCannon":
-		return 220;
+		return 250;
 	case "railCannon":
-		return 3000;
+		return 3250;
 	}
 }
 
@@ -381,6 +396,27 @@ function updateTurretInfo(turret){
     document.getElementById("upgDamage").innerText = turret.damage;
     document.getElementById("range").innerText = turret.range;
     document.getElementById("upgCooldown").innerText = (getTurretShotCooldown(turret.type, turret.level) / 100).toFixed(2) + " s";
+    if (turret.type === "stormCannon") {
+        var pct = Math.round((turret.overheat / STORM_OVERHEAT_MAX) * 100);
+        document.getElementById("upgOverheat").innerText = pct + "%";
+        document.getElementById("overheatRow").style.display = "flex";
+        if (turret.level === 5) {
+            document.getElementById("stormToggleRow").style.display = "flex";
+            var btn = document.getElementById("stormToggleBtn");
+            if (turret.active !== false) {
+                btn.textContent = "On";
+                btn.className = "storm-toggle-btn storm-toggle-on";
+            } else {
+                btn.textContent = "Off";
+                btn.className = "storm-toggle-btn storm-toggle-off";
+            }
+        } else {
+            document.getElementById("stormToggleRow").style.display = "none";
+        }
+    } else {
+        document.getElementById("overheatRow").style.display = "none";
+        document.getElementById("stormToggleRow").style.display = "none";
+    }
     document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
     document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
 }

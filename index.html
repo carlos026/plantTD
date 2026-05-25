@@ -39,6 +39,14 @@
             <span>Cooldown</span>
             <span id="upgCooldown"></span>
         </div>
+        <div class="info-item" id="overheatRow" style="display: none;">
+            <span>Overheat</span>
+            <span id="upgOverheat" class="overheat-text"></span>
+        </div>
+        <div class="info-item" id="stormToggleRow" style="display: none;">
+            <span>Active</span>
+            <button class="storm-toggle-btn storm-toggle-on" id="stormToggleBtn" onclick="toggleStormCannon()">On</button>
+        </div>
         <div class="info-item btn-row">
             <button class="sellbtn" id="sellBtn" onclick="btnSellTurretClick()" type="sellbutton">Sell!</button>
             <button class="upgradebutton" id="upgBtn" onclick="btnUpgradeTurretClick()" type="button">Upgrade!</button>

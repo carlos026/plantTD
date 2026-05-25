@@ -140,6 +140,16 @@ function showShopTurretInfo(type) {
 }
 ////////////////////// END TURRET SHOP INFO DIALOG
 
+////////////////////// STORM CANNON OVERHEAT
+function destroyOverheatedStormCannon(idx) {
+	document.getElementById("registrationForm").style.display = "none";
+	hideRangeIndicator();
+	document.body.removeChild(turretPos[idx].overheatBar);
+	document.body.removeChild(turretPos[idx].htmlElement);
+	turretPos.splice(idx, 1);
+}
+////////////////////// END STORM CANNON OVERHEAT
+
 ////////////////////// DAMAGE STATS PANEL
 function showDamageStatsPanel() {
 	var panel = document.getElementById("damageStatsPanel");
@@ -298,6 +308,20 @@ function mapDrop(mapzone, x, y) {
 				audioFile:turretSoundEffect(turretType),
 				totalDamage:0
 			};
+			if (turretType === "stormCannon") {
+				turretObj.active = true;
+				turretObj.overheat = 0;
+				turretObj.overheatCoolTick = 0;
+				turretObj.firedThisTurn = false;
+				var overheatBar = document.createElement("progress");
+				overheatBar.setAttribute("class", "overheat-bar");
+				overheatBar.setAttribute("value", 0);
+				overheatBar.setAttribute("max", STORM_OVERHEAT_MAX);
+				overheatBar.style.left = xPos + "px";
+				overheatBar.style.top = (parseInt(yPos) + 16) + "px";
+				document.body.appendChild(overheatBar);
+				turretObj.overheatBar = overheatBar;
+			}
 			turretPos[turretPos.length] = turretObj;
 			// once created it is possible to see the turret upgrade info.
 			listenEvent(turret, "click", showTurretInfo(turretPos[turretPos.length - 1]));
@@ -951,6 +975,10 @@ function anyTurretsInRange(minion, x, y) {
 			continue;
 		}
 
+		if (turretPos[i].type === "stormCannon" && turretPos[i].active === false) {
+			continue;
+		}
+
 		if ((euclidDistance(x, xt, y, yt) <= turretPos[i].range) && turretPos[i].shotCd <= 0) {
 			rotateToTarget(minion, turretPos[i].htmlElement);
 			if(turretPos[i].type == "machineGun"){
@@ -988,6 +1016,17 @@ function anyTurretsInRange(minion, x, y) {
 			damage = shotTotal;
 			updateTurretSoundPostShooting(turretPos[i]);
 			updateTurretCooldownPostShooting(turretPos[i]);
+			if (turretPos[i].type === "stormCannon") {
+				turretPos[i].firedThisTurn = true;
+				turretPos[i].overheat += STORM_OVERHEAT_PER_SHOT;
+				turretPos[i].overheatCoolTick = getTurretShotCooldown("stormCannon", 1);
+				turretPos[i].overheatBar.setAttribute("value", turretPos[i].overheat);
+				if (turretPos[i].overheat >= STORM_OVERHEAT_MAX) {
+					destroyOverheatedStormCannon(i);
+					i--;
+					continue;
+				}
+			}
 		} else if(turretPos[i].shotCd == 0) {
 			rotate(0, turretPos[i].htmlElement);
 			resetShotEffect(turretPos[i].htmlElement);
@@ -1172,6 +1211,24 @@ function btnUpgradeTurretClick() {
 	}
 }
 
+function toggleStormCannon() {
+	var turretId = document.getElementById("upgTurretId").value;
+	for (var i = 0; i < turretPos.length; i++) {
+		if (turretPos[i].htmlElement.id === turretId && turretPos[i].type === "stormCannon") {
+			turretPos[i].active = !turretPos[i].active;
+			var btn = document.getElementById("stormToggleBtn");
+			if (turretPos[i].active) {
+				btn.textContent = "On";
+				btn.className = "storm-toggle-btn storm-toggle-on";
+			} else {
+				btn.textContent = "Off";
+				btn.className = "storm-toggle-btn storm-toggle-off";
+			}
+			break;
+		}
+	}
+}
+
 //Identify which turret should be sold.
 function btnSellTurretClick(){
 	if (!isRunning || isPaused) {
@@ -1187,6 +1244,9 @@ function btnSellTurretClick(){
 			document.getElementById("registrationForm").style.display = "none";
 			hideRangeIndicator();
 			//Remove selected turret.
+			if (turretPos[i].overheatBar) {
+				document.body.removeChild(turretPos[i].overheatBar);
+			}
 			document.body.removeChild(turretPos[i].htmlElement);
 			turretPos.splice(i, 1);
 			//Increases money.
