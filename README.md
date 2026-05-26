@@ -19,9 +19,15 @@ Strategically place turrets on the map to stop waves of incoming minions from re
 | Laser | $100 | Mid-range precision with critical hits — 2× damage vs airplanes |
 | Flamethrower | $400 | Short-range area damage — no effect on airplanes |
 | Blizzard | $600 | Freezes enemies in an area |
-| Toxic | $800 | Applies damage-over-time poison |
-| Rail Cannon | $1500 | High damage, stuns enemies — 2× damage vs airplanes (stun has no effect on them) |
-| Storm Cannon | $2000 | Long-range, heavy damage |
+| Toxic | $800 | Applies long-range damage-over-time poison |
+| Storm Cannon | $1000 | Hits **all** enemies in range simultaneously with electric bursts — see [Overheat](#storm-cannon-overheat) |
+| Rail Cannon | $1500 | Extreme single-target damage, stuns enemies — 2× damage vs airplanes (stun has no effect on them) |
+
+### Storm Cannon Overheat
+
+The Storm Cannon generates heat with every shot. If overheat reaches **100%** the tower is permanently destroyed. It cools down passively between shots (faster at higher upgrade levels). Manage it carefully against dense waves.
+
+- At **level 5**, a toggle button appears in the upgrade panel to pause shooting and let the tower cool safely.
 
 ## Enemies
 
