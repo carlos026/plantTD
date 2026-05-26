@@ -388,6 +388,16 @@ function cancelPropogation(event) {
 
 ////////////////////// MAP CREATION
 function drawMap() {
+	// Isolate all map tiles in their own GPU compositor layer.
+	// This prevents minion position changes from triggering repaints of the 2400 map tiles.
+	var mapContainer = document.createElement("div");
+	mapContainer.id = "mapContainer";
+	mapContainer.style.position = "absolute";
+	mapContainer.style.top = "0";
+	mapContainer.style.left = "0";
+	mapContainer.style.willChange = "transform";
+	document.body.appendChild(mapContainer);
+
 	// create the map zone
 	for (var j = 0; j < MAP_H; j++) {
 		for (var i = 0; i < MAP_W; i++) {
@@ -399,12 +409,10 @@ function drawMap() {
 			listenEvent(mapzone, "drop", mapDrop(mapzone, i, j));
 			listenEvent(mapzone, "dragenter", cancelEvent(i, j));
 			listenEvent(mapzone, "dragover", dragOver(i, j));
-			if (isRoad(currentLevel, i, j)) {
-				mapzone.style.backgroundColor = "#1E90FF";
-			} 
-			document.body.appendChild(mapzone);
+			mapContainer.appendChild(mapzone);
 		}
 	}
+	drawTargetMap(currentLevel);
 
 	// create the turrets
 	var turretTypes = getTurretTypes();
@@ -497,43 +505,48 @@ function drawTargetMap(targetLevel) {
 	var pixels = document.getElementsByClassName('mapzone');
 	for (var i = 0; i < pixels.length; i++) {
 		var mapzone = pixels[i];
-		var x = mapzone.style.left.replace("px", "") / TILE_H;
-		var y = mapzone.style.top.replace("px", "") / TILE_W;
+		var x = Math.floor(mapzone.style.left.replace("px", "") / TILE_H);
+		var y = Math.floor(mapzone.style.top.replace("px", "") / TILE_W);
+
 		if (isRoad(targetLevel, x, y)) {
-			var roadColor = "#FFFFFF";
+			var roadColor = "#2a3b5c";
+			var roadGrad = "linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%)";
+			
 			switch(targetLevel) {
-				case 1:
-					roadColor = "#1E90FF";
-				break;
-				case 2:
-					roadColor = "#614821";
-				break;
-				case 3:
-					roadColor = "#15f7b3";
-				break;
-				case 4:
-					roadColor = "#949494";
-				break;
-				case 5:
-					roadColor = "#04545f";
-				break;
+				case 1: roadColor = "#3d5585"; break;
+				case 2: roadColor = "#3d2b1f"; break; // Caminho de terra escura
+				case 3: roadColor = "#0f4938"; break;
+				case 4: roadColor = "#222222"; break;
+				case 5: roadColor = "#19191a"; break;
 			}
 			mapzone.style.backgroundColor = roadColor;
+			mapzone.style.backgroundImage = roadGrad;
+			mapzone.style.boxShadow = "inset 0 0 5px rgba(0,0,0,0.3)";
 		} else {
+			var groundColor = "#0b1035";
+			var groundGrad = "radial-gradient(circle, #101644 0%, #0b1035 100%)"; // Tema Level 1
+
 			switch(targetLevel) {
 				case 2:
-					mapzone.style.backgroundColor = '#C98D26';
+					groundColor = "#8b6b43"; // Desert/Wasteland
+					groundGrad = "radial-gradient(circle, #a68555 0%, #8b6b43 100%)";
 				break;
 				case 3:
-					mapzone.style.backgroundColor = '#035f17';
+					groundColor = "#0b2410"; // Swamp/Forest
+					groundGrad = "radial-gradient(circle, #153d1b 0%, #0b2410 100%)";
 				break;
 				case 4:
-					mapzone.style.backgroundColor = '#942104';
+					groundColor = "#5a1202"; // Inferno
+					groundGrad = "radial-gradient(circle, #7a1a05 0%, #5a1202 100%)";
 				break;
 				case 5:
-					mapzone.style.backgroundColor = '#002e13';
+					groundColor = "#45534c"; // Void
+					groundGrad = "radial-gradient(circle, #232725 0%, #434444 100%)";
 				break;
 			}
+			mapzone.style.backgroundColor = groundColor;
+			mapzone.style.backgroundImage = groundGrad;
+			mapzone.style.boxShadow = "inset 0 0 1px rgba(255,255,255,0.05)";
 		}
 	}
 }
@@ -601,6 +614,7 @@ function startwave(evt) {
 	var minions_killed = 0;
 	var lives_lost = 0;
 	var wave_over = false;
+	var tickCount = 0;
 	// get all the minions available
 	var minions = document.getElementsByClassName("minion");
 	var hpBarMinions = document.getElementsByClassName("hpBar");
@@ -649,9 +663,9 @@ function startwave(evt) {
 				}
 
 				//Projectile's creation happens once every 50 times the common interval.
-				if (timeLapsesSinceLastShot == SHOOT_COOLDOWN && minions[i].style.display != 'none') {
+				//if (timeLapsesSinceLastShot == SHOOT_COOLDOWN && minions[i].style.display != 'none') {
 					//shoot(minions[i], movex[i], movey[i]);
-				}
+				//}
 
 				// are there any turrets in range? @TODO status
 				var damage = 0;
@@ -728,12 +742,16 @@ function startwave(evt) {
 			updateTurretCooldownPostTurn(turretPos);
 			//moveProjectiles();
 			//Reset count since last shot (projectile related)
-			if (timeLapsesSinceLastShot == SHOOT_COOLDOWN) {
+			/*if (timeLapsesSinceLastShot == SHOOT_COOLDOWN) {
 				timeLapsesSinceLastShot = 0;
-			}
+			}*/
 		  
-			// update the status
-			updateStatus();
+			// update the status — throttled to 1x per 6 ticks (~60ms)
+			tickCount++;
+			if (tickCount >= 6) {
+				updateStatus();
+				tickCount = 0;
+			}
 			updateEnemyInfoDialog();
 			updateDamageStatsPanel(false);
 
@@ -775,8 +793,9 @@ function startwave(evt) {
 						minions[i].style.width = "30px";
 						minions[i].style.height = "30px";
 						minion_hp[i] = bossHp();
-						console.log("Boss Hp: " + minion_hp[i]);
 						first_kill[i] = true;
+						minions[i]._isPlane = false;
+						removeDebuffs(minions[i], hpBarMinions[i]);
 					}
 				} else {
 					for (var i = 0; i < minions.length; i++) {
@@ -791,12 +810,13 @@ function startwave(evt) {
 						minions[i].style.height = "16px";
 						minion_hp[i] = minionhp();
 						first_kill[i] = true;
+						removeDebuffs(minions[i], hpBarMinions[i]);
 						var usePlane = currentWave >= 11 && Math.random() < 0.5;
 						if (usePlane) {
-							minions[i].setAttribute(PLANE_STATUS_ATTRIBUTE, PLANE_TYPE_VALUE);
+							minions[i]._isPlane = true;
 							minions[i].style.backgroundImage = "url('img/pla-lv2/pla-up.png')";
 						} else {
-							minions[i].removeAttribute(PLANE_STATUS_ATTRIBUTE);
+							minions[i]._isPlane = false;
 							minions[i].style.backgroundImage = "url('img/min-lv1/min-up.png')";
 						}
 					}
@@ -980,7 +1000,7 @@ function anyTurretsInRange(minion, x, y) {
 		}
 
 		if ((euclidDistance(x, xt, y, yt) <= turretPos[i].range) && turretPos[i].shotCd <= 0) {
-			rotateToTarget(minion, turretPos[i].htmlElement);
+			rotateToTarget(x, y, parseInt(turretPos[i].x), parseInt(turretPos[i].y), turretPos[i].htmlElement);
 			if(turretPos[i].type == "machineGun"){
 				turretPos[i].htmlElement.style.borderTop = "1px solid #cdfb00";
 				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
@@ -1097,23 +1117,11 @@ function shoot(minion, x, y) {
 	}
 }
 
-// Function to calculate the angle between turret and minion
-function getAngle(target, looker) {
-	var targetRect = target.getBoundingClientRect();
-	var lookerRect = looker.getBoundingClientRect();
-
-	var x =  lookerRect.left - targetRect.left;
-	var y =  lookerRect.top - targetRect.top;
-	var radians = Math.atan2(y, x);
-	var angle = (radians * (180 / Math.PI)) - 90;
-
-	return angle;
-}
-
-// Function to rotate the turret div to face the minion div
-function rotateToTarget(minion, turret) {
-	var angle = getAngle(minion, turret);
-	turret.style.transform = "rotate(" + angle + "deg)";
+function rotateToTarget(minionX, minionY, turretX, turretY, turretEl) {
+	var dx = turretX - minionX;
+	var dy = turretY - minionY;
+	var angle = (Math.atan2(dy, dx) * (180 / Math.PI)) - 90;
+	turretEl.style.transform = "rotate(" + angle + "deg)";
 }
 
 function rotate(angle, turret){

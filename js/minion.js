@@ -10,30 +10,33 @@ const PLANE_TYPE_VALUE = "plane";
 const PLANE_SPEED = 3.0;
 const PLANE_FROZEN_SPEED = 1.0;
 
-// Minion status related functions
+// Debuff state is stored as JS properties on the element (_frozen, _stunned, _toxic, _isPlane)
+// to avoid the DOM getAttribute/setAttribute overhead on every tick.
+
 function freezeMinion(minionElement, duration) {
-	minionElement.setAttribute(FROZEN_STATUS_ATTRIBUTE, duration);
+	minionElement._frozen = duration;
 }
 
 function isPlaneMinion(minionElement) {
-	return minionElement.getAttribute(PLANE_STATUS_ATTRIBUTE) === PLANE_TYPE_VALUE;
+	return minionElement._isPlane === true;
 }
 
 function stunMinion(minionElement, duration) {
 	if (isPlaneMinion(minionElement)) return;
-	minionElement.setAttribute(STUN_STATUS_ATTRIBUTE, duration);
+	minionElement._stunned = duration;
 }
 
 function toxicMinion(minionElement, duration) {
-	minionElement.setAttribute(TOXIC_STATUS_ATTRIBUTE, duration);
+	minionElement._toxic = duration;
 }
 
 function applyDebuff(debuff, minionElement, duration) {
-	minionElement.setAttribute(debuff, duration);
+	minionElement["_" + debuff] = duration;
 }
 
 function hasDebuff(debuff, minionElement) {
-	return minionElement.hasAttribute(debuff);
+	var val = minionElement["_" + debuff];
+	return val != null && val > 0;
 }
 
 function applyDebuffVisual(debuff, hpBarElement){
@@ -43,17 +46,20 @@ function applyDebuffVisual(debuff, hpBarElement){
 }
 
 function removeDebuff(debuff, minionElement, hpBarElement) {
-	minionElement.removeAttribute(debuff);
+	minionElement["_" + debuff] = undefined;
 	hpBarElement.classList.remove(debuff);
 }
 
 function addToDebuffDuration(debuff, minionElement, hpBarElement, quantity) {
-	if (hasDebuff(debuff, minionElement)) {
-		let debuffDuration = +minionElement.getAttribute(debuff) + quantity;
-		if (debuffDuration < 1) {
-			removeDebuff(debuff, minionElement, hpBarElement);
+	var key = "_" + debuff;
+	var val = minionElement[key];
+	if (val != null && val > 0) {
+		var newDuration = val + quantity;
+		if (newDuration < 1) {
+			minionElement[key] = undefined;
+			hpBarElement.classList.remove(debuff);
 		} else {
-			minionElement.setAttribute(debuff, debuffDuration);
+			minionElement[key] = newDuration;
 			applyDebuffVisual(debuff, hpBarElement);
 		}
 	}

@@ -7,19 +7,19 @@ function getTurretTypes(){
 function turretColor(type) {
 	switch (type) {
 	case "machineGun":
-		return "#DDA0DD";
+		return "#e0aaff"; // Soft Neon Purple
 	case "laser":
-		return "#8c00ff";
+		return "#ff006e"; // Cyber Pink
 	case "flamethrower":
-		return "#ff00ea";
+		return "#fb5607"; // Intense Orange
 	case "blizzard":
-		return "#00bcbc";
+		return "#00b4d8"; // Bright Sky Blue
 	case "toxic":
-		return "#27752b";
+		return "#3a5a40"; // Forest Green
 	case "stormCannon":
-		return "#FF4500";
+		return "#ffbe0b"; // Electric Yellow
 	case "railCannon":
-		return "#fff700";
+		return "#3a86ff"; // Tech Blue
 	}
 }
 
@@ -63,7 +63,7 @@ function getTurretAnimationCooldown(type, level){
 
 function updateTurretCooldownPostShooting(turret) {
 	if (turret.shotCd > 0) {
-		console.log("Turret should not shoot! -> " + turret.htmlElement.id);
+		return;
 	} else {
 		switch (turret.type) {
 		//case "machineGun":
@@ -449,8 +449,8 @@ function upgradeTurretData(turret){
 			turret.range += upgradeRange * 0.1;
 			break;
 		case "stormCannon":
-			turret.damage += upgradeDamage * 0.1;
-			turret.range += upgradeRange * 0.005;
+			turret.damage += upgradeDamage * 0.15;
+			turret.range += upgradeRange * 0.01;
 			break;
 		case "railCannon":
 			turret.damage += turretDamage(turret.type) * 0.25;
