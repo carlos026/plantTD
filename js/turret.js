@@ -1,6 +1,6 @@
 // Turret functions
 function getTurretTypes(){
-	const types = ["machineGun", "laser", "flamethrower", "blizzard", "toxic", "stormCannon", "railCannon"];
+	const types = ["machineGun", "laser", "flamethrower", "blizzard", "toxic", "stormCannon", "railCannon", "missile"];
 	return types;
 }
 
@@ -20,6 +20,8 @@ function turretColor(type) {
 		return "#ffbe0b"; // Electric Yellow
 	case "railCannon":
 		return "#3a86ff"; // Tech Blue
+	case "missile":
+		return "#FFD700"; // Yellow
 	}
 }
 
@@ -39,6 +41,8 @@ function getTurretShotCooldown(type, level){
 		return 10;
 	case "railCannon":
 		return 601 - (level * 30);
+	case "missile":
+		return 420 - (level * 20);
 	}
 }
 
@@ -57,6 +61,8 @@ function getTurretAnimationCooldown(type, level){
 	case "stormCannon":
 		return 0;
 	case "railCannon":
+		return 0;
+	case "missile":
 		return 0;
 	}
 }
@@ -117,6 +123,8 @@ function updateTurretCooldownPostTurn(turrets){
 				break;
 			case "railCannon":
 				break;
+			case "missile":
+				break;
 			}
 		}
 		if (turrets[i].type === "stormCannon" && turrets[i].overheat > 0) {
@@ -164,6 +172,8 @@ function turretSoundEffect(type){
 			return new Audio("sound/StormCannon.wav");
 		case "railCannon":
 			return new Audio("sound/RailCannon.wav");
+		case "missile":
+			return new Audio("sound/missileLaunch.mp3");
 		}
 }
 
@@ -183,6 +193,8 @@ function turretImage(type) {
 		return "url('img/tw/tower4.png')";
 	case "railCannon":
 		return "url('img/tw/tower5.png')";
+	case "missile":
+		return "url('img/tw/missile.png')";
 	}
 }
 
@@ -200,8 +212,10 @@ function turretValue(type) {
 		return 800;
 	case "railCannon":
 		return 1500;
-	case "stormCannon": 
+	case "stormCannon":
 		return 1000;
+	case "missile":
+		return 2000;
 	}
 }
 
@@ -221,6 +235,8 @@ function turretRange(type) {
 		return 15 * TILE_W;
 	case "railCannon":
 		return 5 * TILE_W;
+	case "missile":
+		return 7 * TILE_W;
 	}
 }
 
@@ -240,6 +256,8 @@ function turretDamage(type) {
 		return 250;
 	case "railCannon":
 		return 3250;
+	case "missile":
+		return 1500;
 	}
 }
 
@@ -259,6 +277,8 @@ function turretName(type) {
 		return "Toxic Tower";
 	case "railCannon":
 		return "Rail Cannon";
+	case "missile":
+		return "Missile Turret";
 	}
 }
 
@@ -278,6 +298,8 @@ function turretDescription(type) {
 		return "Hits all enemies in range simultaneously with electric bursts.";
 	case "railCannon":
 		return "Extreme single-target damage with a very slow fire rate. Destroys bosses.";
+	case "missile":
+		return "Prioritizes aircraft. Fires a missile that detonates on impact, dealing 5x damage to planes.";
 	}
 }
 
@@ -304,6 +326,9 @@ function turretUpgradeCosts(type, turretLvl) {
 		break;
 	case "railCannon":
 		upgradeCost = upgradeCost * 0.2;
+		break;
+	case "missile":
+		upgradeCost = upgradeCost * 0.8;
 		break;
 	}
 	return upgradeCost;
@@ -456,6 +481,10 @@ function upgradeTurretData(turret){
 			turret.damage += turretDamage(turret.type) * 0.25;
 			turret.range += turretRange(turret.type) * 0.2;
 			break;
+		case "missile":
+			turret.damage += upgradeDamage * 0.3;
+			turret.range += upgradeRange * 0.05;
+			break;
 	}
 }
 
@@ -493,6 +522,8 @@ function shootingTrigger(turret, minion, turretStyle, damage){
 			turretStyle.borderRadius = "20px/20px";
 			stunMinion(minion, 150 + (turret.level * 50));
 			return calculateCriticalHitDamage(20, turret.damage);
+		case "missile":
+			return 0;
 	}
 }
 

@@ -19,6 +19,11 @@
 }
 
 /* ── BASE ──────────────────────────────────────────── */
+html {
+  overflow: hidden;
+  touch-action: none;
+}
+
 body {
   font-family: 'Exo 2', 'Segoe UI', system-ui, sans-serif;
   background-color: var(--bg);
@@ -28,7 +33,10 @@ body {
   color: var(--text);
   margin: 0;
   padding: 0;
-  overflow-x: auto;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
 }
 
 p {
@@ -279,8 +287,8 @@ p {
 /* ── STATUS BAR HUD ────────────────────────────────── */
 .statusbar {
   position: absolute;
-  top: 458px;
-  left: 480px;
+  top: 468px;
+  left: 520px;
   height: 80px;
   background: var(--panel);
   border: 1.5px solid var(--border);
