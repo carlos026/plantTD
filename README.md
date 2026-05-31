@@ -22,6 +22,7 @@ Strategically place turrets on the map to stop waves of incoming minions from re
 | Toxic | $800 | Applies long-range damage-over-time poison |
 | Storm Cannon | $1000 | Hits **all** enemies in range simultaneously with electric bursts — see [Overheat](#storm-cannon-overheat) |
 | Rail Cannon | $1500 | Extreme single-target damage, stuns enemies — 2× damage vs airplanes (stun has no effect on them) |
+| Missile Turret | $2000 | Prioritizes airplanes over ground targets. Damage is delayed until impact — **5× damage vs airplanes** |
 
 ### Storm Cannon Overheat
 
@@ -34,7 +35,7 @@ The Storm Cannon generates heat with every shot. If overheat reaches **100%** th
 | Enemy | Appears | Speed | HP | Notes |
 |---|---|---|---|---|
 | Minion | Wave 1+ | 1.0 | Standard | — |
-| Airplane | Wave 11+ (mixed) | 3.0 | Standard | Immune to stun; freeze slows to 1.0; immune to Flamethrower; takes 2× damage from Machine Gun, Laser, and Rail Cannon |
+| Airplane | Wave 11+ (mixed) | 3.0 | Standard | Immune to stun; freeze slows to 1.0; immune to Flamethrower; takes 2× damage from Machine Gun, Laser, and Rail Cannon; takes **5× damage** from Missile Turret |
 | Boss | Every 10th wave | 1.0 | Very high | Single enemy, high reward |
 
 ## Status Effects
@@ -66,6 +67,17 @@ Airplanes share the same HP formula as regular minions. Killing a regular minion
 | 10, 20, … | Boss | 1 |
 | 11–19, … | Minions + Airplanes (random mix) | 10–16 (random) |
 
+## Mobile Support
+
+The game scales automatically to fit any screen size. On devices narrower than the native 1422×640 resolution, the entire game view is scaled down proportionally so it always fits without scrolling.
+
+Touch drag-and-drop is fully supported for placing turrets:
+- **Long-press** (touchstart) a turret card to pick it up — a ghost preview follows your finger
+- **Drag** to any non-road tile and **release** (touchend) to place it
+- A range indicator appears while dragging so you can see coverage before placing
+
+All other interactions (upgrade, sell, start wave, pause) work with a standard tap.
+
 ## Running the Game
 
 No build step or dependencies required.
@@ -96,7 +108,8 @@ Then open `http://localhost:8000/game.html`.
 
 | Action | How |
 |---|---|
-| Place tower | Drag turret card onto the map |
+| Place tower (desktop) | Drag turret card onto the map |
+| Place tower (mobile) | Long-press card, drag, release on tile |
 | Upgrade / Sell | Click a placed tower |
 | Start wave | Click **START** |
 | Pause | Click **⏸** |
