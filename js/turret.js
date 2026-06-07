@@ -142,6 +142,25 @@ function updateTurretCooldownPostTurn(turrets){
 			}
 			turrets[i].firedThisTurn = false;
 		}
+		if (turrets[i].type === "missile" && turrets[i].ammoLoading) {
+			turrets[i].ammoLoadTick--;
+			if (turrets[i].ammoLoadBar) {
+				turrets[i].ammoLoadBar.setAttribute("value", 500 - turrets[i].ammoLoadTick);
+			}
+			if (turrets[i].ammoLoadTick <= 0) {
+				turrets[i].ammo = Math.min(turrets[i].ammo + 1, getMissileMaxAmmo(turrets[i].level));
+				turrets[i].ammoLoading = false;
+				turrets[i].ammoLoadTick = 0;
+				if (turrets[i].ammoLoadBar) {
+					document.body.removeChild(turrets[i].ammoLoadBar);
+					turrets[i].ammoLoadBar = null;
+				}
+				var selectedId = document.getElementById("upgTurretId").value;
+				if (turrets[i].htmlElement.id === selectedId) {
+					updateTurretInfo(turrets[i]);
+				}
+			}
+		}
 	}
 }
 
@@ -257,7 +276,7 @@ function turretDamage(type) {
 	case "railCannon":
 		return 3250;
 	case "missile":
-		return 1500;
+		return 5000;
 	}
 }
 
@@ -328,10 +347,15 @@ function turretUpgradeCosts(type, turretLvl) {
 		upgradeCost = upgradeCost * 0.2;
 		break;
 	case "missile":
-		upgradeCost = upgradeCost * 0.8;
+		upgradeCost = upgradeCost * 0.2;
 		break;
 	}
 	return upgradeCost;
+}
+
+function getMissileMaxAmmo(level) {
+	var counts = [0, 5, 6, 8, 10, 12];
+	return counts[level] || 12;
 }
 
 function getTurretSellPrice(type, upgradeTotalValue) {
@@ -442,6 +466,18 @@ function updateTurretInfo(turret){
         document.getElementById("overheatRow").style.display = "none";
         document.getElementById("stormToggleRow").style.display = "none";
     }
+    if (turret.type === "missile") {
+        document.getElementById("ammoRow").style.display = "flex";
+        document.getElementById("upgAmmo").innerText = turret.ammo + " / " + getMissileMaxAmmo(turret.level);
+        document.getElementById("ammoBuyRow").style.display = "flex";
+        var buyBtn = document.getElementById("ammoBuyBtn");
+        var atMax = turret.ammo >= getMissileMaxAmmo(turret.level);
+        buyBtn.disabled = turret.ammoLoading || currentCash < 50 || atMax;
+        buyBtn.textContent = turret.ammoLoading ? "Loading..." : "$50 | Buy Ammo";
+    } else {
+        document.getElementById("ammoRow").style.display = "none";
+        document.getElementById("ammoBuyRow").style.display = "none";
+    }
     document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
     document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
 }
@@ -523,7 +559,7 @@ function shootingTrigger(turret, minion, turretStyle, damage){
 			stunMinion(minion, 150 + (turret.level * 50));
 			return calculateCriticalHitDamage(20, turret.damage);
 		case "missile":
-			return 0;
+			return calculateCriticalHitDamage(20, turret.damage);
 	}
 }
 

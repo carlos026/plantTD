@@ -160,6 +160,31 @@ p {
   font-weight: 700;
 }
 
+/* ── MISSILE TURRET AMMO LOADING BAR ──────────────── */
+.ammo-load-bar {
+  position: absolute;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.ammo-load-bar::-webkit-progress-bar {
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+}
+
+.ammo-load-bar::-webkit-progress-value {
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  border-radius: 2px;
+}
+
+.ammo-load-bar::-moz-progress-bar {
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  border-radius: 2px;
+}
+
 /* ── TURRET SHOP INFO BUTTON ───────────────────────── */
 .turret-shop-info-btn {
   position: absolute;
@@ -395,6 +420,66 @@ p {
     transparent 100%
   );
   animation: frostFill 0.6s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
+/* ── MISSILE PROJECTILE ────────────────────────────── */
+.missile-projectile {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-image: url('img/tw/missileShot.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  z-index: 45;
+}
+
+/* ── MISSILE IMPACT EXPLOSION ──────────────────────── */
+@keyframes missileBlast {
+  0%   { transform: translate(-50%, -50%) scale(0);    opacity: 1; }
+  60%  { opacity: 0.75; }
+  100% { transform: translate(-50%, -50%) scale(1);    opacity: 0; }
+}
+
+@keyframes missileFlash {
+  0%   { transform: translate(-50%, -50%) scale(0);    opacity: 1; }
+  35%  { transform: translate(-50%, -50%) scale(0.55); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1);    opacity: 0; }
+}
+
+.missile-impact {
+  position: absolute;
+  pointer-events: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 150, 0, 0.9);
+  background: radial-gradient(
+    circle,
+    rgba(255, 240, 100, 0.65) 0%,
+    rgba(255, 110, 0, 0.35) 45%,
+    transparent 72%
+  );
+  box-shadow:
+    0 0 14px rgba(255, 140, 0, 0.75),
+    inset 0 0 16px rgba(255, 210, 0, 0.3);
+  animation: missileBlast 0.52s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+  z-index: 50;
+}
+
+.missile-impact::after {
+  content: '';
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 220, 0.95) 0%,
+    rgba(255, 200, 0, 0.65) 45%,
+    transparent 100%
+  );
+  animation: missileFlash 0.32s cubic-bezier(0.1, 0, 0.35, 1) forwards;
 }
 
 /* glow pulsante na torre de gelo ao disparar */
@@ -671,6 +756,39 @@ progress.toxic::-webkit-progress-value {
 
 .sellbtn:active {
   transform: scale(0.97);
+}
+
+/* ── AMMO BUY BUTTON ───────────────────────────────── */
+.ammo-buy-btn {
+  flex: 1;
+  height: 44px;
+  background: linear-gradient(135deg, #7a5c00, #c49b00);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 0.5px;
+  white-space: pre-line;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 14px rgba(200, 160, 0, 0.4);
+}
+
+.ammo-buy-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 22px rgba(255, 200, 0, 0.65);
+}
+
+.ammo-buy-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.ammo-buy-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* ── STORM CANNON TOGGLE BUTTON ────────────────────── */

@@ -307,6 +307,10 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 		turretObj.audioFileImpact = new Audio("sound/missileImpact.mp3");
 		turretObj.pendingMissiles = [];
 		turretObj.planeInRange = false;
+		turretObj.ammo = getMissileMaxAmmo(1);
+		turretObj.ammoLoading = false;
+		turretObj.ammoLoadTick = 0;
+		turretObj.ammoLoadBar = null;
 	}
 	if (turretType === "stormCannon") {
 		turretObj.active = true;
@@ -970,17 +974,45 @@ function processPendingMissiles() {
 		for (var j = 0; j < turretPos[i].pendingMissiles.length; j++) {
 			var missile = turretPos[i].pendingMissiles[j];
 			missile.timer--;
+			if (missile.projectileEl) {
+				var progress = 1 - missile.timer / 80;
+				var tgtX = parseFloat(missile.minionElement.style.left) + 8;
+				var tgtY = parseFloat(missile.minionElement.style.top)  + 8;
+				var curX = missile.startX + (tgtX - missile.startX) * progress;
+				var curY = missile.startY + (tgtY - missile.startY) * progress;
+				missile.projectileEl.style.left = curX + "px";
+				missile.projectileEl.style.top  = curY + "px";
+				var angle = Math.atan2(tgtY - curY, tgtX - curX) * 180 / Math.PI - 90;
+				missile.projectileEl.style.transform = "translate(-50%, -50%) rotate(" + angle + "deg)";
+			}
 			if (missile.timer <= 0) {
+				if (missile.projectileEl && missile.projectileEl.parentNode) {
+					document.body.removeChild(missile.projectileEl);
+				}
 				pendingMissileHits[missile.minionElement.id] = (pendingMissileHits[missile.minionElement.id] || 0) + missile.damage;
 				turretPos[i].totalDamage += missile.damage;
 				turretPos[i].audioFileImpact.currentTime = 0;
 				turretPos[i].audioFileImpact.play();
+				createMissileImpact(missile.minionElement);
 			} else {
 				remaining.push(missile);
 			}
 		}
 		turretPos[i].pendingMissiles = remaining;
 	}
+}
+
+function createMissileImpact(minionEl) {
+	var x = parseFloat(minionEl.style.left) || 0;
+	var y = parseFloat(minionEl.style.top)  || 0;
+	var impact = document.createElement("div");
+	impact.className = "missile-impact";
+	impact.style.left = (x + 8) + "px";
+	impact.style.top  = (y + 8) + "px";
+	document.body.appendChild(impact);
+	setTimeout(function() {
+		if (impact.parentNode) document.body.removeChild(impact);
+	}, 600);
 }
 
 function updateMissileTurretPlaneFlags(minions, movex, movey) {
@@ -1048,15 +1080,25 @@ function anyTurretsInRange(minion, x, y) {
 
 		if (turretPos[i].type === "missile") {
 			if (!isPlaneMinion(minion) && turretPos[i].planeInRange) continue;
+			if (turretPos[i].ammo <= 0) continue;
 			if (euclidDistance(x, xt, y, yt) <= turretPos[i].range && turretPos[i].shotCd <= 0) {
 				rotateToTarget(x, y, parseInt(turretPos[i].x), parseInt(turretPos[i].y), turretPos[i].htmlElement);
-				turretPos[i].htmlElement.style.borderTop = "3px solid #FFD700";
+				//turretPos[i].htmlElement.style.borderTop = "3px solid #FFD700";
 				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
 				var missileDmg = turretPos[i].damage;
 				if (isPlaneMinion(minion)) missileDmg *= 5;
 				turretPos[i].audioFile.currentTime = 0;
 				turretPos[i].audioFile.play();
-				turretPos[i].pendingMissiles.push({ minionElement: minion, damage: missileDmg, timer: 80 });
+				turretPos[i].ammo--;
+				var projStartX = parseInt(turretPos[i].x) + 8;
+				var projStartY = parseInt(turretPos[i].y) + 8;
+				var projEl = document.createElement("div");
+				projEl.className = "missile-projectile";
+				projEl.style.left = projStartX + "px";
+				projEl.style.top  = projStartY + "px";
+				projEl.style.transform = "translate(-50%, -50%)";
+				document.body.appendChild(projEl);
+				turretPos[i].pendingMissiles.push({ minionElement: minion, damage: missileDmg, timer: 80, projectileEl: projEl, startX: projStartX, startY: projStartY });
 				updateTurretCooldownPostShooting(turretPos[i]);
 			} else if (turretPos[i].shotCd === 0) {
 				rotate(0, turretPos[i].htmlElement);
@@ -1290,6 +1332,30 @@ function btnUpgradeTurretClick() {
 	}
 }
 
+function btnBuyAmmoClick() {
+	if (!isRunning || isPaused) return;
+	var turretId = document.getElementById("upgTurretId").value;
+	for (var i = 0; i < turretPos.length; i++) {
+		if (turretPos[i].htmlElement.id !== turretId || turretPos[i].type !== "missile") continue;
+		if (turretPos[i].ammoLoading) return;
+		if (currentCash < 50) return;
+		if (turretPos[i].ammo >= getMissileMaxAmmo(turretPos[i].level)) return;
+		currentCash -= 50;
+		turretPos[i].ammoLoading = true;
+		turretPos[i].ammoLoadTick = 500;
+		var loadBar = document.createElement("progress");
+		loadBar.setAttribute("class", "ammo-load-bar");
+		loadBar.setAttribute("value", 0);
+		loadBar.setAttribute("max", 500);
+		loadBar.style.left = turretPos[i].x + "px";
+		loadBar.style.top  = (parseInt(turretPos[i].y) + 22) + "px";
+		document.body.appendChild(loadBar);
+		turretPos[i].ammoLoadBar = loadBar;
+		updateTurretInfo(turretPos[i]);
+		break;
+	}
+}
+
 function toggleStormCannon() {
 	var turretId = document.getElementById("upgTurretId").value;
 	for (var i = 0; i < turretPos.length; i++) {
@@ -1324,6 +1390,17 @@ function btnSellTurretClick(){
 			//Remove selected turret.
 			if (turretPos[i].overheatBar) {
 				document.body.removeChild(turretPos[i].overheatBar);
+			}
+			if (turretPos[i].ammoLoadBar) {
+				document.body.removeChild(turretPos[i].ammoLoadBar);
+			}
+			if (turretPos[i].pendingMissiles) {
+				for (var p = 0; p < turretPos[i].pendingMissiles.length; p++) {
+					var pm = turretPos[i].pendingMissiles[p];
+					if (pm.projectileEl && pm.projectileEl.parentNode) {
+						document.body.removeChild(pm.projectileEl);
+					}
+				}
 			}
 			document.body.removeChild(turretPos[i].htmlElement);
 			turretPos.splice(i, 1);
