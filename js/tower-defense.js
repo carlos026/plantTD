@@ -282,6 +282,7 @@ function turretClick(turret) {
 
 function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 	if (isRoad(currentLevel, x, y)) return false;
+	if (isBlockedTile(x, y)) return false;
 
 	turretEl.style.left = mapzone.style.left;
 	turretEl.style.top  = mapzone.style.top;
@@ -362,9 +363,18 @@ function listenEvent(eventTarget, eventType, eventHandler) {
 
 
 // DRAG AND DROP
+var BLOCKED_TILES = [{x: 29, y: 4}]; // boat.png position
+
+function isBlockedTile(xPos, yPos) {
+	for (var i = 0; i < BLOCKED_TILES.length; i++) {
+		if (BLOCKED_TILES[i].x === xPos && BLOCKED_TILES[i].y === yPos) return true;
+	}
+	return false;
+}
+
 function dragOver(xPos, yPos){
 	function dragover(evt) {
-		if(!isRoad(currentLevel, xPos, yPos)) {
+		if(!isRoad(currentLevel, xPos, yPos) && !isBlockedTile(xPos, yPos)) {
 			if (evt.preventDefault) evt.preventDefault();
 				evt = evt || window.event;
 				evt.dataTransfer.dropEffect = 'copy';
@@ -376,7 +386,7 @@ function dragOver(xPos, yPos){
 
 function cancelEvent(xPos, yPos){
 	function dragenter(event) {
-		if(!isRoad(currentLevel, xPos, yPos)){
+		if(!isRoad(currentLevel, xPos, yPos) && !isBlockedTile(xPos, yPos)){
 			if (event.preventDefault) {
 				event.preventDefault();
 			} else {
@@ -517,6 +527,11 @@ function pauseAudio() {
 function drawTargetMap(targetLevel) {
 	var pixels = document.getElementsByClassName('mapzone');
 	for (var i = 0; i < pixels.length; i++) {
+		
+		
+		if(i == 350){
+			mapzone.style.backgroundImage = "url('img/neutral/boat.png')";
+		}
 		var mapzone = pixels[i];
 		var x = Math.floor(mapzone.style.left.replace("px", "") / TILE_H);
 		var y = Math.floor(mapzone.style.top.replace("px", "") / TILE_W);
@@ -619,6 +634,7 @@ function startwave(evt) {
 	var movey = new Array();
 	// what direction are we going?
 	var currentDir = new Array();
+	var prevDir = new Array();
 	var minion_c = 1;
 	var minion_release = new Array();
 	var minion_hp = new Array();
@@ -634,6 +650,7 @@ function startwave(evt) {
 		movex[i] = 0;
 		movey[i] = 0;
 		currentDir[i] = MOVE_S;
+		prevDir[i] = MOVE_S;
 		minion_release[i] = 0;
 		minions[i].style.display = "none";
 		hpBarMinions[i].style.display = "none";
@@ -696,6 +713,14 @@ function startwave(evt) {
 					delete pendingMissileHits[minions[i].id];
 				}
 				let speed = getMinionSpeed(minions[i]);
+				if (currentDir[i] !== prevDir[i]) {
+					if (currentDir[i] === MOVE_E || currentDir[i] === MOVE_W) {
+						movey[i] = Math.floor((movey[i] + 7.5) / 15) * 15 - 1;
+					} else if (currentDir[i] === MOVE_N || currentDir[i] === MOVE_S) {
+						movex[i] = Math.floor((movex[i] + 7.5) / 15) * 15 - 1;
+					}
+					prevDir[i] = currentDir[i];
+				}
 				switch (currentDir[i]) {
 				case MOVE_N:
 					movey[i] -= speed;
@@ -801,6 +826,7 @@ function startwave(evt) {
 						movex[i] = 0;
 						movey[i] = 0;
 						currentDir[i] = MOVE_S;
+						prevDir[i] = MOVE_S;
 						minion_release[i] = 0;
 						minions[i].style.display = "none";
 						hpBarMinions[i].style.display = "none";
@@ -818,6 +844,7 @@ function startwave(evt) {
 						movex[i] = 0;
 						movey[i] = 0;
 						currentDir[i] = MOVE_S;
+						prevDir[i] = MOVE_S;
 						minion_release[i] = 0;
 						minions[i].style.display = "none";
 						hpBarMinions[i].style.display = "none";
