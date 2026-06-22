@@ -1,0 +1,26 @@
+{
+  "name": "planttd",
+  "version": "1.0.0",
+  "description": "A browser-based tower defense game built with vanilla JavaScript, HTML5, and CSS3. No installation required — just open `game.html` and play.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/carlos026/plantTD.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/carlos026/plantTD/issues"
+  },
+  "homepage": "https://github.com/carlos026/plantTD#readme",
+  "dependencies": {
+    "phaser": "^4.2.0",
+    "vite": "^8.0.16"
+  }
+}

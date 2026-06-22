@@ -1,114 +1,30 @@
-<html>
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Plant TD</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="board.css" type="text/css">
-<script type="text/javascript" src="js/constants.js"></script>
-<script type="text/javascript" src="js/map.js"></script>
-<script type="text/javascript" src="js/turret.js"></script>
-<script type="text/javascript" src="js/minion.js"></script>
-<script type="text/javascript" src="js/tower-defense.js"></script>
-<script type="text/javascript" src="js/mobile.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plant TD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #0d0d1a;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #game-container canvas {
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <div class="character-info">
-        <p class="panel-title">&#9834; Soundtrack</p>
-        <button class="soundtrackbtn" onclick="playAudio()" id="play"  style="display: block;">&#9654; Play</button>
-        <button class="soundtrackbtn" onclick="pauseAudio()" id="pause" style="display: none;">&#9646;&#9646; Pause</button>
-    </div>
-    <div id="registrationForm" class="character-info" style="display: none;">
-        <h1>Turret Upgrade</h1>
-        <div class="info-item">
-            <span>Name</span>
-            <span id="upgName"></span>
-        </div>
-        <div class="info-item">
-            <span>Level</span>
-            <span id="upgLevel"></span>
-        </div>
-        <div class="info-item">
-            <span>Damage</span>
-            <span id="upgDamage"></span>
-        </div>
-        <div class="info-item">
-            <span>Range</span>
-            <span id="range"></span>
-        </div>
-        <div class="info-item">
-            <span>Cooldown</span>
-            <span id="upgCooldown"></span>
-        </div>
-        <div class="info-item" id="ammoRow" style="display: none;">
-            <span>Ammo</span>
-            <span id="upgAmmo"></span>
-        </div>
-        <div class="info-item btn-row" id="ammoBuyRow" style="display: none;">
-            <button class="ammo-buy-btn" id="ammoBuyBtn" onclick="btnBuyAmmoClick()" type="button">$50 | Buy Ammo</button>
-        </div>
-        <div class="info-item" id="overheatRow" style="display: none;">
-            <span>Overheat</span>
-            <span id="upgOverheat" class="overheat-text"></span>
-        </div>
-        <div class="info-item" id="stormToggleRow" style="display: none;">
-            <span>Active</span>
-            <button class="storm-toggle-btn storm-toggle-on" id="stormToggleBtn" onclick="toggleStormCannon()">On</button>
-        </div>
-        <div class="info-item btn-row">
-            <button class="sellbtn" id="sellBtn" onclick="btnSellTurretClick()" type="sellbutton">Sell!</button>
-            <button class="upgradebutton" id="upgBtn" onclick="btnUpgradeTurretClick()" type="button">Upgrade!</button>
-        </div>
-        <input class="text" id="upgTurretId" hidden>
-    </div>
-    <div id="damageStatsPanel" class="character-info" style="display: none;">
-        <h1>Damage Stats</h1>
-        <div id="damageStatsList" class="dmg-list"></div>
-    </div>
-    <div id="turretShopInfoDialog" class="character-info" style="display: none;">
-        <h1>Turret Info</h1>
-        <div class="info-item">
-            <span>Name</span>
-            <span id="shopInfoName"></span>
-        </div>
-        <div class="shop-info-desc">
-            <span id="shopInfoDesc"></span>
-        </div>
-        <div class="info-item">
-            <span>Damage</span>
-            <span id="shopInfoDamage"></span>
-        </div>
-        <div class="info-item">
-            <span>Range</span>
-            <span id="shopInfoRange"></span>
-        </div>
-        <div class="info-item">
-            <span>Cooldown</span>
-            <span id="shopInfoCooldown"></span>
-        </div>
-        <div class="info-item">
-            <span>Cost</span>
-            <span id="shopInfoCost"></span>
-        </div>
-    </div>
-    <div id="enemyInfoDialog" class="character-info" style="display: none;">
-        <h1>Enemy Info</h1>
-        <div class="info-item">
-            <span>Name</span>
-            <span id="enemyName"></span>
-        </div>
-        <div class="info-item enemy-hp-item">
-            <span>HP</span>
-            <div class="enemy-hp-wrap">
-                <progress id="enemyHpBar" class="enemy-hp-bar" value="0" max="100"></progress>
-                <span id="enemyHpText" class="enemy-hp-text"></span>
-            </div>
-        </div>
-        <div class="info-item">
-            <span>Speed</span>
-            <span id="enemySpeed"></span>
-        </div>
-    </div>
+    <div id="game-container"></div>
+    <script type="module" src="/src/main.js"></script>
 </body>
 </html>

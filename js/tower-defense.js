@@ -9,7 +9,7 @@ var currentWaveEnemyCount = 12;
 var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
-var currentLevel = 1;
+var currentLevel = 6;
 var currentLives = 15;
 var currentCash = 20;
 var currentScore = 0;
@@ -531,6 +531,7 @@ function drawTargetMap(targetLevel) {
 				case 3: roadColor = "#0f4938"; break;
 				case 4: roadColor = "#222222"; break;
 				case 5: roadColor = "#19191a"; break;
+				case 6: roadColor = "#8dc0f0"; break;
 			}
 			mapzone.style.backgroundColor = roadColor;
 			mapzone.style.backgroundImage = roadGrad;
@@ -555,6 +556,10 @@ function drawTargetMap(targetLevel) {
 				case 5:
 					groundColor = "#45534c"; // Void
 					groundGrad = "radial-gradient(circle, #232725 0%, #434444 100%)";
+				break;
+				case 6:
+					groundColor = "#86e7ff"; // Blizzard
+					groundGrad = "radial-gradient(circle, #d1fdfd 0%, #acf1ff 100%)";
 				break;
 			}
 			mapzone.style.backgroundColor = groundColor;
