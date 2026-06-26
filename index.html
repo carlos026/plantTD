@@ -16,8 +16,15 @@
 <body>
     <div class="character-info">
         <p class="panel-title">&#9834; Soundtrack</p>
-        <button class="soundtrackbtn" onclick="playAudio()" id="play"  style="display: block;">&#9654; Play</button>
-        <button class="soundtrackbtn" onclick="pauseAudio()" id="pause" style="display: none;">&#9646;&#9646; Pause</button>
+        <table>
+            <td>
+                <button class="soundtrackbtn" onclick="cycleVolume()" id="volumeBtn">&#128266; 5%</button>
+            </td>
+            <td>
+                <button class="soundtrackbtn" onclick="playAudio()" id="play"  style="display: block;">&#9654; Play</button>
+                <button class="soundtrackbtn" onclick="pauseAudio()" id="pause" style="display: none;">&#9646;&#9646; Pause</button>
+            </td>
+        </table>
     </div>
     <div id="registrationForm" class="character-info" style="display: none;">
         <h1>Turret Upgrade</h1>

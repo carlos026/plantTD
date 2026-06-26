@@ -9,7 +9,7 @@ var currentWaveEnemyCount = 12;
 var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
-var currentLevel = 1;
+var currentLevel = 5;
 var currentLives = 15;
 var currentCash = 20;
 var currentScore = 0;
@@ -17,7 +17,8 @@ var turretPos = new Array();
 var timeLapsesSinceLastShot = 1;
 var blizzardPendingDamage = {};
 var pendingMissileHits = {};
-var soundtrack = new Audio("sound/map1Soundtrack.mp3");
+var soundtrack = new Audio("sound/map1Soundtrack.wav");
+soundtrack.loop = true;
 
 // enemy info dialog state
 var selectedMinionIdx = -1;
@@ -363,11 +364,11 @@ function listenEvent(eventTarget, eventType, eventHandler) {
 
 
 // DRAG AND DROP
-var BLOCKED_TILES = [{x: 29, y: 4}]; // boat.png position
+var BLOCKED_TILES = [{x: 29, y: 4, lv: 1}]; // boat.png position
 
 function isBlockedTile(xPos, yPos) {
 	for (var i = 0; i < BLOCKED_TILES.length; i++) {
-		if (BLOCKED_TILES[i].x === xPos && BLOCKED_TILES[i].y === yPos) return true;
+		if (BLOCKED_TILES[i].x === xPos && BLOCKED_TILES[i].y === yPos && currentLevel == BLOCKED_TILES[i].lv) return true;
 	}
 	return false;
 }
@@ -506,20 +507,43 @@ function drawMap() {
 
 function playMapSoundtrack(){
 	switch(currentLevel){
-		//@TODO Soundtrack to others maps.
-		case 1:
+		case 2:
+			soundtrack = new Audio("sound/map2Soundtrack.wav");
+		break;
+		case 3:
+			soundtrack = new Audio("sound/map3Soundtrack.wav");
+		break;
+		case 4:
+			soundtrack = new Audio("sound/map4Soundtrack.wav");
+		break;
+		case 5:
+			soundtrack = new Audio("sound/map5Soundtrack.wav");
 		break;
 	}
+	soundtrack.loop = true;
+}
+
+var volumeLevels = [0.05, 0.25, 0.5, 1, 0];
+var volumeIcons  = ["&#128264;", "&#128265;", "&#128266;", "&#128266;", "&#128263;"];
+var volumeIdx = 0;
+
+function cycleVolume() {
+	volumeIdx = (volumeIdx + 1) % volumeLevels.length;
+	soundtrack.volume = volumeLevels[volumeIdx];
+	var pct = volumeLevels[volumeIdx] * 100;
+	document.getElementById("volumeBtn").innerHTML = volumeIcons[volumeIdx] + " " + pct + "%";
 }
 
 function playAudio() {
-    soundtrack.play();
-	document.getElementById("play").style.display = "none";
+	soundtrack.play();
+	volumeIdx = -1;
+	cycleVolume();
 	document.getElementById("pause").style.display = "block";
+	document.getElementById("play").style.display = "none";
 }
 
 function pauseAudio() {
-    soundtrack.pause();
+	soundtrack.pause();
 	document.getElementById("play").style.display = "block";
 	document.getElementById("pause").style.display = "none";
 }
@@ -529,7 +553,7 @@ function drawTargetMap(targetLevel) {
 	for (var i = 0; i < pixels.length; i++) {
 		
 		
-		if(i == 350){
+		if(i == 350 && currentLevel == 1){
 			mapzone.style.backgroundImage = "url('img/neutral/boat.png')";
 		}
 		var mapzone = pixels[i];
