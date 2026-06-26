@@ -9,7 +9,7 @@ var currentWaveEnemyCount = 12;
 var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
-var currentLevel = 5;
+var currentLevel = 1;
 var currentLives = 15;
 var currentCash = 20;
 var currentScore = 0;
@@ -17,7 +17,7 @@ var turretPos = new Array();
 var timeLapsesSinceLastShot = 1;
 var blizzardPendingDamage = {};
 var pendingMissileHits = {};
-var soundtrack = new Audio("sound/map1Soundtrack.wav");
+var soundtrack = new Audio("sound/map1Soundtrack.mp3");
 soundtrack.loop = true;
 
 // enemy info dialog state
@@ -508,16 +508,16 @@ function drawMap() {
 function playMapSoundtrack(){
 	switch(currentLevel){
 		case 2:
-			soundtrack = new Audio("sound/map2Soundtrack.wav");
+			soundtrack = new Audio("sound/map2Soundtrack.mp3");
 		break;
 		case 3:
-			soundtrack = new Audio("sound/map3Soundtrack.wav");
+			soundtrack = new Audio("sound/map3Soundtrack.mp3");
 		break;
 		case 4:
-			soundtrack = new Audio("sound/map4Soundtrack.wav");
+			soundtrack = new Audio("sound/map4Soundtrack.mp3");
 		break;
 		case 5:
-			soundtrack = new Audio("sound/map5Soundtrack.wav");
+			soundtrack = new Audio("sound/map5Soundtrack.mp3");
 		break;
 	}
 	soundtrack.loop = true;
@@ -902,6 +902,7 @@ function startNextLevel() {
 	currentScore = oldScore + 100;
 
 	drawTargetMap(currentLevel);
+	playMapSoundtrack();
 }
 
 function whereToMove(xpos, ypos, currentDir, minion, c) {
