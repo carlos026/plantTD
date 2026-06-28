@@ -50,7 +50,7 @@ The buy button is disabled when the queue is full or when ammo + queue would exc
 | Sp. Minion | Wave 5+ (30% chance) | **1.5** | Immune to freeze and stun; takes **2× damage** from all towers |
 | Airplane | Wave 11+ (mixed) | 3.0 | Immune to stun; freeze slows to 1.0; immune to Flamethrower; takes 2× damage from Machine Gun, Laser, and Rail Cannon; takes **5× damage** from Missile Turret |
 | Boss | Wave 10, 20 | 1.0 | Single enemy, high reward |
-| **Sp. Boss** | **Wave 30** | **1.0** | Same traits as Sp. Minion — immune to freeze/stun, takes **2× damage**. 5,000,000 HP |
+| Sp. Boss | Wave 30 | 1.5 | Same traits as Sp. Minion — immune to freeze/stun, takes **2× damage**. 2,500,000 HP |
 
 ## Status Effects
 
