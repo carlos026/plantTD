@@ -13,7 +13,12 @@ const PLANE_FROZEN_SPEED = 1.0;
 // Debuff state is stored as JS properties on the element (_frozen, _stunned, _toxic, _isPlane)
 // to avoid the DOM getAttribute/setAttribute overhead on every tick.
 
+function isSpMinion(minionElement) {
+	return minionElement._isSpMinion === true;
+}
+
 function freezeMinion(minionElement, duration) {
+	if (isSpMinion(minionElement)) return;
 	minionElement._frozen = duration;
 }
 
@@ -23,6 +28,7 @@ function isPlaneMinion(minionElement) {
 
 function stunMinion(minionElement, duration) {
 	if (isPlaneMinion(minionElement)) return;
+	if (isSpMinion(minionElement)) return;
 	minionElement._stunned = duration;
 }
 
@@ -90,6 +96,9 @@ function getMinionSpeed(minionElement) {
 	if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) {
 		return FROZEN_MINION_SPEED;
 	}
+	if (isSpMinion(minionElement)) {
+		return 1.5;
+	}
 	return 1.0;
 }
 
@@ -100,4 +109,34 @@ function getToxicDamage(minionElement) {
 		damage = TOXIC_MINION_DAMAGE;
 	}
 	return damage;
+}
+
+function minionhp() {
+	var hpMax = 64 + Math.pow(2, currentWave + 4);
+	if (currentWave > 5) {
+		hpMax = Math.pow(2, currentWave + 2) * 1.3;
+	}
+	if (currentWave > 10) {
+		hpMax = Math.pow(2, currentWave);
+	}
+	if (currentWave > 15) {
+		hpMax = Math.pow(2, currentWave) * 0.60;
+	}
+	if (currentWave > 17) {
+		hpMax = Math.pow(2, currentWave) * 0.40;
+	}
+	if(currentWave > 20) {
+		hpMax = 200000 * Math.pow(1.09, currentWave - 21);
+	}
+	return hpMax;
+}
+
+function bossHp() {
+	if (currentWave == 10){
+		return Math.pow(2, currentWave) * 10;
+	} else if (currentWave == 20) {
+		return Math.pow(2, currentWave);
+	} else if (currentWave == 30) {
+		return 2500000;
+	}
 }

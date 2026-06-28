@@ -142,23 +142,36 @@ function updateTurretCooldownPostTurn(turrets){
 			}
 			turrets[i].firedThisTurn = false;
 		}
-		if (turrets[i].type === "missile" && turrets[i].ammoLoading) {
+		if (turrets[i].type === "missile" && turrets[i].ammoQueue > 0) {
+			if (turrets[i].ammoLoadTick <= 0) {
+				turrets[i].ammoLoadTick = 500;
+				if (!turrets[i].ammoLoadBar) {
+					var loadBar = document.createElement("progress");
+					loadBar.setAttribute("class", "ammo-load-bar");
+					loadBar.setAttribute("value", 0);
+					loadBar.setAttribute("max", 500);
+					loadBar.style.left = turrets[i].x + "px";
+					loadBar.style.top  = (parseInt(turrets[i].y) + 22) + "px";
+					document.body.appendChild(loadBar);
+					turrets[i].ammoLoadBar = loadBar;
+				}
+			}
 			turrets[i].ammoLoadTick--;
 			if (turrets[i].ammoLoadBar) {
 				turrets[i].ammoLoadBar.setAttribute("value", 500 - turrets[i].ammoLoadTick);
 			}
 			if (turrets[i].ammoLoadTick <= 0) {
 				turrets[i].ammo = Math.min(turrets[i].ammo + 1, getMissileMaxAmmo(turrets[i].level));
-				turrets[i].ammoLoading = false;
+				turrets[i].ammoQueue--;
 				turrets[i].ammoLoadTick = 0;
 				if (turrets[i].ammoLoadBar) {
 					document.body.removeChild(turrets[i].ammoLoadBar);
 					turrets[i].ammoLoadBar = null;
 				}
-				var selectedId = document.getElementById("upgTurretId").value;
-				if (turrets[i].htmlElement.id === selectedId) {
-					updateTurretInfo(turrets[i]);
-				}
+			}
+			var selectedId = document.getElementById("upgTurretId").value;
+			if (turrets[i].htmlElement.id === selectedId) {
+				updateTurretInfo(turrets[i]);
 			}
 		}
 	}
@@ -354,8 +367,8 @@ function turretUpgradeCosts(type, turretLvl) {
 }
 
 function getMissileMaxAmmo(level) {
-	var counts = [0, 5, 6, 8, 10, 12];
-	return counts[level] || 12;
+	var counts = [0, 5, 6, 8, 10, 12, 14, 16, 18];
+	return counts[level] || 18;
 }
 
 function getTurretSellPrice(type, upgradeTotalValue) {
@@ -421,7 +434,7 @@ function showTurretInfo(turret){
 	function upgrade(evt) {
 		var form = document.getElementById("registrationForm");
 		updateTurretInfo(turret);
-		document.getElementById("upgBtn").style.display = turret.level <= 4 ? "block" : "none";
+		document.getElementById("upgBtn").style.display = turret.level <= 7 ? "block" : "none";
 		if (form.style.display === "none") {
 			form.style.display = "block";
 			showRangeIndicator(
@@ -438,6 +451,35 @@ function showTurretInfo(turret){
 	return upgrade;
 }
 
+function updateAmmoQueueUI(turret) {
+    var maxAmmo = getMissileMaxAmmo(turret.level);
+    for (var s = 0; s < 5; s++) {
+        var slot = document.getElementById("ammoSlot" + s);
+        if (!slot) continue;
+        var fill = slot.querySelector(".ammo-slot-fill");
+        if (s < turret.ammoQueue) {
+            if (s === 0) {
+                slot.className = "ammo-slot ammo-slot-active";
+                if (fill && turret.ammoLoadTick > 0) {
+                    fill.style.height = ((500 - turret.ammoLoadTick) / 500 * 100) + "%";
+                } else if (fill) {
+                    fill.style.height = "0%";
+                }
+            } else {
+                slot.className = "ammo-slot ammo-slot-queued";
+                if (fill) fill.style.height = "0%";
+            }
+        } else {
+            slot.className = "ammo-slot";
+            if (fill) fill.style.height = "0%";
+        }
+    }
+    var buyBtn = document.getElementById("ammoBuyBtn");
+    var queueFull = turret.ammoQueue >= 5;
+    var wouldExceedMax = (turret.ammo + turret.ammoQueue) >= maxAmmo;
+    buyBtn.disabled = queueFull || wouldExceedMax || currentCash < 50;
+}
+
 function updateTurretInfo(turret){
     document.getElementById("upgTurretId").value = turret.htmlElement.id;
     document.getElementById("upgName").innerText = turretName(turret.type);
@@ -449,7 +491,7 @@ function updateTurretInfo(turret){
         var pct = Math.round((turret.overheat / STORM_OVERHEAT_MAX) * 100);
         document.getElementById("upgOverheat").innerText = pct + "%";
         document.getElementById("overheatRow").style.display = "flex";
-        if (turret.level === 5) {
+        if (turret.level >= 5) {
             document.getElementById("stormToggleRow").style.display = "flex";
             var btn = document.getElementById("stormToggleBtn");
             if (turret.active !== false) {
@@ -470,10 +512,7 @@ function updateTurretInfo(turret){
         document.getElementById("ammoRow").style.display = "flex";
         document.getElementById("upgAmmo").innerText = turret.ammo + " / " + getMissileMaxAmmo(turret.level);
         document.getElementById("ammoBuyRow").style.display = "flex";
-        var buyBtn = document.getElementById("ammoBuyBtn");
-        var atMax = turret.ammo >= getMissileMaxAmmo(turret.level);
-        buyBtn.disabled = turret.ammoLoading || currentCash < 50 || atMax;
-        buyBtn.textContent = turret.ammoLoading ? "Loading..." : "$50 | Buy Ammo";
+        updateAmmoQueueUI(turret);
     } else {
         document.getElementById("ammoRow").style.display = "none";
         document.getElementById("ammoBuyRow").style.display = "none";
@@ -493,11 +532,16 @@ function upgradeTurretData(turret){
 			turret.range += upgradeRange * 0.1;
 			break;
 		case "laser":
-			turret.damage += upgradeDamage * 0.3;
-			turret.range += upgradeRange * 0.05;
+			if(turret.level >= 5) {
+				turret.damage += upgradeDamage * 0.45;
+				turret.range += upgradeRange * 0.02;
+			} else {
+				turret.damage += upgradeDamage * 0.35;
+				turret.range += upgradeRange * 0.05;
+			}
 			break;
 		case "flamethrower":
-			turret.damage += upgradeDamage * 0.2;
+			turret.damage += upgradeDamage * 0.25;
 			turret.range += upgradeRange * 0.025;
 			break;
 		case "blizzard":
@@ -506,20 +550,30 @@ function upgradeTurretData(turret){
 			turret.range += upgradeRange * 0.02;
 			break;
 		case "toxic":
-			turret.damage += upgradeDamage * 0.3;
-			turret.range += upgradeRange * 0.1;
+			if(turret.level >= 5) {
+				turret.damage += upgradeDamage * 0.45;
+				turret.range += upgradeRange * 0.02;
+			} else {
+				turret.damage += upgradeDamage * 0.35;
+				turret.range += upgradeRange * 0.1;
+			}
 			break;
 		case "stormCannon":
-			turret.damage += upgradeDamage * 0.15;
+			turret.damage += upgradeDamage * 0.2;
 			turret.range += upgradeRange * 0.01;
 			break;
 		case "railCannon":
-			turret.damage += turretDamage(turret.type) * 0.25;
+			turret.damage += turretDamage(turret.type) * turret.level * 0.2;
 			turret.range += turretRange(turret.type) * 0.2;
 			break;
 		case "missile":
-			turret.damage += upgradeDamage * 0.3;
-			turret.range += upgradeRange * 0.05;
+			if(turret.level >= 5) {
+				turret.damage += upgradeDamage * 0.4;
+				turret.range += upgradeRange * 0.01;
+			} else {
+				turret.damage += upgradeDamage * 0.3;
+				turret.range += upgradeRange * 0.05;
+			}
 			break;
 	}
 }

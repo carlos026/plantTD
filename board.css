@@ -791,6 +791,72 @@ progress.toxic::-webkit-progress-value {
   cursor: not-allowed;
 }
 
+/* ── AMMO QUEUE SLOTS ────────────────────────────────── */
+.ammo-queue-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.ammo-queue-slots {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.ammo-slot {
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.ammo-slot-icon {
+  font-size: 16px;
+  position: relative;
+  z-index: 1;
+  display: none;
+  line-height: 1;
+}
+
+.ammo-slot-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: rgba(255, 200, 0, 0.3);
+}
+
+.ammo-slot-queued {
+  border-color: rgba(255, 190, 0, 0.5);
+  background: rgba(80, 50, 0, 0.6);
+}
+
+.ammo-slot-queued .ammo-slot-icon {
+  display: block;
+  opacity: 0.75;
+}
+
+.ammo-slot-active {
+  border-color: rgba(255, 215, 0, 0.95);
+  background: rgba(110, 70, 0, 0.75);
+  box-shadow: 0 0 8px rgba(255, 200, 0, 0.55);
+}
+
+.ammo-slot-active .ammo-slot-icon {
+  display: block;
+}
+
 /* ── STORM CANNON TOGGLE BUTTON ────────────────────── */
 .storm-toggle-btn {
   padding: 5px 16px;

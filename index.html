@@ -52,8 +52,17 @@
             <span>Ammo</span>
             <span id="upgAmmo"></span>
         </div>
-        <div class="info-item btn-row" id="ammoBuyRow" style="display: none;">
-            <button class="ammo-buy-btn" id="ammoBuyBtn" onclick="btnBuyAmmoClick()" type="button">$50 | Buy Ammo</button>
+        <div class="info-item" id="ammoBuyRow" style="display: none;">
+            <div class="ammo-queue-wrap">
+                <div class="ammo-queue-slots">
+                    <div class="ammo-slot" id="ammoSlot0"><div class="ammo-slot-fill"></div><span class="ammo-slot-icon">&#128640;</span></div>
+                    <div class="ammo-slot" id="ammoSlot1"><div class="ammo-slot-fill"></div><span class="ammo-slot-icon">&#128640;</span></div>
+                    <div class="ammo-slot" id="ammoSlot2"><div class="ammo-slot-fill"></div><span class="ammo-slot-icon">&#128640;</span></div>
+                    <div class="ammo-slot" id="ammoSlot3"><div class="ammo-slot-fill"></div><span class="ammo-slot-icon">&#128640;</span></div>
+                    <div class="ammo-slot" id="ammoSlot4"><div class="ammo-slot-fill"></div><span class="ammo-slot-icon">&#128640;</span></div>
+                </div>
+                <button class="ammo-buy-btn" id="ammoBuyBtn" onclick="btnBuyAmmoClick()" type="button">$50 | Buy</button>
+            </div>
         </div>
         <div class="info-item" id="overheatRow" style="display: none;">
             <span>Overheat</span>
