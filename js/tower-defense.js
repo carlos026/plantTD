@@ -854,7 +854,7 @@ function startwave(evt) {
 						: 12;
 				}
 				//Move to next level if current wave = 30
-				if (currentWave > 2) {
+				if (currentWave > 30) {
 					startNextLevel();
 				}
 

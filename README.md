@@ -95,6 +95,24 @@ The game plays a per-level soundtrack that loops continuously. Use the **volume 
 
 The **⏸ Pause** button mutes/resumes the soundtrack independently of the volume setting.
 
+## Player Profile
+
+On first launch a **nickname screen** appears. Enter any name (up to 20 characters) to create your profile, or reuse an existing nickname to continue where you left off.
+
+Your profile is saved automatically in the browser's LocalStorage. Progress persists across sessions without any account or server.
+
+### Player HUD
+
+After logging in, a **Player HUD** panel appears to the right of the status bar, showing:
+
+| Field | Description |
+|---|---|
+| Player | Your nickname |
+| Record | Highest score ever reached across all sessions |
+| Seeds | Total golden seeds collected (one awarded per completed level) |
+
+The record is updated automatically whenever your current score exceeds it. Golden seeds are earned by completing each map level and carry over between sessions.
+
 ## Mobile Support
 
 The game scales automatically to fit any screen size. On devices narrower than the native 1422×640 resolution, the entire game view is scaled down proportionally so it always fits without scrolling.
@@ -135,6 +153,7 @@ Then open `http://localhost:8000/index.html`.
 
 | Action | How |
 |---|---|
+| Login / create profile | Enter nickname on startup screen, press **PLAY** or Enter |
 | Place tower (desktop) | Drag turret card onto the map |
 | Place tower (mobile) | Long-press card, drag, release on tile |
 | Upgrade / Sell | Click a placed tower |
