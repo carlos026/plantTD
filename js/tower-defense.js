@@ -13,6 +13,7 @@ var currentLevel = 1;
 var currentLives = 15;
 var currentCash = 100;
 var currentScore = 0;
+var currentGoldSeed = 0;
 var turretPos = new Array();
 var timeLapsesSinceLastShot = 1;
 var blizzardPendingDamage = {};
@@ -498,6 +499,7 @@ function drawMap() {
 	statusbar.innerHTML =
 		'<div class="stat-block"><span class="stat-label">Cash</span><span class="stat-value gold" id="cash">$0</span></div>' +
 		'<div class="stat-block"><span class="stat-label">Score</span><span class="stat-value score" id="score">0</span></div>' +
+		'<div class="stat-block"><span class="stat-label">Gold Seed</span><span class="stat-value seed" id="seed">0</span></div>' +
 		'<div class="stat-block"><span class="stat-label">Wave</span><span class="stat-value wave" id="wave">0</span></div>' +
 		'<div class="stat-block"><span class="stat-label">Lives</span><span class="stat-value lives" id="lives">0</span></div>';
 	document.body.appendChild(statusbar);
@@ -519,8 +521,8 @@ function playMapSoundtrack(){
 	soundtrack.play().catch(function() {});
 }
 
-var volumeLevels = [0.05, 0.25, 0.5, 1, 0];
-var volumeIcons  = ["&#128264;", "&#128265;", "&#128266;", "&#128266;", "&#128263;"];
+var volumeLevels = [1, 0.5, 0.25, 0.05, 0];
+var volumeIcons  = [ "&#128266;", "&#128266;", "&#128265;", "&#128264;", "&#128263;"];
 var volumeIdx = 0;
 
 function cycleVolume() {
@@ -623,9 +625,10 @@ function startwave(evt) {
 	// increase the wave count
 	currentWave++;
 
-	// remove all the placed turrets, projectiles and progressBars
+	// remove all the placed turrets, projectiles and Bars
 	var turrets = document.querySelectorAll(".turretdrag");
 	var overHeatBar = document.querySelectorAll(".overheat-bar");
+	var ammoLoadBar = document.querySelectorAll(".ammo-load-bar");
 	var projectiles = document.querySelectorAll(".missile-projectile");
 	for (var i = 0; i < turrets.length; i++) {
 		document.body.removeChild(turrets[i]);
@@ -635,6 +638,9 @@ function startwave(evt) {
 	}
 	for (var i = 0; i < projectiles.length; i++) {
 		document.body.removeChild(projectiles[i]);
+	}
+	for (var i = 0; i < ammoLoadBar.length; i++) {
+		document.body.removeChild(ammoLoadBar[i]);
 	}
 
 	// create all our minions
@@ -831,6 +837,9 @@ function startwave(evt) {
 				if (currentLives == 0) {
 					var lives = document.getElementById("lives");
 					lives.innerHTML = "Game Over";
+					PlayerData.updateScore(currentScore);
+					PlayerData.savePlayer();
+					updatePlayerHud();
 					resetwave(null);
 				}
 				// reset for the next wave!
@@ -845,7 +854,7 @@ function startwave(evt) {
 						: 12;
 				}
 				//Move to next level if current wave = 30
-				if (currentWave > 30) {
+				if (currentWave > 2) {
 					startNextLevel();
 				}
 
@@ -911,12 +920,16 @@ function startwave(evt) {
 
 function startNextLevel() {
 	currentLevel++;
+	currentGoldSeed++;
+	isPaused = true;
 	var oldScore = currentScore;
 	//Reset the Level
 	resetwave(null);
 	startwave(null);
 	currentScore = oldScore + 100;
-
+	PlayerData.updateScore(currentScore);
+	PlayerData.addGoldenSeeds(1);
+	updatePlayerHud();
 	drawTargetMap(currentLevel);
 	playMapSoundtrack();
 }
@@ -1017,6 +1030,9 @@ function updateStatus() {
 
 	var score = document.getElementById("score");
 	score.innerHTML = currentScore;
+
+	var goldSeed = document.getElementById("seed");
+	goldSeed.innerHTML = currentGoldSeed;
 
 	var wave = document.getElementById("wave");
 	wave.innerHTML = currentWave;
@@ -1317,11 +1333,50 @@ function bossReward() {
 }
 ////////////////////////// END WAVE HANDLING
 
+function submitNickname() {
+	var input = document.getElementById('nicknameInput');
+	var msg   = document.getElementById('nicknameMessage');
+	var nickname = input.value.trim();
+
+	if (!nickname) {
+		msg.textContent = 'Nickname is required.';
+		msg.className = 'nickname-message error';
+		msg.style.display = 'block';
+		return;
+	}
+
+	var isReturning = !!PlayerData.loadPlayer(nickname);
+	if (!isReturning) PlayerData.createPlayer(nickname);
+
+	var player = PlayerData.getPlayer();
+	if (isReturning) {
+		msg.textContent = 'Welcome back, ' + player.nickname + '! Record: ' + player.highestScore;
+		msg.className = 'nickname-message info';
+		msg.style.display = 'block';
+	}
+
+	document.getElementById('playerHud').style.display = 'flex';
+	updatePlayerHud();
+
+	setTimeout(function() {
+		document.getElementById('nicknameScreen').style.display = 'none';
+		drawMap();
+	}, isReturning ? 1200 : 0);
+}
+
+function updatePlayerHud() {
+	var player = PlayerData.getPlayer();
+	if (!player) return;
+	document.getElementById('hudNickname').textContent = player.nickname;
+	document.getElementById('hudRecord').textContent   = player.highestScore;
+	document.getElementById('hudSeeds').textContent    = player.goldenSeeds;
+}
+
 window.onload = function () {
 	applyGameScale();
 	window.addEventListener('resize', applyGameScale);
 
-	drawMap();
+	document.getElementById('nicknameInput').focus();
 
 	// atualiza posição do range indicator enquanto arrasta uma nova torre (desktop)
 	document.addEventListener("dragover", function(e) {

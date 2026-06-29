@@ -10,15 +10,50 @@
 <script type="text/javascript" src="js/map.js"></script>
 <script type="text/javascript" src="js/turret.js"></script>
 <script type="text/javascript" src="js/minion.js"></script>
+<script type="text/javascript" src="js/player-data.js"></script>
 <script type="text/javascript" src="js/tower-defense.js"></script>
 <script type="text/javascript" src="js/mobile.js"></script>
 </head>
 <body>
+    <!-- ── NICKNAME SCREEN ─────────────────────────────── -->
+    <div id="nicknameScreen" class="nickname-overlay">
+        <div class="nickname-panel">
+            <h1 class="nickname-title">PLANT TD</h1>
+            <p class="nickname-sub">Enter your nickname to play</p>
+            <input
+                type="text"
+                id="nicknameInput"
+                class="nickname-input"
+                placeholder="Nickname..."
+                maxlength="20"
+                autocomplete="off"
+                onkeydown="if(event.key==='Enter') submitNickname()"
+            >
+            <p id="nicknameMessage" class="nickname-message" style="display:none;"></p>
+            <button class="nickname-btn" onclick="submitNickname()">PLAY</button>
+        </div>
+    </div>
+
+    <!-- ── PLAYER HUD ──────────────────────────────────── -->
+    <div id="playerHud" class="player-hud" style="display:none;">
+        <div class="hud-row">
+            <span class="hud-label">👤 Player</span>
+            <span class="hud-value hud-nickname" id="hudNickname">—</span>
+        </div>
+        <div class="hud-row">
+            <span class="hud-label">📈 Record</span>
+            <span class="hud-value" id="hudRecord">0</span>
+        </div>
+        <div class="hud-row">
+            <span class="hud-label">🌱 Seeds</span>
+            <span class="hud-value hud-seeds" id="hudSeeds">0</span>
+        </div>
+    </div>
     <div class="character-info">
         <p class="panel-title">&#9834; Soundtrack</p>
         <table>
             <td>
-                <button class="soundtrackbtn" onclick="cycleVolume()" id="volumeBtn">&#128266; 5%</button>
+                <button class="soundtrackbtn" onclick="cycleVolume()" id="volumeBtn">&#128266; 100%</button>
             </td>
             <td>
                 <button class="soundtrackbtn" onclick="playAudio()" id="play"  style="display: block;">&#9654; Play</button>
