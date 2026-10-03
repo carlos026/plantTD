@@ -678,7 +678,7 @@ function startwave(evt) {
 	var currentDir = new Array();
 	var prevDir = new Array();
 	var minion_c = 1;
-	var minion_release = new Array();
+	var spawnCountdown = randomSpawnInterval();
 	var minion_hp = new Array();
 	var first_kill = new Array();
 	var minions_killed = 0;
@@ -693,7 +693,6 @@ function startwave(evt) {
 		movey[i] = 0;
 		currentDir[i] = MOVE_S;
 		prevDir[i] = MOVE_S;
-		minion_release[i] = 0;
 		minions[i].style.display = "none";
 		hpBarMinions[i].style.display = "none";
 		hpBarMinions[i].setAttribute("max", minionhp());
@@ -818,11 +817,12 @@ function startwave(evt) {
 				} else {
 					tickDownMinionDebuffs(minions[i], hpBarMinions[i]);
 				}
-				// stagger the minions coming out, release one every 15 pixels
-				if ((minion_release[i] == 100 * minion_c) && minion_c < currentWaveEnemyCount) {
-					minion_c++;
-				}
-				minion_release[i]++;
+			}
+			// stagger the minions coming out at random intervals
+			spawnCountdown--;
+			if (spawnCountdown <= 0 && minion_c < currentWaveEnemyCount) {
+				minion_c++;
+				spawnCountdown = randomSpawnInterval();
 			}
 			updateTurretCooldownPostTurn(turretPos);
 			//moveProjectiles();
@@ -852,6 +852,7 @@ function startwave(evt) {
 				}
 				// reset for the next wave!
 				minion_c = 1;
+				spawnCountdown = randomSpawnInterval();
 				minions_killed = 0;
 				wave_over = false;
 				currentWave++;
@@ -874,7 +875,6 @@ function startwave(evt) {
 						movey[i] = 0;
 						currentDir[i] = MOVE_S;
 						prevDir[i] = MOVE_S;
-						minion_release[i] = 0;
 						minions[i].style.display = "none";
 						hpBarMinions[i].style.display = "none";
 						hpBarMinions[i].style.width = "30px"
@@ -896,7 +896,6 @@ function startwave(evt) {
 						movey[i] = 0;
 						currentDir[i] = MOVE_S;
 						prevDir[i] = MOVE_S;
-						minion_release[i] = 0;
 						minions[i].style.display = "none";
 						hpBarMinions[i].style.display = "none";
 						hpBarMinions[i].style.width = "20px";
@@ -1034,9 +1033,6 @@ function updateStatus() {
 
 	var score = document.getElementById("score");
 	score.innerHTML = currentScore;
-
-	var goldSeed = document.getElementById("seed");
-	goldSeed.innerHTML = currentGoldSeed;
 
 	var wave = document.getElementById("wave");
 	wave.innerHTML = currentWave;
@@ -1375,6 +1371,11 @@ function rotate(angle, turret){
 
 function euclidDistance(x1, x2, y1, y2) {
 	return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+}
+
+// ticks until the next minion leaves the spawn (1 tick = 10ms)
+function randomSpawnInterval() {
+	return MIN_SPAWN_INTERVAL + Math.floor(Math.random() * (MAX_SPAWN_INTERVAL - MIN_SPAWN_INTERVAL + 1));
 }
 
 function minionreward() {
