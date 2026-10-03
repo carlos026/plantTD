@@ -54,6 +54,41 @@ p {
   height: 15px;
 }
 
+/* Map art is painted on this canvas, below the transparent tiles */
+.map-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+/* Pulsing markers on the enemy spawn and exit points */
+@keyframes mapMarkerPulse {
+  0%   { transform: translate(-50%, -50%) scale(0.7); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+.map-marker {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--marker);
+  box-shadow: 0 0 12px var(--marker), inset 0 0 8px var(--marker);
+  pointer-events: none;
+  animation: mapMarkerPulse 1.8s ease-out infinite;
+}
+
+.map-marker::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: var(--marker);
+  opacity: 0.55;
+  filter: blur(2px);
+}
+
 /* ── PLACED TURRET ─────────────────────────────────── */
 .turretdrag {
   position: absolute;

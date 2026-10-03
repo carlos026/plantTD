@@ -549,64 +549,9 @@ function pauseAudio() {
 	document.getElementById("pause").style.display = "none";
 }
 
+// Map visuals are painted on a canvas behind the transparent .mapzone tiles
 function drawTargetMap(targetLevel) {
-	var pixels = document.getElementsByClassName('mapzone');
-	for (var i = 0; i < pixels.length; i++) {
-		
-		
-		/*if(i == 350 && currentLevel == 1){
-			mapzone.style.backgroundImage = "url('img/neutral/boat.png')";
-		}*/
-		var mapzone = pixels[i];
-		var x = Math.floor(mapzone.style.left.replace("px", "") / TILE_H);
-		var y = Math.floor(mapzone.style.top.replace("px", "") / TILE_W);
-
-		if (isRoad(targetLevel, x, y)) {
-			var roadColor = "#2a3b5c";
-			var roadGrad = "linear-gradient(45deg, rgba(255,255,255,0.02) 25%, transparent 25%)";
-			
-			switch(targetLevel) {
-				case 1: roadColor = "#3d5585"; break;
-				case 2: roadColor = "#3d2b1f"; break; // Caminho de terra escura
-				case 3: roadColor = "#0f4938"; break;
-				case 4: roadColor = "#222222"; break;
-				case 5: roadColor = "#19191a"; break;
-				case 6: roadColor = "#8dc0f0"; break;
-			}
-			mapzone.style.backgroundColor = roadColor;
-			mapzone.style.backgroundImage = roadGrad;
-			mapzone.style.boxShadow = "inset 0 0 5px rgba(0,0,0,0.3)";
-		} else {
-			var groundColor = "#0b1035";
-			var groundGrad = "radial-gradient(circle, #101644 0%, #0b1035 100%)"; // Tema Level 1
-
-			switch(targetLevel) {
-				case 2:
-					groundColor = "#8b6b43"; // Desert/Wasteland
-					groundGrad = "radial-gradient(circle, #a68555 0%, #8b6b43 100%)";
-				break;
-				case 3:
-					groundColor = "#0b2410"; // Swamp/Forest
-					groundGrad = "radial-gradient(circle, #153d1b 0%, #0b2410 100%)";
-				break;
-				case 4:
-					groundColor = "#5a1202"; // Inferno
-					groundGrad = "radial-gradient(circle, #7a1a05 0%, #5a1202 100%)";
-				break;
-				case 5:
-					groundColor = "#45534c"; // Void
-					groundGrad = "radial-gradient(circle, #232725 0%, #434444 100%)";
-				break;
-				case 6:
-					groundColor = "#86e7ff"; // Iceland
-					groundGrad = "radial-gradient(circle, #d1fdfd 0%, #acf1ff 100%)";
-				break;
-			}
-			mapzone.style.backgroundColor = groundColor;
-			mapzone.style.backgroundImage = groundGrad;
-			mapzone.style.boxShadow = "inset 0 0 1px rgba(255,255,255,0.05)";
-		}
-	}
+	MapRenderer.render(document.getElementById("mapContainer"), targetLevel);
 }
 /////////////////////// END MAP CREATION
 
