@@ -502,7 +502,6 @@ function drawMap() {
 	statusbar.innerHTML =
 		'<div class="stat-block"><span class="stat-label">Cash</span><span class="stat-value gold" id="cash">$0</span></div>' +
 		'<div class="stat-block"><span class="stat-label">Score</span><span class="stat-value score" id="score">0</span></div>' +
-		'<div class="stat-block"><span class="stat-label">Gold Seed</span><span class="stat-value seed" id="seed">0</span></div>' +
 		'<div class="stat-block"><span class="stat-label">Wave</span><span class="stat-value wave" id="wave">0</span></div>' +
 		'<div class="stat-block"><span class="stat-label">Lives</span><span class="stat-value lives" id="lives">0</span></div>';
 	document.body.appendChild(statusbar);
@@ -1497,6 +1496,7 @@ function startGameOnMap(mapId) {
 	currentLevel = mapId;
 	document.getElementById('mapSelectScreen').style.display = 'none';
 	drawMap();
+	Tutorial.startIfNeeded();
 }
 ////////////////////// END MAP SELECTION SCREEN
 

@@ -1027,7 +1027,7 @@ progress.toxic::-webkit-progress-value {
 .player-hud {
   position: absolute;
   top: 468px;
-  left:1080px;
+  left: 1035px;
   width: 145px;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -1577,4 +1577,116 @@ button[type="sellbutton"]:active {
   cursor: default;
   font-size: 9px;
   letter-spacing: 0.5px;
+}
+
+/* ── FIRST-TIME TUTORIAL ─────────────────────────────── */
+@keyframes tutorialPulse {
+  0%, 100% { border-color: var(--border-hi); }
+  50%      { border-color: var(--accent); }
+}
+
+@keyframes tutorialBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+
+.tutorial-spotlight {
+  position: absolute;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(3, 5, 15, 0.62), 0 0 18px var(--accent-glow);
+  pointer-events: none;
+  z-index: 9600;
+  animation: tutorialPulse 1.4s ease-in-out infinite;
+  transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.tutorial-spotlight-full {
+  border-color: transparent;
+  animation: none;
+}
+
+.tutorial-card {
+  position: absolute;
+  width: 320px;
+  box-sizing: border-box;
+  padding: 16px 18px 14px;
+  background: var(--panel);
+  border: 1.5px solid var(--border-hi);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 0 22px var(--accent-glow);
+  color: var(--text);
+  z-index: 9700;
+  transition: left 0.2s ease, top 0.2s ease;
+}
+
+.tutorial-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tutorial-counter {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+}
+
+.tutorial-skip {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Exo 2', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.tutorial-skip:hover {
+  color: var(--text);
+}
+
+.tutorial-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1px;
+  margin: 8px 0 6px;
+}
+
+.tutorial-text {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0 0 10px;
+}
+
+.tutorial-hint {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 1px;
+  margin: 0;
+  animation: tutorialBlink 1.4s ease-in-out infinite;
+}
+
+.tutorial-next {
+  float: right;
+  padding: 7px 18px;
+  background: linear-gradient(135deg, #003d7a, #0077cc);
+  border: 1px solid rgba(0, 180, 255, 0.4);
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+}
+
+.tutorial-next:hover {
+  box-shadow: 0 0 14px rgba(0, 160, 255, 0.55);
 }

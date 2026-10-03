@@ -58,6 +58,10 @@ var PlayerData = (function () {
                 "toxic", "stormCannon", "railCannon"
             ];
         }
+        // Migration: profiles created before the tutorial already know the game
+        if (typeof data.tutorialDone !== 'boolean') {
+            data.tutorialDone = true;
+        }
         data.lastPlayAt = _now();
         StorageAdapter.set(data.nickname, data);
         _player = data;
@@ -79,6 +83,7 @@ var PlayerData = (function () {
                 "machineGun", "laser", "flamethrower", "blizzard",
                 "toxic", "stormCannon", "railCannon"
             ],
+            tutorialDone:   false,
             createdAt:      now,
             lastPlayAt:     now
         };
@@ -116,6 +121,15 @@ var PlayerData = (function () {
     }
 
     /**
+     * Flags the first-time tutorial as seen and persists.
+     */
+    function markTutorialDone() {
+        if (!_player) return;
+        _player.tutorialDone = true;
+        savePlayer();
+    }
+
+    /**
      * Returns the current in-memory player object (read-only reference).
      */
     function getPlayer() {
@@ -128,6 +142,7 @@ var PlayerData = (function () {
         savePlayer:     savePlayer,
         updateScore:    updateScore,
         addGoldenSeeds: addGoldenSeeds,
+        markTutorialDone: markTutorialDone,
         getPlayer:      getPlayer
     };
 })();
