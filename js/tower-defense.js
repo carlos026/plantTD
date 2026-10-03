@@ -9,7 +9,7 @@ var currentWaveEnemyCount = 12;
 var interval_id = null;
 var currentWave = 0;
 var isBossWave = 0;
-var currentLevel = 1;
+var currentLevel = 5;
 var currentLives = 15;
 var currentCash = 100;
 var currentScore = 0;
@@ -285,7 +285,7 @@ function turretClick(turret) {
 
 function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 	if (isRoad(currentLevel, x, y)) return false;
-	if (isBlockedTile(x, y)) return false;
+	//if (isBlockedTile(x, y)) return false;
 
 	turretEl.style.left = mapzone.style.left;
 	turretEl.style.top  = mapzone.style.top;
@@ -315,6 +315,9 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 		turretObj.ammoQueue = 0;
 		turretObj.ammoLoadTick = 0;
 		turretObj.ammoLoadBar = null;
+	}
+	if (turretType === "archery") {
+		turretObj.pendingMissiles = [];
 	}
 	if (turretType === "stormCannon") {
 		turretObj.active = true;
@@ -366,18 +369,18 @@ function listenEvent(eventTarget, eventType, eventHandler) {
 
 
 // DRAG AND DROP
-var BLOCKED_TILES = [{x: 29, y: 4, lv: 1}]; // boat.png position
+//var BLOCKED_TILES = [{x: 29, y: 4, lv: 1}]; // boat.png position
 
-function isBlockedTile(xPos, yPos) {
+/*function isBlockedTile(xPos, yPos) {
 	for (var i = 0; i < BLOCKED_TILES.length; i++) {
 		if (BLOCKED_TILES[i].x === xPos && BLOCKED_TILES[i].y === yPos && currentLevel == BLOCKED_TILES[i].lv) return true;
 	}
 	return false;
-}
+}*/
 
 function dragOver(xPos, yPos){
 	function dragover(evt) {
-		if(!isRoad(currentLevel, xPos, yPos) && !isBlockedTile(xPos, yPos)) {
+		if(!isRoad(currentLevel, xPos, yPos) /*&& !isBlockedTile(xPos, yPos)*/) {
 			if (evt.preventDefault) evt.preventDefault();
 				evt = evt || window.event;
 				evt.dataTransfer.dropEffect = 'copy';
@@ -389,7 +392,7 @@ function dragOver(xPos, yPos){
 
 function cancelEvent(xPos, yPos){
 	function dragenter(event) {
-		if(!isRoad(currentLevel, xPos, yPos) && !isBlockedTile(xPos, yPos)){
+		if(!isRoad(currentLevel, xPos, yPos) /*&& !isBlockedTile(xPos, yPos)*/){
 			if (event.preventDefault) {
 				event.preventDefault();
 			} else {
@@ -439,8 +442,8 @@ function drawMap() {
 	}
 	drawTargetMap(currentLevel);
 
-	// create the turrets
-	var turretTypes = getTurretTypes();
+	// create the turrets (only those the player has unlocked)
+	var turretTypes = UnlockManager.getUnlockedTowers();
 	for (var k = 0; k < turretTypes.length; k++) {
 		var turret = document.createElement("div");
 		turret.setAttribute("type", turretTypes[k]);
@@ -515,6 +518,7 @@ function playMapSoundtrack(){
 		case 3: soundtrack.src = "sound/map3Soundtrack.mp3"; break;
 		case 4: soundtrack.src = "sound/map4Soundtrack.mp3"; break;
 		case 5: soundtrack.src = "sound/map5Soundtrack.mp3"; break;
+		case 6: soundtrack.src = "sound/map6Soundtrack.mp3"; break;
 		default: soundtrack.src = "sound/map1Soundtrack.mp3"; break;
 	}
 	soundtrack.loop = true;
@@ -551,9 +555,9 @@ function drawTargetMap(targetLevel) {
 	for (var i = 0; i < pixels.length; i++) {
 		
 		
-		if(i == 350 && currentLevel == 1){
+		/*if(i == 350 && currentLevel == 1){
 			mapzone.style.backgroundImage = "url('img/neutral/boat.png')";
-		}
+		}*/
 		var mapzone = pixels[i];
 		var x = Math.floor(mapzone.style.left.replace("px", "") / TILE_H);
 		var y = Math.floor(mapzone.style.top.replace("px", "") / TILE_W);
@@ -568,6 +572,7 @@ function drawTargetMap(targetLevel) {
 				case 3: roadColor = "#0f4938"; break;
 				case 4: roadColor = "#222222"; break;
 				case 5: roadColor = "#19191a"; break;
+				case 6: roadColor = "#8dc0f0"; break;
 			}
 			mapzone.style.backgroundColor = roadColor;
 			mapzone.style.backgroundImage = roadGrad;
@@ -592,6 +597,10 @@ function drawTargetMap(targetLevel) {
 				case 5:
 					groundColor = "#45534c"; // Void
 					groundGrad = "radial-gradient(circle, #232725 0%, #434444 100%)";
+				break;
+				case 6:
+					groundColor = "#86e7ff"; // Iceland
+					groundGrad = "radial-gradient(circle, #d1fdfd 0%, #acf1ff 100%)";
 				break;
 			}
 			mapzone.style.backgroundColor = groundColor;
@@ -619,7 +628,7 @@ function startwave(evt) {
 	currentWave = 0;
 	currentLives = 15;
 	currentCash = 100;
-	currentScore = 0;
+	currentScore = RunSession.getScore();
 	turretPos = new Array();
 
 	// increase the wave count
@@ -629,7 +638,7 @@ function startwave(evt) {
 	var turrets = document.querySelectorAll(".turretdrag");
 	var overHeatBar = document.querySelectorAll(".overheat-bar");
 	var ammoLoadBar = document.querySelectorAll(".ammo-load-bar");
-	var projectiles = document.querySelectorAll(".missile-projectile");
+	var projectiles = document.querySelectorAll(".missile-projectile, .arrow-projectile");
 	for (var i = 0; i < turrets.length; i++) {
 		document.body.removeChild(turrets[i]);
 	}
@@ -853,9 +862,10 @@ function startwave(evt) {
 						? Math.floor(Math.random() * 7) + 10
 						: 12;
 				}
-				//Move to next level if current wave = 30
+				// Map finished after wave 30 — back to map selection
 				if (currentWave > 30) {
-					startNextLevel();
+					finishMap();
+					return;
 				}
 
 				//Boss wave
@@ -918,20 +928,15 @@ function startwave(evt) {
 	}, 10);
 }
 
-function startNextLevel() {
-	currentLevel++;
-	currentGoldSeed++;
-	isPaused = true;
-	var oldScore = currentScore;
-	//Reset the Level
+function finishMap() {
 	resetwave(null);
-	startwave(null);
-	currentScore = oldScore + 100;
+	pauseAudio();
+	currentGoldSeed++;
+	currentScore += 100;
 	PlayerData.updateScore(currentScore);
 	PlayerData.addGoldenSeeds(1);
-	updatePlayerHud();
-	drawTargetMap(currentLevel);
-	playMapSoundtrack();
+	RunSession.completeMap(currentLevel, currentScore);
+	window.location.href = "index.html";
 }
 
 function whereToMove(xpos, ypos, currentDir, minion, c) {
@@ -1053,13 +1058,14 @@ function updateStatus() {
 
 function processPendingMissiles() {
 	for (var i = 0; i < turretPos.length; i++) {
-		if (turretPos[i].type !== "missile" || !turretPos[i].pendingMissiles) continue;
+		if (!turretPos[i].pendingMissiles) continue;
+		var isArrow = turretPos[i].type === "archery";
 		var remaining = [];
 		for (var j = 0; j < turretPos[i].pendingMissiles.length; j++) {
 			var missile = turretPos[i].pendingMissiles[j];
 			missile.timer--;
 			if (missile.projectileEl) {
-				var progress = 1 - missile.timer / 80;
+				var progress = 1 - missile.timer / missile.duration;
 				var tgtX = parseFloat(missile.minionElement.style.left) + 8;
 				var tgtY = parseFloat(missile.minionElement.style.top)  + 8;
 				var curX = missile.startX + (tgtX - missile.startX) * progress;
@@ -1075,9 +1081,13 @@ function processPendingMissiles() {
 				}
 				pendingMissileHits[missile.minionElement.id] = (pendingMissileHits[missile.minionElement.id] || 0) + missile.damage;
 				turretPos[i].totalDamage += missile.damage;
-				turretPos[i].audioFileImpact.currentTime = 0;
-				turretPos[i].audioFileImpact.play();
-				createMissileImpact(missile.minionElement);
+				if (isArrow) {
+					createProjectileImpact(missile.minionElement, "arrow-impact", 300);
+				} else {
+					turretPos[i].audioFileImpact.currentTime = 0;
+					turretPos[i].audioFileImpact.play();
+					createProjectileImpact(missile.minionElement, "missile-impact", 600);
+				}
 			} else {
 				remaining.push(missile);
 			}
@@ -1086,17 +1096,27 @@ function processPendingMissiles() {
 	}
 }
 
-function createMissileImpact(minionEl) {
+function createProjectileImpact(minionEl, className, lifetimeMs) {
 	var x = parseFloat(minionEl.style.left) || 0;
 	var y = parseFloat(minionEl.style.top)  || 0;
 	var impact = document.createElement("div");
-	impact.className = "missile-impact";
+	impact.className = className;
 	impact.style.left = (x + 8) + "px";
 	impact.style.top  = (y + 8) + "px";
 	document.body.appendChild(impact);
 	setTimeout(function() {
 		if (impact.parentNode) document.body.removeChild(impact);
-	}, 600);
+	}, lifetimeMs);
+}
+
+function createProjectileEl(className, startX, startY) {
+	var projEl = document.createElement("div");
+	projEl.className = className;
+	projEl.style.left = startX + "px";
+	projEl.style.top  = startY + "px";
+	projEl.style.transform = "translate(-50%, -50%)";
+	document.body.appendChild(projEl);
+	return projEl;
 }
 
 function updateMissileTurretPlaneFlags(minions, movex, movey) {
@@ -1176,14 +1196,48 @@ function anyTurretsInRange(minion, x, y) {
 				turretPos[i].ammo--;
 				var projStartX = parseInt(turretPos[i].x) + 8;
 				var projStartY = parseInt(turretPos[i].y) + 8;
-				var projEl = document.createElement("div");
-				projEl.className = "missile-projectile";
-				projEl.style.left = projStartX + "px";
-				projEl.style.top  = projStartY + "px";
-				projEl.style.transform = "translate(-50%, -50%)";
-				document.body.appendChild(projEl);
-				turretPos[i].pendingMissiles.push({ minionElement: minion, damage: missileDmg, timer: 80, projectileEl: projEl, startX: projStartX, startY: projStartY });
+				var projEl = createProjectileEl("missile-projectile", projStartX, projStartY);
+				turretPos[i].pendingMissiles.push({ minionElement: minion, damage: missileDmg, timer: 80, duration: 80, projectileEl: projEl, startX: projStartX, startY: projStartY });
 				updateTurretCooldownPostShooting(turretPos[i]);
+			} else if (turretPos[i].shotCd === 0) {
+				rotate(0, turretPos[i].htmlElement);
+				resetShotEffect(turretPos[i].htmlElement);
+			}
+			continue;
+		}
+
+		if (turretPos[i].type === "archery") {
+			var inRangeArchery = euclidDistance(x, xt, y, yt) <= turretPos[i].range;
+			if (inRangeArchery && turretPos[i].shotCd <= 0) {
+				var maxTargets = getArcheryTargetCount(turretPos[i].level);
+				var nearbyMinions = document.getElementsByClassName("minion");
+				var candidates = [];
+				for (var m = 0; m < nearbyMinions.length; m++) {
+					if (nearbyMinions[m].style.display === "none") continue;
+					var mx = parseFloat(nearbyMinions[m].style.left) || 0;
+					var my = parseFloat(nearbyMinions[m].style.top)  || 0;
+					var dist = euclidDistance(mx, xt, my, yt);
+					if (dist <= turretPos[i].range) {
+						candidates.push({ el: nearbyMinions[m], dist: dist });
+					}
+				}
+				if (candidates.length > 0) {
+					candidates.sort(function(a, b) { return a.dist - b.dist; });
+					rotateToTarget(x, y, parseInt(turretPos[i].x), parseInt(turretPos[i].y), turretPos[i].htmlElement);
+					turretPos[i].htmlElement.style.borderTop = "1px solid #c08a3e";
+					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+					turretPos[i].audioFile.currentTime = 0;
+					turretPos[i].audioFile.play();
+					var hits = Math.min(maxTargets, candidates.length);
+					var arrowStartX = parseInt(turretPos[i].x) + 8;
+					var arrowStartY = parseInt(turretPos[i].y) + 8;
+					for (var ti = 0; ti < hits; ti++) {
+						var arrowDmg = calculateCriticalHitDamage(ARCHERY_CRIT_CHANCE, turretPos[i].damage) + turretPos[i].damage;
+						var arrowEl = createProjectileEl("arrow-projectile", arrowStartX, arrowStartY);
+						turretPos[i].pendingMissiles.push({ minionElement: candidates[ti].el, damage: arrowDmg, timer: 20, duration: 20, projectileEl: arrowEl, startX: arrowStartX, startY: arrowStartY });
+					}
+					updateTurretCooldownPostShooting(turretPos[i]);
+				}
 			} else if (turretPos[i].shotCd === 0) {
 				rotate(0, turretPos[i].htmlElement);
 				resetShotEffect(turretPos[i].htmlElement);
@@ -1349,6 +1403,7 @@ function submitNickname() {
 	if (!isReturning) PlayerData.createPlayer(nickname);
 
 	var player = PlayerData.getPlayer();
+	RunSession.start(player.nickname);
 	if (isReturning) {
 		msg.textContent = 'Welcome back, ' + player.nickname + '! Record: ' + player.highestScore;
 		msg.className = 'nickname-message info';
@@ -1360,7 +1415,7 @@ function submitNickname() {
 
 	setTimeout(function() {
 		document.getElementById('nicknameScreen').style.display = 'none';
-		drawMap();
+		showMapSelectScreen();
 	}, isReturning ? 1200 : 0);
 }
 
@@ -1372,11 +1427,172 @@ function updatePlayerHud() {
 	document.getElementById('hudSeeds').textContent    = player.goldenSeeds;
 }
 
+////////////////////// MAP SELECTION SCREEN
+function showMapSelectScreen() {
+	renderMapGrid();
+	document.getElementById('mapSelectScreen').style.display = 'flex';
+}
+
+function renderMapGrid() {
+	var grid = document.getElementById('mapGrid');
+	grid.innerHTML = '';
+	var maps = UnlockCatalog.getMaps();
+	for (var i = 0; i < maps.length; i++) {
+		var m = maps[i];
+		var unlocked = UnlockManager.isMapUnlocked(m.id);
+		var played   = RunSession.isMapPlayed(m.id);
+		var card = document.createElement('div');
+		card.className = 'map-card' + (unlocked && !played ? '' : ' map-card-locked');
+
+		var numEl = document.createElement('div');
+		numEl.className = 'map-card-num';
+		numEl.textContent = 'Map ' + m.id;
+
+		var nameEl = document.createElement('div');
+		nameEl.className = 'map-card-name';
+		nameEl.textContent = m.name;
+
+		card.appendChild(numEl);
+		card.appendChild(nameEl);
+
+		if (played) {
+			var doneEl = document.createElement('div');
+			doneEl.className = 'map-card-done';
+			doneEl.textContent = '✔ Completed';
+			card.appendChild(doneEl);
+		} else if (unlocked) {
+			var btn = document.createElement('button');
+			btn.className = 'map-card-btn';
+			btn.textContent = 'PLAY';
+			(function (mapId) {
+				btn.addEventListener('click', function (e) {
+					e.stopPropagation();
+					startGameOnMap(mapId);
+				});
+			})(m.id);
+			card.appendChild(btn);
+		} else {
+			var lockEl = document.createElement('div');
+			lockEl.className = 'map-card-lock';
+			lockEl.textContent = '🌿 ' + m.cost + ' Seeds';
+			card.appendChild(lockEl);
+		}
+
+		grid.appendChild(card);
+	}
+
+	var run = RunSession.get();
+	document.getElementById('runScore').textContent = run ? run.score : 0;
+	document.getElementById('newRunBtn').style.display =
+		run && run.playedMaps.length > 0 ? 'inline-block' : 'none';
+}
+
+function startNewRun() {
+	RunSession.reset();
+	renderMapGrid();
+}
+
+function startGameOnMap(mapId) {
+	if (RunSession.isMapPlayed(mapId) || !UnlockManager.isMapUnlocked(mapId)) return;
+	currentLevel = mapId;
+	document.getElementById('mapSelectScreen').style.display = 'none';
+	drawMap();
+}
+////////////////////// END MAP SELECTION SCREEN
+
+////////////////////// PROGRESSION SCREEN
+function showProgressionScreen() {
+	renderProgressionScreen();
+	document.getElementById('progressionScreen').style.display = 'flex';
+}
+
+function hideProgressionScreen() {
+	document.getElementById('progressionScreen').style.display = 'none';
+}
+
+function renderProgressionScreen() {
+	var player = PlayerData.getPlayer();
+	document.getElementById('progressionSeeds').textContent = player ? player.goldenSeeds : 0;
+	var lockableMaps   = UnlockCatalog.getMaps().filter(function (m) { return m.locked; });
+	var lockableTowers = UnlockCatalog.getTowers().filter(function (t) { return t.locked; });
+	renderProgressionItems('maps',   lockableMaps,   'progressionMaps');
+	renderProgressionItems('towers', lockableTowers, 'progressionTowers');
+}
+
+function renderProgressionItems(category, items, containerId) {
+	var container = document.getElementById(containerId);
+	container.innerHTML = '';
+	var player = PlayerData.getPlayer();
+	var seeds  = player ? player.goldenSeeds : 0;
+
+	for (var i = 0; i < items.length; i++) {
+		var item  = items[i];
+		var owned = category === 'maps'
+			? UnlockManager.isMapUnlocked(item.id)
+			: UnlockManager.isTowerUnlocked(item.id);
+
+		var row = document.createElement('div');
+		row.className = 'prog-item';
+
+		var info = document.createElement('div');
+		info.className = 'prog-item-info';
+		var nameSpan = document.createElement('span');
+		nameSpan.className = 'prog-item-name';
+		nameSpan.textContent = item.name;
+		var costSpan = document.createElement('span');
+		costSpan.className = 'prog-item-cost';
+		costSpan.textContent = '🌿 ' + item.cost + ' Seeds';
+		info.appendChild(nameSpan);
+		info.appendChild(costSpan);
+
+		var btn = document.createElement('button');
+		btn.className = 'prog-btn';
+		if (owned) {
+			btn.className += ' prog-btn-owned';
+			btn.textContent = 'Owned';
+			btn.disabled = true;
+		} else if (seeds >= item.cost) {
+			btn.className += ' prog-btn-buy';
+			btn.textContent = 'Unlock';
+			(function (cat, itemId) {
+				btn.addEventListener('click', function () { progressionPurchase(cat, itemId); });
+			})(category, item.id);
+		} else {
+			btn.className += ' prog-btn-locked';
+			btn.textContent = 'Need ' + item.cost + ' Seeds';
+			btn.disabled = true;
+		}
+
+		row.appendChild(info);
+		row.appendChild(btn);
+		container.appendChild(row);
+	}
+}
+
+function progressionPurchase(category, id) {
+	var result = UnlockManager.purchase(category, id);
+	if (result.ok) {
+		updatePlayerHud();
+		renderProgressionScreen();
+		renderMapGrid();
+	}
+}
+////////////////////// END PROGRESSION SCREEN
+
 window.onload = function () {
 	applyGameScale();
 	window.addEventListener('resize', applyGameScale);
 
-	document.getElementById('nicknameInput').focus();
+	// Returning from a finished map: resume the run straight on map selection
+	var run = RunSession.get();
+	if (run && PlayerData.loadPlayer(run.nickname)) {
+		document.getElementById('nicknameScreen').style.display = 'none';
+		document.getElementById('playerHud').style.display = 'flex';
+		updatePlayerHud();
+		showMapSelectScreen();
+	} else {
+		document.getElementById('nicknameInput').focus();
+	}
 
 	// atualiza posição do range indicator enquanto arrasta uma nova torre (desktop)
 	document.addEventListener("dragover", function(e) {

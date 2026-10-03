@@ -314,7 +314,7 @@ p {
 .statusbar {
   position: absolute;
   top: 468px;
-  left: 520px;
+  left: 565px;
   height: 80px;
   background: var(--panel);
   border: 1.5px solid var(--border);
@@ -484,6 +484,41 @@ p {
   animation: missileFlash 0.32s cubic-bezier(0.1, 0, 0.35, 1) forwards;
 }
 
+/* ── ARROW PROJECTILE ───────────────────────────────── */
+.arrow-projectile {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-image: url('img/tw/arrowShot.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  z-index: 45;
+}
+
+/* ── ARROW IMPACT BURST ────────────────────────────── */
+@keyframes arrowBurst {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+.arrow-impact {
+  position: absolute;
+  pointer-events: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(220, 180, 100, 0.9) 0%,
+    rgba(192, 138, 62, 0.5) 50%,
+    transparent 75%
+  );
+  animation: arrowBurst 0.25s ease-out forwards;
+  z-index: 50;
+}
+
 /* glow pulsante na torre de gelo ao disparar */
 @keyframes blizzardGlow {
   0%   { filter: drop-shadow(0 0  3px rgba(0, 200, 255, 0.4)); }
@@ -586,7 +621,7 @@ progress.toxic::-webkit-progress-value {
 }
 
 #damageStatsPanel.character-info {
-  top: 380px;
+  top: 468px;
   left: 1212px;
   width: 210px;
 }
@@ -992,7 +1027,7 @@ progress.toxic::-webkit-progress-value {
 .player-hud {
   position: absolute;
   top: 468px;
-  left:1035px;
+  left:1080px;
   width: 145px;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -1203,4 +1238,343 @@ button[type="sellbutton"]:active {
   color: var(--text-muted);
   text-align: center;
   padding: 12px 0;
+}
+
+/* ── MAP SELECTION SCREEN ────────────────────────────── */
+.map-select-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 26, 0.97);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+}
+
+.map-select-panel {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  box-shadow: var(--shadow), 0 0 48px rgba(0, 180, 255, 0.15);
+  min-width: 500px;
+}
+
+.map-select-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 0 24px var(--accent-glow);
+  margin: 0;
+  letter-spacing: 4px;
+}
+
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.map-card {
+  background: rgba(0, 20, 60, 0.6);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-height: 90px;
+  justify-content: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.map-card:not(.map-card-locked) {
+  cursor: pointer;
+}
+
+.map-card:not(.map-card-locked):hover {
+  border-color: var(--border-hi);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.map-card-locked {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.map-card-num {
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.map-card-name {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+}
+
+.map-card-btn {
+  width: 100%;
+  padding: 7px 0;
+  background: linear-gradient(135deg, #003d7a, #0077cc);
+  border: 1px solid rgba(0, 180, 255, 0.4);
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.map-card-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px rgba(0, 160, 255, 0.55);
+}
+
+.map-card-btn:active {
+  transform: scale(0.97);
+}
+
+.map-card-lock {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(255, 200, 0, 0.4);
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.map-card-done {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.map-select-score {
+  font-family: 'Orbitron', monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+}
+
+.map-select-score span {
+  color: var(--gold);
+}
+
+.map-select-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progression-open-btn {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #2d0073 0%, #6a00cc 100%);
+  border: 1px solid rgba(140, 0, 255, 0.4);
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(100, 0, 200, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.progression-open-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 24px rgba(120, 0, 240, 0.65);
+}
+
+.progression-open-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── PROGRESSION SCREEN ──────────────────────────────── */
+.progression-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 26, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9500;
+}
+
+.progression-panel {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: var(--shadow), 0 0 48px rgba(0, 180, 255, 0.12);
+  min-width: 420px;
+  max-width: 520px;
+}
+
+.progression-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+
+.progression-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 0 16px var(--accent-glow);
+  margin: 0;
+  letter-spacing: 3px;
+}
+
+.progression-seeds-display {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 8px rgba(255, 200, 0, 0.5);
+}
+
+.progression-close-btn {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 60, 60, 0.3);
+  border-radius: 6px;
+  color: #ff4466;
+  font-size: 14px;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  padding: 0;
+}
+
+.progression-close-btn:hover {
+  background: rgba(255, 0, 0, 0.25);
+  border-color: rgba(255, 60, 60, 0.65);
+}
+
+.progression-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.progression-section h2 {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 180, 255, 0.1);
+}
+
+.progression-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prog-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(0, 20, 60, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.prog-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.prog-item-name {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.prog-item-cost {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: 0 0 6px rgba(255, 200, 0, 0.4);
+}
+
+.prog-btn {
+  padding: 7px 16px;
+  border-radius: 7px;
+  border: none;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.prog-btn-buy {
+  background: linear-gradient(135deg, #00a050, #00e676);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(0, 200, 100, 0.4);
+}
+
+.prog-btn-buy:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(0, 220, 110, 0.65);
+}
+
+.prog-btn-buy:active {
+  transform: scale(0.97);
+}
+
+.prog-btn-owned {
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  cursor: default;
+}
+
+.prog-btn-locked {
+  background: rgba(40, 0, 0, 0.5);
+  color: #ff5566;
+  border: 1px solid rgba(255, 60, 60, 0.2);
+  cursor: default;
+  font-size: 9px;
+  letter-spacing: 0.5px;
 }

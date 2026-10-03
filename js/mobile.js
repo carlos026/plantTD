@@ -1,7 +1,7 @@
 // Mobile viewport scaling and touch drag-and-drop support
 
 var GAME_NATIVE_WIDTH  = 1422;
-var GAME_NATIVE_HEIGHT = 640;
+var GAME_NATIVE_HEIGHT = 720;
 var mobileScale = 1.0;
 
 function getMobileScale() {

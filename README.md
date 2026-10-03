@@ -25,6 +25,7 @@ All towers can be upgraded up to **level 8**.
 | Storm Cannon | $1000 | Hits **all** enemies in range simultaneously with electric bursts — see [Overheat](#storm-cannon-overheat) |
 | Rail Cannon | $1500 | Extreme single-target damage, stuns enemies — 2× damage vs airplanes (stun has no effect on Sp. Minions or airplanes) |
 | Missile Turret | $2000 | Prioritizes airplanes over ground targets. Uses an ammo queue — see [Missile Ammo Queue](#missile-ammo-queue). **5× damage vs airplanes** |
+| Archery Turret | $350 | Fires homing arrow projectiles with unlimited ammo. Highest critical hit chance in the game (**35%**) — see [Archery Multi-Shot](#archery-multi-shot) |
 
 ### Storm Cannon Overheat
 
@@ -41,6 +42,14 @@ The Missile Turret uses a limited ammo pool. Instead of buying one reload at a t
 - **Empty slots** (dark): available queue space
 
 The buy button is disabled when the queue is full or when ammo + queue would exceed the tower's maximum capacity.
+
+### Archery Multi-Shot
+
+The Archery Turret fires homing arrow projectiles (similar travel-time mechanic to the Missile Turret) with damage comparable to the Machine Gun, but no ammo limit. Its strength lies in critical hits and multi-targeting:
+
+- **Level 1–4:** fires at a single target
+- **Level 5–7:** fires at **2 targets** simultaneously
+- **Level 8:** fires at **3 targets** simultaneously
 
 ## Enemies
 

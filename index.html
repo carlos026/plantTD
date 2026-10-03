@@ -11,6 +11,8 @@
 <script type="text/javascript" src="js/turret.js"></script>
 <script type="text/javascript" src="js/minion.js"></script>
 <script type="text/javascript" src="js/player-data.js"></script>
+<script type="text/javascript" src="js/unlock-catalog.js"></script>
+<script type="text/javascript" src="js/unlock-manager.js"></script>
 <script type="text/javascript" src="js/tower-defense.js"></script>
 <script type="text/javascript" src="js/mobile.js"></script>
 </head>
@@ -34,18 +36,52 @@
         </div>
     </div>
 
+    <!-- ── MAP SELECTION SCREEN ───────────────────────── -->
+    <div id="mapSelectScreen" class="map-select-overlay" style="display:none;">
+        <div class="map-select-panel">
+            <h1 class="map-select-title">SELECT MAP</h1>
+            <div class="map-select-score">Run score: <span id="runScore">0</span></div>
+            <div id="mapGrid" class="map-grid"></div>
+            <div class="map-select-footer">
+                <button id="newRunBtn" class="progression-open-btn" style="display:none;" onclick="startNewRun()">&#8635; NEW RUN</button>
+                <button class="progression-open-btn" onclick="showProgressionScreen()">&#127807; PROGRESSION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── PROGRESSION SCREEN ─────────────────────────── -->
+    <div id="progressionScreen" class="progression-overlay" style="display:none;">
+        <div class="progression-panel">
+            <div class="progression-header">
+                <h1 class="progression-title">PROGRESSION</h1>
+                <div class="progression-seeds-display">&#127807; <span id="progressionSeeds">0</span> Seeds</div>
+                <button class="progression-close-btn" onclick="hideProgressionScreen()">&#10005;</button>
+            </div>
+            <div class="progression-sections">
+                <div class="progression-section">
+                    <h2>Maps</h2>
+                    <div id="progressionMaps" class="progression-items"></div>
+                </div>
+                <div class="progression-section">
+                    <h2>Towers</h2>
+                    <div id="progressionTowers" class="progression-items"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── PLAYER HUD ──────────────────────────────────── -->
     <div id="playerHud" class="player-hud" style="display:none;">
         <div class="hud-row">
-            <span class="hud-label">👤 Player</span>
+            <span class="hud-label">&#128100; Player</span>
             <span class="hud-value hud-nickname" id="hudNickname">—</span>
         </div>
         <div class="hud-row">
-            <span class="hud-label">📈 Record</span>
+            <span class="hud-label">&#128200; Record</span>
             <span class="hud-value" id="hudRecord">0</span>
         </div>
         <div class="hud-row">
-            <span class="hud-label">🌱 Seeds</span>
+            <span class="hud-label">&#127807; Seeds</span>
             <span class="hud-value hud-seeds" id="hudSeeds">0</span>
         </div>
     </div>
@@ -98,6 +134,10 @@
                 </div>
                 <button class="ammo-buy-btn" id="ammoBuyBtn" onclick="btnBuyAmmoClick()" type="button">$50 | Buy</button>
             </div>
+        </div>
+        <div class="info-item" id="multiTargetRow" style="display: none;">
+            <span>Targets</span>
+            <span id="upgTargets"></span>
         </div>
         <div class="info-item" id="overheatRow" style="display: none;">
             <span>Overheat</span>

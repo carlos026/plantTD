@@ -1,6 +1,6 @@
 // Turret functions
 function getTurretTypes(){
-	const types = ["machineGun", "laser", "flamethrower", "blizzard", "toxic", "stormCannon", "railCannon", "missile"];
+	const types = ["machineGun", "laser", "flamethrower", "blizzard", "toxic", "stormCannon", "railCannon", "missile", "archery"];
 	return types;
 }
 
@@ -22,6 +22,8 @@ function turretColor(type) {
 		return "#3a86ff"; // Tech Blue
 	case "missile":
 		return "#FFD700"; // Yellow
+	case "archery":
+		return "#c08a3e"; // Bronze/Wood
 	}
 }
 
@@ -43,6 +45,8 @@ function getTurretShotCooldown(type, level){
 		return 601 - (level * 30);
 	case "missile":
 		return 420 - (level * 20);
+	case "archery":
+		return 80;
 	}
 }
 
@@ -63,6 +67,8 @@ function getTurretAnimationCooldown(type, level){
 	case "railCannon":
 		return 0;
 	case "missile":
+		return 0;
+	case "archery":
 		return 0;
 	}
 }
@@ -124,6 +130,8 @@ function updateTurretCooldownPostTurn(turrets){
 			case "railCannon":
 				break;
 			case "missile":
+				break;
+			case "archery":
 				break;
 			}
 		}
@@ -206,6 +214,8 @@ function turretSoundEffect(type){
 			return new Audio("sound/RailCannon.wav");
 		case "missile":
 			return new Audio("sound/missileLaunch.mp3");
+		case "archery":
+			return new Audio("sound/arrowHit.mp3");
 		}
 }
 
@@ -227,6 +237,8 @@ function turretImage(type) {
 		return "url('img/tw/tower5.png')";
 	case "missile":
 		return "url('img/tw/missile.png')";
+	case "archery":
+		return "url('img/tw/archery.png')";
 	}
 }
 
@@ -248,6 +260,8 @@ function turretValue(type) {
 		return 1000;
 	case "missile":
 		return 2000;
+	case "archery":
+		return 250;
 	}
 }
 
@@ -269,6 +283,8 @@ function turretRange(type) {
 		return 5 * TILE_W;
 	case "missile":
 		return 7 * TILE_W;
+	case "archery":
+		return 5 * TILE_W;
 	}
 }
 
@@ -290,6 +306,8 @@ function turretDamage(type) {
 		return 3250;
 	case "missile":
 		return 5000;
+	case "archery":
+		return 48;
 	}
 }
 
@@ -311,6 +329,8 @@ function turretName(type) {
 		return "Rail Cannon";
 	case "missile":
 		return "Missile Turret";
+	case "archery":
+		return "Archery Turret";
 	}
 }
 
@@ -332,6 +352,8 @@ function turretDescription(type) {
 		return "Extreme single-target damage with a very slow fire rate. Destroys bosses.";
 	case "missile":
 		return "Prioritizes aircraft. Fires a missile that detonates on impact, dealing 5x damage to planes.";
+	case "archery":
+		return "Fires homing arrows with unlimited ammo and the highest critical hit chance of any tower. Strikes 2 enemies at level 5 and 3 enemies at level 8.";
 	}
 }
 
@@ -362,6 +384,9 @@ function turretUpgradeCosts(type, turretLvl) {
 	case "missile":
 		upgradeCost = upgradeCost * 0.2;
 		break;
+	case "archery":
+		upgradeCost = upgradeCost * 0.5;
+		break;
 	}
 	return upgradeCost;
 }
@@ -369,6 +394,12 @@ function turretUpgradeCosts(type, turretLvl) {
 function getMissileMaxAmmo(level) {
 	var counts = [0, 5, 6, 8, 10, 12, 14, 16, 18];
 	return counts[level] || 18;
+}
+
+function getArcheryTargetCount(level) {
+	if (level >= 8) return 3;
+	if (level >= 5) return 2;
+	return 1;
 }
 
 function getTurretSellPrice(type, upgradeTotalValue) {
@@ -517,6 +548,12 @@ function updateTurretInfo(turret){
         document.getElementById("ammoRow").style.display = "none";
         document.getElementById("ammoBuyRow").style.display = "none";
     }
+    if (turret.type === "archery") {
+        document.getElementById("multiTargetRow").style.display = "flex";
+        document.getElementById("upgTargets").innerText = getArcheryTargetCount(turret.level);
+    } else {
+        document.getElementById("multiTargetRow").style.display = "none";
+    }
     document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
     document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
 }
@@ -575,6 +612,15 @@ function upgradeTurretData(turret){
 				turret.range += upgradeRange * 0.05;
 			}
 			break;
+		case "archery":
+			if(turret.level >= 5) {
+				turret.damage += upgradeDamage * 0.4;
+				turret.range += upgradeRange * 0.02;
+			} else {
+				turret.damage += upgradeDamage * 0.3;
+				turret.range += upgradeRange * 0.05;
+			}
+			break;
 	}
 }
 
@@ -614,6 +660,8 @@ function shootingTrigger(turret, minion, turretStyle, damage){
 			return calculateCriticalHitDamage(20, turret.damage);
 		case "missile":
 			return calculateCriticalHitDamage(20, turret.damage);
+		case "archery":
+			return calculateCriticalHitDamage(40, turret.damage);
 	}
 }
 

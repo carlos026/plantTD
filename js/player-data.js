@@ -48,6 +48,16 @@ var PlayerData = (function () {
     function loadPlayer(nickname) {
         var data = StorageAdapter.get(nickname);
         if (!data) return null;
+        // Migration: add unlock arrays for profiles created before the progression system
+        if (!Array.isArray(data.unlockedMaps)) {
+            data.unlockedMaps = [1];
+        }
+        if (!Array.isArray(data.unlockedTowers)) {
+            data.unlockedTowers = [
+                "machineGun", "laser", "flamethrower", "blizzard",
+                "toxic", "stormCannon", "railCannon"
+            ];
+        }
         data.lastPlayAt = _now();
         StorageAdapter.set(data.nickname, data);
         _player = data;
@@ -61,11 +71,16 @@ var PlayerData = (function () {
     function createPlayer(nickname) {
         var now = _now();
         _player = {
-            nickname:      nickname.trim(),
-            highestScore:  0,
-            goldenSeeds:   0,
-            createdAt:     now,
-            lastPlayAt:    now
+            nickname:       nickname.trim(),
+            highestScore:   0,
+            goldenSeeds:    0,
+            unlockedMaps:   [1],
+            unlockedTowers: [
+                "machineGun", "laser", "flamethrower", "blizzard",
+                "toxic", "stormCannon", "railCannon"
+            ],
+            createdAt:      now,
+            lastPlayAt:     now
         };
         StorageAdapter.set(_player.nickname, _player);
         return _player;
@@ -114,5 +129,85 @@ var PlayerData = (function () {
         updateScore:    updateScore,
         addGoldenSeeds: addGoldenSeeds,
         getPlayer:      getPlayer
+    };
+})();
+
+// ── RunSession — state that survives the redirect to index.html ───────────
+// Holds the current run (nickname, accumulated score, maps already played).
+// Lives in sessionStorage, so closing the tab starts a fresh run.
+var RunSession = (function () {
+    var KEY = 'plantTD_run';
+
+    function _read() {
+        try {
+            return JSON.parse(sessionStorage.getItem(KEY));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _write(run) {
+        try {
+            sessionStorage.setItem(KEY, JSON.stringify(run));
+        } catch (e) {}
+    }
+
+    /**
+     * Returns the active run, or null if none.
+     */
+    function get() {
+        return _read();
+    }
+
+    /**
+     * Starts a new run for nickname, unless one already exists for it.
+     */
+    function start(nickname) {
+        var run = _read();
+        if (run && run.nickname.toLowerCase() === nickname.toLowerCase().trim()) return run;
+        run = { nickname: nickname.trim(), score: 0, playedMaps: [] };
+        _write(run);
+        return run;
+    }
+
+    function getScore() {
+        var run = _read();
+        return run ? run.score : 0;
+    }
+
+    function isMapPlayed(mapId) {
+        var run = _read();
+        return run ? run.playedMaps.indexOf(mapId) !== -1 : false;
+    }
+
+    /**
+     * Marks mapId as finished and stores the accumulated score.
+     */
+    function completeMap(mapId, score) {
+        var run = _read();
+        if (!run) return;
+        if (run.playedMaps.indexOf(mapId) === -1) run.playedMaps.push(mapId);
+        run.score = score;
+        _write(run);
+    }
+
+    /**
+     * Keeps the player but clears score and played maps.
+     */
+    function reset() {
+        var run = _read();
+        if (!run) return;
+        run.score = 0;
+        run.playedMaps = [];
+        _write(run);
+    }
+
+    return {
+        get:         get,
+        start:       start,
+        getScore:    getScore,
+        isMapPlayed: isMapPlayed,
+        completeMap: completeMap,
+        reset:       reset
     };
 })();
