@@ -4,6 +4,7 @@ var isRunning = false;
 var isPaused = false;
 var rangeIndicator = null;
 var isDraggingNewTurret = false;
+var draggedTurretEl = null; // turret being dragged from the shop (set on dragstart)
 var minion_count = 16;
 var currentWaveEnemyCount = 12;
 var interval_id = null;
@@ -93,22 +94,22 @@ function updateEnemyInfoDialog() {
 	var maxHp = parseFloat(selectedHpBarEl.getAttribute("max")) || 1;
 	var speed = getMinionSpeed(selectedMinionEl);
 	var isPlane = isPlaneMinion(selectedMinionEl);
-	var isSp = isSpMinion(selectedMinionEl);
-	var name = isBossWave ? (isSp ? "Sp. Boss" : "Boss") : isPlane ? "Airplane" : (isSp ? "Sp. Minion" : "Minion");
+	var profile = getEnemyProfile(selectedMinionEl);
+	var name = profile ? profile.name : isBossWave ? "Boss" : isPlane ? "Airplane" : "Minion";
 
 	document.getElementById("enemyName").innerText = name;
 	var hpBar = document.getElementById("enemyHpBar");
 	hpBar.value = currentHp;
 	hpBar.max = maxHp;
-	document.getElementById("enemyHpText").innerText = Math.ceil(currentHp) + " / " + Math.ceil(maxHp);
+	var hpText = Math.ceil(currentHp) + " / " + Math.ceil(maxHp);
+	if (selectedMinionEl._shield > 0) hpText += " (+" + Math.ceil(selectedMinionEl._shield) + " shield)";
+	document.getElementById("enemyHpText").innerText = hpText;
 
 	var speedLabel;
-	if (speed === 0) {
+	if (hasDebuff(STUN_STATUS_ATTRIBUTE, selectedMinionEl) && !isPlane) {
 		speedLabel = "0 (Stunned)";
-	} else if (speed === 0.5) {
-		speedLabel = "0.5 (Frozen)";
-	} else if (isPlane && speed === PLANE_FROZEN_SPEED) {
-		speedLabel = PLANE_FROZEN_SPEED.toFixed(1) + " (Frozen)";
+	} else if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, selectedMinionEl)) {
+		speedLabel = speed + " (Frozen)";
 	} else {
 		speedLabel = speed.toFixed(1);
 	}
@@ -145,12 +146,20 @@ function showShopTurretInfo(type) {
 ////////////////////// END TURRET SHOP INFO DIALOG
 
 ////////////////////// STORM CANNON OVERHEAT
-function destroyOverheatedStormCannon(idx) {
-	document.getElementById("registrationForm").style.display = "none";
-	hideRangeIndicator();
-	document.body.removeChild(turretPos[idx].overheatBar);
-	document.body.removeChild(turretPos[idx].htmlElement);
-	turretPos.splice(idx, 1);
+// At max overheat the cannon shuts down and only comes back once it fully cools (0%)
+function setStormOverheated(turret, overheated) {
+	turret.overheated = overheated;
+	turret.htmlElement.classList.toggle("storm-overheated", overheated);
+	turret.overheatBar.classList.toggle("storm-overheated", overheated);
+	if (overheated) {
+		rotate(0, turret.htmlElement);
+		resetShotEffect(turret.htmlElement);
+	}
+	// keep the upgrade panel in sync if this turret is selected
+	if (document.getElementById("upgTurretId").value === turret.htmlElement.id &&
+		document.getElementById("registrationForm").style.display !== "none") {
+		updateTurretInfo(turret);
+	}
 }
 ////////////////////// END STORM CANNON OVERHEAT
 
@@ -221,7 +230,8 @@ function formatDamage(n) {
 ////////////////////// TURRET FUNCTIONS that requires global values (others declared on object/turret.js)
 function turretClick(turret) {
 	function tclick(evt) {
-		if (!isRunning || isPaused) {
+		// buying is allowed while paused, but only once the game has started
+		if (!isRunning) {
 			return;
 		}
 
@@ -274,11 +284,13 @@ function turretClick(turret) {
 		// ao soltar (com ou sem drop válido), limpa o indicator
 		listenEvent(turretD, "dragend", function() {
 			isDraggingNewTurret = false;
+			draggedTurretEl = null;
 			hideRangeIndicator();
 		});
 
 		// reduce our available cash by what we just spent
 		currentCash -= turretValue(turretType);
+		updateStatus(); // the game loop doesn't refresh the HUD while paused
 	}
 	return tclick;
 }
@@ -323,6 +335,7 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 		turretObj.active = true;
 		turretObj.overheat = 0;
 		turretObj.overheatCoolTick = 0;
+		turretObj.overheated = false;
 		turretObj.firedThisTurn = false;
 		var overheatBar = document.createElement("progress");
 		overheatBar.setAttribute("class", "overheat-bar");
@@ -344,11 +357,16 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 
 function mapDrop(mapzone, x, y) {
 	function drop(evt) {
-		cancelPropogation(evt);
 		evt = evt || window.event;
+		// stop the browser from treating the drop as a navigation
+		if (evt.preventDefault) evt.preventDefault();
+		cancelPropogation(evt);
 		evt.dataTransfer.dropEffect = 'copy';
-		var id = evt.dataTransfer.getData("Text");
-		var turretEl = document.getElementById(id);
+		// prefer the tracked element; dataTransfer can arrive empty (e.g. file:// pages)
+		var turretEl = draggedTurretEl || document.getElementById(evt.dataTransfer.getData("Text"));
+		draggedTurretEl = null;
+		// ignore drops that don't carry a turret still waiting to be placed
+		if (!turretEl || turretEl.getAttribute("draggable") !== "true") return;
 		placeTurretAtMapzone(mapzone, x, y, turretEl);
 	}
 	return drop;
@@ -610,7 +628,7 @@ function startwave(evt) {
 		document.body.appendChild(hpBarMinion);
 		listenEvent(minion, "click", (function(idx, mEl, hEl) {
 			return function() {
-				if (!isRunning || isPaused) return;
+				if (!isRunning) return; // also works while paused
 				showEnemyInfoDialog(idx, mEl, hEl);
 			};
 		})(i, minion, hpBarMinion));
@@ -657,7 +675,9 @@ function startwave(evt) {
 				if (currentDir[i] == MOVE_END) {
 					// lose a life, one escaped!
 					if (minions[i].style.display != "none") {
-						currentLives--;
+						// bosses cost BOSS_LIVES_COST, scaled by the enemy's own cost (Fire Tank Boss = 10)
+						var livesCost = getEnemyLivesCost(minions[i]) * (isBossWave ? BOSS_LIVES_COST : 1);
+						currentLives = Math.max(0, currentLives - livesCost);
 						lives_lost++;
 						minions_killed++;
 					}
@@ -728,12 +748,13 @@ function startwave(evt) {
 				hpBarMinions[i].style.top = movey[i] + "px";
 				hpBarMinions[i].style.left = movex[i] + "px";
 				if (isBossWave) {
-					hpBarMinions[i].setAttribute("max", bossHp());
+					hpBarMinions[i].setAttribute("max", bossHp() * getEnemyHpMult(minions[i]));
 				} else {
-					hpBarMinions[i].setAttribute("max", minionhp());
+					hpBarMinions[i].setAttribute("max", minionhp() * getEnemyHpMult(minions[i]));
 				}
-				// reduce the minion's hit points by the damage
-				if (isSpMinion(minions[i])) damage *= 2;
+				// reduce the minion's hit points by the damage (per-turret multipliers
+				// were already applied at each damage source; the shield absorbs first)
+				damage = absorbWithShield(minions[i], damage);
 				minion_hp[i] -= damage;
 				hpBarMinions[i].setAttribute("value", minion_hp[i]);
 				if (minion_hp[i] <= 0) {
@@ -761,6 +782,7 @@ function startwave(evt) {
 					//deleteProjectilesTargetingMinion(minions[i].id);
 				} else {
 					tickDownMinionDebuffs(minions[i], hpBarMinions[i]);
+					tickShield(minions[i]);
 				}
 			}
 			// stagger the minions coming out at random intervals
@@ -794,6 +816,8 @@ function startwave(evt) {
 					PlayerData.savePlayer();
 					updatePlayerHud();
 					resetwave(null);
+					// stop here: a game over (even on wave 30) must never complete the map
+					return;
 				}
 				// reset for the next wave!
 				minion_c = 1;
@@ -829,10 +853,15 @@ function startwave(evt) {
 							: "url('img/min-lv1/boss-up.png')";
 						minions[i].style.width = "30px";
 						minions[i].style.height = "30px";
-						minion_hp[i] = bossHp();
+						var bossProfile = isSPBossWave ? getBossProfile(currentLevel) : null;
+						minion_hp[i] = bossHp() * (bossProfile ? bossProfile.hpMult : 1);
 						first_kill[i] = true;
 						minions[i]._isPlane = false;
-						minions[i]._isSpMinion = isSPBossWave;
+						minions[i]._isBoss = true;
+						setEnemyProfile(minions[i], bossProfile, minion_hp[i]);
+						if (bossProfile && bossProfile.sprite) {
+							minions[i].style.backgroundImage = "url('" + bossProfile.sprite + "')";
+						}
 						removeDebuffs(minions[i], hpBarMinions[i]);
 					}
 				} else {
@@ -848,20 +877,24 @@ function startwave(evt) {
 						minions[i].style.height = "16px";
 						minion_hp[i] = minionhp();
 						first_kill[i] = true;
+						minions[i]._isBoss = false;
 						removeDebuffs(minions[i], hpBarMinions[i]);
 						var usePlane = currentWave >= 11 && currentWave != 20 && Math.random() < 0.5;
 						var useSpMin = !usePlane && currentWave >= 20 && Math.random() < 0.3;
 						if (usePlane) {
 							minions[i]._isPlane = true;
-							minions[i]._isSpMinion = false;
+							setEnemyProfile(minions[i], null, minion_hp[i]);
 							minions[i].style.backgroundImage = "url('img/pla-lv2/pla-up.png')";
 						} else if (useSpMin) {
+							// each map has its own special enemy (tinted via CSS class)
+							var special = getSpecialEnemy(currentLevel);
 							minions[i]._isPlane = false;
-							minions[i]._isSpMinion = true;
-							minions[i].style.backgroundImage = "url('img/min-lv1/sp-min-up.png')";
+							minion_hp[i] = minionhp() * special.hpMult;
+							setEnemyProfile(minions[i], special, minion_hp[i]);
+							minions[i].style.backgroundImage = "url('" + (special.sprite || "img/min-lv1/sp-min-up.png") + "')";
 						} else {
 							minions[i]._isPlane = false;
-							minions[i]._isSpMinion = false;
+							setEnemyProfile(minions[i], null, minion_hp[i]);
 							minions[i].style.backgroundImage = "url('img/min-lv1/min-up.png')";
 						}
 					}
@@ -1021,6 +1054,7 @@ function processPendingMissiles() {
 				}
 				pendingMissileHits[missile.minionElement.id] = (pendingMissileHits[missile.minionElement.id] || 0) + missile.damage;
 				turretPos[i].totalDamage += missile.damage;
+				if (missile.critical) showCriticalPopup(missile.minionElement, missile.damage);
 				if (isArrow) {
 					createProjectileImpact(missile.minionElement, "arrow-impact", 300);
 				} else {
@@ -1034,6 +1068,24 @@ function processPendingMissiles() {
 		}
 		turretPos[i].pendingMissiles = remaining;
 	}
+}
+
+// Floating "Critical!" text above a minion; throttled per minion so fast turrets don't spam it
+function showCriticalPopup(minionEl, shotTotal) {
+	if (minionEl.style.display === "none") return;
+	var now = Date.now();
+	if (minionEl._lastCritPopup && now - minionEl._lastCritPopup < CRIT_POPUP_THROTTLE_MS) return;
+	minionEl._lastCritPopup = now;
+
+	var popup = document.createElement("div");
+	popup.className = "crit-popup";
+	popup.textContent = Math.round(shotTotal) + " Critical!";
+	popup.style.left = ((parseFloat(minionEl.style.left) || 0) + minionEl.offsetWidth / 2) + "px";
+	popup.style.top  = ((parseFloat(minionEl.style.top)  || 0) - 4) + "px";
+	document.body.appendChild(popup);
+	setTimeout(function() {
+		if (popup.parentNode) document.body.removeChild(popup);
+	}, 900);
 }
 
 function createProjectileImpact(minionEl, className, lifetimeMs) {
@@ -1086,15 +1138,16 @@ function anyTurretsInRange(minion, x, y) {
 			var inRange = euclidDistance(x, xt, y, yt) <= turretPos[i].range;
 			if (inRange && turretPos[i].shotCd === 0) {
 				var aoeMinions = document.getElementsByClassName("minion");
-				var aoeHits = 0;
+				var aoeDamage = 0;
 				for (var m = 0; m < aoeMinions.length; m++) {
 					if (aoeMinions[m].style.display === "none") continue;
 					var mx = parseFloat(aoeMinions[m].style.left) || 0;
 					var my = parseFloat(aoeMinions[m].style.top)  || 0;
 					if (euclidDistance(mx, xt, my, yt) <= turretPos[i].range) {
 						freezeMinion(aoeMinions[m], 100 + turretPos[i].level);
-						blizzardPendingDamage[aoeMinions[m].id] = (blizzardPendingDamage[aoeMinions[m].id] || 0) + turretPos[i].damage;
-						aoeHits++;
+						var blizzDmg = turretPos[i].damage * getDamageMultiplier(aoeMinions[m], "blizzard");
+						blizzardPendingDamage[aoeMinions[m].id] = (blizzardPendingDamage[aoeMinions[m].id] || 0) + blizzDmg;
+						aoeDamage += blizzDmg;
 					}
 				}
 				createFrostBurst(turretPos[i]);
@@ -1103,7 +1156,7 @@ function anyTurretsInRange(minion, x, y) {
 					setTimeout(function() { el.classList.remove("blizzard-firing"); }, 650);
 				})(turretPos[i].htmlElement);
 				updateTurretSoundPostShooting(turretPos[i]);
-				turretPos[i].totalDamage += turretPos[i].damage * Math.max(1, aoeHits);
+				turretPos[i].totalDamage += aoeDamage;
 				turretPos[i].shotCd = getTurretShotCooldown(turretPos[i].type, turretPos[i].level);
 			}
 			if (inRange) {
@@ -1118,7 +1171,12 @@ function anyTurretsInRange(minion, x, y) {
 			continue;
 		}
 
-		if (turretPos[i].type === "stormCannon" && turretPos[i].active === false) {
+		// immune to this turret (e.g. Fire Tank vs flamethrower): let it pick another target
+		if (getDamageMultiplier(minion, turretPos[i].type) === 0) {
+			continue;
+		}
+
+		if (turretPos[i].type === "stormCannon" && (turretPos[i].active === false || turretPos[i].overheated)) {
 			continue;
 		}
 
@@ -1129,15 +1187,18 @@ function anyTurretsInRange(minion, x, y) {
 				rotateToTarget(x, y, parseInt(turretPos[i].x), parseInt(turretPos[i].y), turretPos[i].htmlElement);
 				//turretPos[i].htmlElement.style.borderTop = "3px solid #FFD700";
 				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
-				var missileDmg = turretPos[i].damage;
+				// base damage on a normal hit, 2x on a critical (shown on impact)
+				var missileDmg = calculateCriticalHitDamage(MISSILE_CRIT_CHANCE, turretPos[i].damage);
+				var missileCrit = lastHitCritical;
 				if (isPlaneMinion(minion)) missileDmg *= 5;
+				missileDmg *= getDamageMultiplier(minion, "missile");
 				turretPos[i].audioFile.currentTime = 0;
 				turretPos[i].audioFile.play();
 				turretPos[i].ammo--;
 				var projStartX = parseInt(turretPos[i].x) + 8;
 				var projStartY = parseInt(turretPos[i].y) + 8;
 				var projEl = createProjectileEl("missile-projectile", projStartX, projStartY);
-				turretPos[i].pendingMissiles.push({ minionElement: minion, damage: missileDmg, timer: 80, duration: 80, projectileEl: projEl, startX: projStartX, startY: projStartY });
+				turretPos[i].pendingMissiles.push({ minionElement: minion, damage: missileDmg, timer: 80, duration: 80, projectileEl: projEl, startX: projStartX, startY: projStartY, critical: missileCrit });
 				updateTurretCooldownPostShooting(turretPos[i]);
 			} else if (turretPos[i].shotCd === 0) {
 				rotate(0, turretPos[i].htmlElement);
@@ -1172,9 +1233,10 @@ function anyTurretsInRange(minion, x, y) {
 					var arrowStartX = parseInt(turretPos[i].x) + 8;
 					var arrowStartY = parseInt(turretPos[i].y) + 8;
 					for (var ti = 0; ti < hits; ti++) {
-						var arrowDmg = calculateCriticalHitDamage(ARCHERY_CRIT_CHANCE, turretPos[i].damage) + turretPos[i].damage;
+						var arrowDmg = (calculateCriticalHitDamage(ARCHERY_CRIT_CHANCE, turretPos[i].damage) + turretPos[i].damage)
+							* getDamageMultiplier(candidates[ti].el, "archery");
 						var arrowEl = createProjectileEl("arrow-projectile", arrowStartX, arrowStartY);
-						turretPos[i].pendingMissiles.push({ minionElement: candidates[ti].el, damage: arrowDmg, timer: 20, duration: 20, projectileEl: arrowEl, startX: arrowStartX, startY: arrowStartY });
+						turretPos[i].pendingMissiles.push({ minionElement: candidates[ti].el, damage: arrowDmg, timer: 20, duration: 20, projectileEl: arrowEl, startX: arrowStartX, startY: arrowStartY, critical: lastHitCritical });
 					}
 					updateTurretCooldownPostShooting(turretPos[i]);
 				}
@@ -1212,14 +1274,18 @@ function anyTurretsInRange(minion, x, y) {
 				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
 				stunMinion(minion, 150 + (turretPos[i].level * 10));
 			}
+			lastHitCritical = false; // turrets without crit chance don't roll at all
 			var triggerDmg = shootingTrigger(turretPos[i], minion, turretPos[i].htmlElement.style);
+			var isCrit = lastHitCritical;
 			var shotTotal = triggerDmg + turretPos[i].damage;
 			if (isPlaneMinion(minion) &&
 				(turretPos[i].type === "machineGun" || turretPos[i].type === "laser" || turretPos[i].type === "railCannon")) {
 				shotTotal *= 2;
 			}
+			shotTotal *= getDamageMultiplier(minion, turretPos[i].type);
+			if (isCrit) showCriticalPopup(minion, shotTotal);
 			turretPos[i].totalDamage += shotTotal;
-			damage = shotTotal;
+			damage += shotTotal;
 			updateTurretSoundPostShooting(turretPos[i]);
 			updateTurretCooldownPostShooting(turretPos[i]);
 			if (turretPos[i].type === "stormCannon") {
@@ -1228,9 +1294,8 @@ function anyTurretsInRange(minion, x, y) {
 				turretPos[i].overheatCoolTick = getTurretShotCooldown("stormCannon", 1);
 				turretPos[i].overheatBar.setAttribute("value", turretPos[i].overheat);
 				if (turretPos[i].overheat >= STORM_OVERHEAT_MAX) {
-					destroyOverheatedStormCannon(i);
-					i--;
-					continue;
+					turretPos[i].overheat = STORM_OVERHEAT_MAX;
+					setStormOverheated(turretPos[i], true);
 				}
 			}
 		} else if(turretPos[i].shotCd == 0) {
@@ -1247,7 +1312,7 @@ function anyTurretsInRange(minion, x, y) {
 			}
 		}
 	}
-	var toxicDmg = getToxicDamage(minion);
+	var toxicDmg = getToxicDamage(minion) * getDamageMultiplier(minion, "toxic");
 	if (toxicDmg > 0) {
 		for (var t = 0; t < turretPos.length; t++) {
 			if (turretPos[t].type === "toxic") {
@@ -1556,7 +1621,7 @@ window.onload = function () {
 
 //Identify which turret should be upgraded.
 function btnUpgradeTurretClick() {
-	if (!isRunning || isPaused) {
+	if (!isRunning) {
 		return;
 	}
 	
@@ -1573,6 +1638,7 @@ function btnUpgradeTurretClick() {
 					upgradeTurretData(turretPos[i]);
 					//Money reduce
 					currentCash = currentCash - turretUpgradeCost;
+					updateStatus();
 					
 					//Update inteface upgrade info.
 					updateTurretInfo(turretPos[i]);
@@ -1593,7 +1659,7 @@ function btnUpgradeTurretClick() {
 }
 
 function btnBuyAmmoClick() {
-	if (!isRunning || isPaused) return;
+	if (!isRunning) return;
 	var turretId = document.getElementById("upgTurretId").value;
 	for (var i = 0; i < turretPos.length; i++) {
 		if (turretPos[i].htmlElement.id !== turretId || turretPos[i].type !== "missile") continue;
@@ -1604,6 +1670,7 @@ function btnBuyAmmoClick() {
 		currentCash -= 50;
 		turretPos[i].ammoQueue++;
 		updateTurretInfo(turretPos[i]);
+		updateStatus();
 		break;
 	}
 }
@@ -1628,7 +1695,7 @@ function toggleStormCannon() {
 
 //Identify which turret should be sold.
 function btnSellTurretClick(){
-	if (!isRunning || isPaused) {
+	if (!isRunning) {
 		return;
 	}
 	for (var i = 0; i < turretPos.length; i++) {
@@ -1658,6 +1725,8 @@ function btnSellTurretClick(){
 			turretPos.splice(i, 1);
 			//Increases money.
 			currentCash += turretSellPrice;
+			updateStatus();
+			break;
 		}
 	}
 }

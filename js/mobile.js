@@ -31,7 +31,7 @@ var touchDrag = {
 function initTouchDragForCard(card) {
 	card.addEventListener('touchstart', function(e) {
 		e.preventDefault();
-		if (!isRunning || isPaused) return;
+		if (!isRunning) return; // buying is allowed while paused
 		var turretType = card.getAttribute('type');
 		if (currentCash < turretValue(turretType)) return;
 
@@ -40,6 +40,7 @@ function initTouchDragForCard(card) {
 		var gameY = touch.clientY / mobileScale;
 
 		currentCash -= turretValue(turretType);
+		updateStatus();
 		isDraggingNewTurret = true;
 
 		// Create real turretdrag element off-screen; ghost is what user sees

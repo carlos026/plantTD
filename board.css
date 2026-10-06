@@ -191,6 +191,20 @@ p {
   border-radius: 2px;
 }
 
+/* Storm Cannon shut down until fully cooled */
+@keyframes stormOverheatPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+.turretdrag.storm-overheated {
+  filter: grayscale(0.7) brightness(0.7) drop-shadow(0 0 3px rgba(255, 60, 0, 0.9));
+}
+
+.overheat-bar.storm-overheated {
+  animation: stormOverheatPulse 0.8s ease-in-out infinite;
+}
+
 .overheat-text {
   color: #ff4500;
   font-weight: 700;
@@ -519,6 +533,28 @@ p {
   animation: missileFlash 0.32s cubic-bezier(0.1, 0, 0.35, 1) forwards;
 }
 
+/* ── CRITICAL HIT POPUP ────────────────────────────── */
+@keyframes critFloat {
+  0%   { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+  15%  { transform: translate(-50%, -6px) scale(1.15); opacity: 1; }
+  35%  { transform: translate(-50%, -10px) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -26px) scale(1); opacity: 0; }
+}
+
+.crit-popup {
+  position: absolute;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: 'Orbitron', monospace;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #df0c0c;
+  text-shadow: 0 0 4px rgba(255, 120, 0, 0.9), 0 1px 0 #7a2a00;
+  animation: critFloat 0.9s ease-out forwards;
+  z-index: 60;
+}
+
 /* ── ARROW PROJECTILE ───────────────────────────────── */
 .arrow-projectile {
   position: absolute;
@@ -591,6 +627,20 @@ p {
 }
 
 /* ── HP BARS ───────────────────────────────────────── */
+/* Map-specific special enemies: sp-min sprite (blue) tinted per theme */
+/* Mecha / Ice Mecha have their own directional art: only a soft glow, no tint */
+.minion.enemy-mecha       { filter: drop-shadow(0 0 2px rgba(255, 170, 60, 0.6)); }
+.minion.enemy-forest-tank { filter: hue-rotate(-110deg) saturate(1.5) drop-shadow(0 0 2px rgba(90, 255, 120, 0.7)); }
+.minion.enemy-fire-tank   { filter: hue-rotate(130deg) saturate(2.2) brightness(1.2) drop-shadow(0 0 3px rgba(255, 90, 0, 0.9)); }
+.minion.enemy-dark-tank   { filter: hue-rotate(50deg) brightness(0.8) drop-shadow(0 0 2px rgba(170, 90, 255, 0.6)); }
+.minion.enemy-ice-mecha   { filter: drop-shadow(0 0 2px rgba(200, 245, 255, 0.7)); }
+
+/* Dark Tank with an active shield */
+.minion.enemy-dark-tank.shielded {
+  border-radius: 50%;
+  box-shadow: 0 0 6px 2px rgba(170, 90, 255, 0.9), inset 0 0 4px rgba(200, 150, 255, 0.8);
+}
+
 .hpBar {
   background-color: rgba(0, 0, 0, 0.55);
   position: absolute;
