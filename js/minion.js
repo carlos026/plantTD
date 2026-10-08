@@ -232,7 +232,7 @@ function minionhp() {
 
 function bossHp() {
 	if (currentWave == 10){
-		return Math.pow(2, currentWave) * 10;
+		return Math.pow(2, currentWave) * 15;
 	} else if (currentWave == 20) {
 		return Math.pow(2, currentWave);
 	} else if (currentWave == 30) {

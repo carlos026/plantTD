@@ -382,7 +382,7 @@ function turretUpgradeCosts(type, turretLvl) {
 		upgradeCost = upgradeCost * 0.15;
 		break;
 	case "stormCannon":
-		upgradeCost = upgradeCost * 0.15;
+		upgradeCost = upgradeCost * 0.3;
 		break;
 	case "railCannon":
 		upgradeCost = upgradeCost * 0.2;
@@ -603,7 +603,7 @@ function upgradeTurretData(turret){
 			}
 			break;
 		case "stormCannon":
-			turret.damage += upgradeDamage * 0.25;
+			turret.damage += upgradeDamage * 0.2;
 			turret.range += upgradeRange * 0.01;
 			break;
 		case "railCannon":
