@@ -11,6 +11,7 @@ var Tutorial = (function () {
     var POLL_MS = 200;
     var CARD_W  = 320;
     var PAD     = 6;
+    var IS_TOUCH = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     var _steps = [
         {
@@ -115,8 +116,8 @@ var Tutorial = (function () {
 
         _counter.textContent = (_index + 1) + ' / ' + _steps.length;
         _title.textContent   = typeof step.title === 'function' ? step.title() : step.title;
-        _text.textContent    = step.text;
-        _hint.textContent    = step.hint || '';
+        _text.textContent    = _forDevice(step.text);
+        _hint.textContent    = _forDevice(step.hint || '');
         _hint.style.display  = step.waitFor ? 'block' : 'none';
         _nextBtn.style.display = step.waitFor ? 'none' : 'inline-block';
         _nextBtn.textContent = last ? 'LET\'S PLAY!' : 'NEXT';
@@ -168,6 +169,22 @@ var Tutorial = (function () {
         }
     }
 
+    // Touch devices tap instead of clicking
+    function _forDevice(text) {
+        if (!IS_TOUCH) return text;
+        return text.replace(/\bClick\b/g, 'Tap').replace(/\bclick\b/g, 'tap');
+    }
+
+    // The body is zoomed out on small screens, which would shrink the card until it
+    // is unreadable. Counter-scale it so it keeps its desktop size on screen,
+    // limited to the screen width and half of its height.
+    function _cardScale(scale) {
+        var s = 1 / scale;
+        s = Math.min(s, (window.innerWidth - 32) / (CARD_W * scale));
+        s = Math.min(s, (window.innerHeight * 0.5) / (_card.offsetHeight * scale));
+        return Math.max(1, s);
+    }
+
     // Places the spotlight over the step target and the card next to it.
     // Coordinates are converted to game space, since body is zoomed on mobile.
     function _position() {
@@ -176,13 +193,16 @@ var Tutorial = (function () {
         var scale  = getMobileScale();
         var viewW  = window.innerWidth  / scale;
         var viewH  = window.innerHeight / scale;
-        var cardH  = _card.offsetHeight;
+        var cs     = _cardScale(scale);
+        _card.style.scale = cs;
+        var cardW  = CARD_W * cs;                   // card size in game space
+        var cardH  = _card.offsetHeight * cs;
 
         if (!target || target.offsetParent === null) {
             _spot.classList.add('tutorial-spotlight-full');
             _spot.style.left = _spot.style.top = '0px';
             _spot.style.width = _spot.style.height = '0px';
-            _card.style.left = Math.max(16, (viewW - CARD_W) / 2) + 'px';
+            _card.style.left = Math.max(16, (viewW - cardW) / 2) + 'px';
             _card.style.top  = Math.max(16, (viewH - cardH) / 2) + 'px';
             return;
         }
@@ -200,7 +220,7 @@ var Tutorial = (function () {
         _spot.style.height = h + 'px';
 
         // Prefer below the target, then above, then beside it
-        var cardX = Math.min(Math.max(16, x), viewW - CARD_W - 16);
+        var cardX = Math.min(Math.max(16, x), viewW - cardW - 16);
         var cardY;
         if (y + h + 12 + cardH <= viewH) {
             cardY = y + h + 12;
@@ -208,7 +228,7 @@ var Tutorial = (function () {
             cardY = y - 12 - cardH;
         } else {
             cardY = Math.min(Math.max(16, y), viewH - cardH - 16);
-            cardX = x + w + 12 + CARD_W <= viewW ? x + w + 12 : Math.max(16, x - 12 - CARD_W);
+            cardX = x + w + 12 + cardW <= viewW ? x + w + 12 : Math.max(16, x - 12 - cardW);
         }
         _card.style.left = cardX + 'px';
         _card.style.top  = cardY + 'px';

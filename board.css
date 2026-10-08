@@ -1731,7 +1731,14 @@ button[type="sellbutton"]:active {
   box-shadow: var(--shadow), 0 0 22px var(--accent-glow);
   color: var(--text);
   z-index: 9700;
+  transform-origin: 0 0; /* scaled from tutorial.js on small screens */
   transition: left 0.2s ease, top 0.2s ease;
+  /* let taps and tower drops reach the map under the card; only its buttons are clickable */
+  pointer-events: none;
+}
+
+.tutorial-card button {
+  pointer-events: auto;
 }
 
 .tutorial-head {
