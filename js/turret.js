@@ -530,7 +530,7 @@ function updateTurretInfo(turret){
     document.getElementById("upgName").innerText = turretName(turret.type);
     document.getElementById("upgLevel").innerText = turret.level;
     document.getElementById("upgDamage").innerText = turret.damage;
-    document.getElementById("range").innerText = turret.range;
+    document.getElementById("range").innerText = Math.round(turret.range / MAP_SCALE);
     document.getElementById("upgCooldown").innerText = (getTurretShotCooldown(turret.type, turret.level) / 100).toFixed(2) + " s";
     if (turret.type === "stormCannon") {
         var pct = Math.round((turret.overheat / STORM_OVERHEAT_MAX) * 100);
@@ -638,9 +638,9 @@ function upgradeTurretData(turret){
 			}
 			break;
 	}
-	// damage and range are always whole numbers
+	// damage and range are always whole numbers (range in base 15px tile units)
 	turret.damage = Math.round(turret.damage);
-	turret.range = Math.round(turret.range);
+	turret.range = Math.round(turret.range / MAP_SCALE) * MAP_SCALE;
 }
 
 function shootingTrigger(turret, minion, turretStyle, damage){

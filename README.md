@@ -246,7 +246,7 @@ The record is updated automatically whenever your current score exceeds it.
 
 ## Mobile Support
 
-The game scales automatically to fit any screen size. On screens smaller than the native 1422×720 resolution, the entire game view is scaled down proportionally so it always fits without scrolling.
+The game scales automatically to fit any screen size. On screens smaller than the native 2196×1005 resolution, the entire game view is scaled down proportionally so it always fits without scrolling.
 
 Touch drag-and-drop is fully supported for placing turrets:
 - **Touch** a turret card to pick it up — a ghost preview follows your finger

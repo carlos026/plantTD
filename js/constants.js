@@ -1,8 +1,26 @@
 // constants
-const TILE_H = 15;
-const TILE_W = 15;
-const MAP_H = 30;
-const MAP_W = 80;
+// The game logic was designed for 15px tiles. MAP_SCALE enlarges the map on
+// screen while keeping the grid (MAP_W x MAP_H) and paths identical: every
+// pixel-based logic value (tile size, speeds, ranges) is multiplied by it.
+const BASE_TILE = 15;
+const TILE_H = 30;
+const TILE_W = 30;
+const MAP_SCALE = TILE_W / BASE_TILE;
+const TILE_EPSILON = 1e-9;
+const MINION_SIZE = 35; // sprite and HP bar width of regular enemies, in px
+const BOSS_SIZE = 60;
+const MAP_H = 23;
+const MAP_W = 60;
+// Scale of the buttons, shop, status bar and info panels
+const HUD_SCALE = 1.5;
+// Unscaled HUD size in px: strip below the map (gap + content + margin) and
+// panel column right of the map (gap + .character-info box + margin)
+const HUD_STRIP_HEIGHT = 210;
+const HUD_PANEL_WIDTH = 264;
+// Expose the sizes to board.css
+document.documentElement.style.setProperty("--hud-scale", HUD_SCALE);
+document.documentElement.style.setProperty("--map-width", MAP_W * TILE_W + "px");
+document.documentElement.style.setProperty("--map-height", MAP_H * TILE_H + "px");
 const TURRET_OFFSET = 148;
 const TURRET_GAP = 5;
 const TURRET_D = 40;

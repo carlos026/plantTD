@@ -112,7 +112,6 @@ function tickShield(minionElement) {
 		minionElement._shieldRegen--;
 		if (minionElement._shieldRegen === 0) minionElement._shield = minionElement._shieldMax;
 	}
-	minionElement.classList.toggle("shielded", minionElement._shield > 0);
 }
 
 function freezeMinion(minionElement, duration) {

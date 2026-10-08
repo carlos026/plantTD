@@ -8,8 +8,11 @@
  * the same.
  */
 var MapRenderer = (function () {
-    var T = TILE_W;           // tile size in px (TILE_W == TILE_H)
+    // The art is designed for BASE_TILE (15px) tiles and scaled up by MAP_SCALE
+    // when painted, so it looks the same at any tile size.
+    var T = BASE_TILE;        // tile size in design units
     var HALF = T / 2;
+    var S = MAP_SCALE;        // design units -> screen px
 
     // ── Themes ─────────────────────────────────────────────────────────────
     var THEMES = {
@@ -425,10 +428,10 @@ var MapRenderer = (function () {
 
         // Body + texture on an offscreen canvas so the texture is clipped to the road shape
         var off = document.createElement('canvas');
-        off.width = W * dpr;
-        off.height = H * dpr;
+        off.width = W * S * dpr;
+        off.height = H * S * dpr;
         var octx = off.getContext('2d');
-        octx.scale(dpr, dpr);
+        octx.scale(S * dpr, S * dpr);
         strokeSegs(octx, grid.segs, T, th.road);
         octx.globalCompositeOperation = 'source-atop';
         ROAD_TEXTURES[th.roadTexture](octx, th, rng, grid);
@@ -704,8 +707,8 @@ var MapRenderer = (function () {
     function addMarker(container, kind, tile, color) {
         var m = document.createElement('div');
         m.className = 'map-marker map-marker-' + kind;
-        m.style.left = (tile.x * T + HALF) + 'px';
-        m.style.top  = (tile.y * T + HALF) + 'px';
+        m.style.left = (tile.x * T + HALF) * S + 'px';
+        m.style.top  = (tile.y * T + HALF) * S + 'px';
         m.style.setProperty('--marker', color);
         container.appendChild(m);
     }
@@ -713,7 +716,7 @@ var MapRenderer = (function () {
     // ── Public ─────────────────────────────────────────────────────────────
     function render(container, level) {
         var th = THEMES[level] || THEMES[1];
-        var W = MAP_W * T, H = MAP_H * T;
+        var W = MAP_W * T, H = MAP_H * T;   // design units
 
         var stale = container.querySelectorAll('.map-canvas, .map-marker');
         for (var i = 0; i < stale.length; i++) stale[i].parentNode.removeChild(stale[i]);
@@ -721,14 +724,14 @@ var MapRenderer = (function () {
         var dpr = Math.min(2, window.devicePixelRatio || 1);
         var canvas = document.createElement('canvas');
         canvas.className = 'map-canvas';
-        canvas.width = W * dpr;
-        canvas.height = H * dpr;
-        canvas.style.width = W + 'px';
-        canvas.style.height = H + 'px';
+        canvas.width = W * S * dpr;
+        canvas.height = H * S * dpr;
+        canvas.style.width = W * S + 'px';
+        canvas.style.height = H * S + 'px';
         container.insertBefore(canvas, container.firstChild);
 
         var ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
+        ctx.scale(S * dpr, S * dpr);
         var rng = mulberry32(level * 9973 + 17);
         var grid = buildGrid(level);
 

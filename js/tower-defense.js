@@ -95,7 +95,7 @@ function updateEnemyInfoDialog() {
 	var speed = getMinionSpeed(selectedMinionEl);
 	var isPlane = isPlaneMinion(selectedMinionEl);
 	var profile = getEnemyProfile(selectedMinionEl);
-	var name = profile ? profile.name : isBossWave ? "Boss" : isPlane ? "Airplane" : "Minion";
+	var name = profile ? profile.name : isBossWave ? "Destroyer" : isPlane ? "Jet" : "Tank";
 
 	document.getElementById("enemyName").innerText = name;
 	var hpBar = document.getElementById("enemyHpBar");
@@ -141,7 +141,7 @@ function showShopTurretInfo(type) {
 	document.getElementById("shopInfoName").innerText = turretName(type);
 	document.getElementById("shopInfoDesc").innerText = turretDescription(type);
 	document.getElementById("shopInfoDamage").innerText = turretDamage(type);
-	document.getElementById("shopInfoRange").innerText = (turretRange(type) / 15) + " tiles";
+	document.getElementById("shopInfoRange").innerText = (turretRange(type) / TILE_W) + " tiles";
 	document.getElementById("shopInfoCooldown").innerText = (getTurretShotCooldown(type, 1) / 100).toFixed(2) + " s";
 	document.getElementById("shopInfoCost").innerText = "$" + turretValue(type);
 	dialog.style.display = "block";
@@ -350,7 +350,7 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 		overheatBar.setAttribute("value", 0);
 		overheatBar.setAttribute("max", STORM_OVERHEAT_MAX);
 		overheatBar.style.left = xPos + "px";
-		overheatBar.style.top  = (parseInt(yPos) + 16) + "px";
+		overheatBar.style.top  = (parseInt(yPos) + 30) + "px";
 		document.body.appendChild(overheatBar);
 		turretObj.overheatBar = overheatBar;
 	}
@@ -441,7 +441,7 @@ function cancelPropogation(event) {
 ////////////////////// MAP CREATION
 function drawMap() {
 	// Isolate all map tiles in their own GPU compositor layer.
-	// This prevents minion position changes from triggering repaints of the 2400 map tiles.
+	// This prevents minion position changes from triggering repaints of the map tiles.
 	var mapContainer = document.createElement("div");
 	mapContainer.id = "mapContainer";
 	mapContainer.style.position = "absolute";
@@ -458,6 +458,8 @@ function drawMap() {
 			mapzone.setAttribute("class", "mapzone");
 			mapzone.style.left = TILE_H * i + "px";
 			mapzone.style.top = TILE_W * j + "px";
+			mapzone.style.width = TILE_W + "px";
+			mapzone.style.height = TILE_H + "px";
 			mapzone.dataset.mapX = i;
 			mapzone.dataset.mapY = j;
 			listenEvent(mapzone, "drop", mapDrop(mapzone, i, j));
@@ -467,6 +469,9 @@ function drawMap() {
 		}
 	}
 	drawTargetMap(currentLevel);
+
+	// shop, buttons and status bar live in the scaled HUD strip below the map
+	var hud = document.getElementById("gameHud");
 
 	// create the turrets (only those the player has unlocked)
 	// shop lists turrets from cheapest to most expensive
@@ -484,7 +489,7 @@ function drawMap() {
 		// turrets are draggable (desktop: click; mobile: touch)
 		listenEvent(turret, "click", turretClick(turret));
 		initTouchDragForCard(turret);
-		document.body.appendChild(turret);
+		hud.appendChild(turret);
 
 		// info button below each turret card
 		var infoBtn = document.createElement("button");
@@ -497,7 +502,7 @@ function drawMap() {
 				showShopTurretInfo(t);
 			};
 		})(turretTypes[k]));
-		document.body.appendChild(infoBtn);
+		hud.appendChild(infoBtn);
 	}
 
 	// put a start button on
@@ -506,7 +511,7 @@ function drawMap() {
 	startbutton.setAttribute("class", "startbutton");
 	startbutton.innerHTML = "&#9654; START";
 	listenEvent(startbutton, "click", startwave);
-	document.body.appendChild(startbutton);
+	hud.appendChild(startbutton);
 
 	// reset button
 	var resetbutton = document.createElement("div");
@@ -514,7 +519,7 @@ function drawMap() {
 	resetbutton.setAttribute("class", "resetbutton");
 	resetbutton.innerHTML = "&#8635; RESET";
 	listenEvent(resetbutton, "click", resetwave);
-	document.body.appendChild(resetbutton);
+	hud.appendChild(resetbutton);
 
 	// damage stats button
 	var statsbutton = document.createElement("div");
@@ -522,7 +527,7 @@ function drawMap() {
 	statsbutton.setAttribute("class", "statsbutton");
 	statsbutton.innerHTML = "&#9881; DMG STATS";
 	listenEvent(statsbutton, "click", showDamageStatsPanel);
-	document.body.appendChild(statsbutton);
+	hud.appendChild(statsbutton);
 
 	// config (settings) button
 	var configbutton = document.createElement("div");
@@ -530,7 +535,7 @@ function drawMap() {
 	configbutton.setAttribute("class", "configbutton");
 	configbutton.innerHTML = "&#9881;&#65039; CONFIG";
 	listenEvent(configbutton, "click", openSettings);
-	document.body.appendChild(configbutton);
+	hud.appendChild(configbutton);
 
 	// status  bar
 	var statusbar = document.createElement("div");
@@ -541,7 +546,7 @@ function drawMap() {
 		'<div class="stat-block"><span class="stat-label">Score</span><span class="stat-value score" id="score">0</span></div>' +
 		'<div class="stat-block"><span class="stat-label">Wave</span><span class="stat-value wave" id="wave">0</span></div>' +
 		'<div class="stat-block"><span class="stat-label">Lives</span><span class="stat-value lives" id="lives">0</span></div>';
-	document.body.appendChild(statusbar);
+	hud.appendChild(statusbar);
 
 	//Play map Soundtrack
 	playMapSoundtrack();
@@ -627,8 +632,15 @@ function startwave(evt) {
 		hpBarMinion.setAttribute("class", "hpBar");
 		hpBarMinion.setAttribute("value", 0);
 		hpBarMinion.setAttribute("max", minionhp());
+		setMinionSize(minion, hpBarMinion, MINION_SIZE);
+		// shield bar shown on top of the HP bar (only for shielded enemies)
+		var shieldBar = document.createElement("progress");
+		shieldBar.setAttribute("class", "shieldBar");
+		shieldBar.setAttribute("value", 0);
+		minion._shieldBar = shieldBar;
 		document.body.appendChild(minion);
 		document.body.appendChild(hpBarMinion);
+		document.body.appendChild(shieldBar);
 		listenEvent(minion, "click", (function(idx, mEl, hEl) {
 			return function() {
 				if (!isRunning) return; // also works while paused
@@ -721,12 +733,13 @@ function startwave(evt) {
 					damage += missileHit;
 					delete pendingMissileHits[minions[i].id];
 				}
-				let speed = getMinionSpeed(minions[i]);
+				// speeds are defined in base (15px) tile units
+				let speed = getMinionSpeed(minions[i]) * MAP_SCALE;
 				if (currentDir[i] !== prevDir[i]) {
 					if (currentDir[i] === MOVE_E || currentDir[i] === MOVE_W) {
-						movey[i] = Math.floor((movey[i] + 7.5) / 15) * 15 - 1;
+						movey[i] = Math.floor((movey[i] + TILE_H / 2) / TILE_H + TILE_EPSILON) * TILE_H - MAP_SCALE;
 					} else if (currentDir[i] === MOVE_N || currentDir[i] === MOVE_S) {
-						movex[i] = Math.floor((movex[i] + 7.5) / 15) * 15 - 1;
+						movex[i] = Math.floor((movex[i] + TILE_W / 2) / TILE_W + TILE_EPSILON) * TILE_W - MAP_SCALE;
 					}
 					prevDir[i] = currentDir[i];
 				}
@@ -787,6 +800,9 @@ function startwave(evt) {
 					tickDownMinionDebuffs(minions[i], hpBarMinions[i]);
 					tickShield(minions[i]);
 				}
+			}
+			for (var s = 0; s < minions.length; s++) {
+				updateShieldBar(minions[s], hpBarMinions[s]);
 			}
 			// stagger the minions coming out at random intervals
 			spawnCountdown--;
@@ -849,13 +865,11 @@ function startwave(evt) {
 						prevDir[i] = MOVE_S;
 						minions[i].style.display = "none";
 						hpBarMinions[i].style.display = "none";
-						hpBarMinions[i].style.width = "30px"
 						var isSPBossWave = currentWave === 30;
 						minions[i].style.backgroundImage = isSPBossWave
 							? "url('img/min-lv1/sp-boss-up.png')"
 							: "url('img/min-lv1/boss-up.png')";
-						minions[i].style.width = "30px";
-						minions[i].style.height = "30px";
+						setMinionSize(minions[i], hpBarMinions[i], BOSS_SIZE);
 						var bossProfile = isSPBossWave ? getBossProfile(currentLevel) : null;
 						minion_hp[i] = bossHp() * (bossProfile ? bossProfile.hpMult : 1);
 						first_kill[i] = true;
@@ -875,9 +889,7 @@ function startwave(evt) {
 						prevDir[i] = MOVE_S;
 						minions[i].style.display = "none";
 						hpBarMinions[i].style.display = "none";
-						hpBarMinions[i].style.width = "20px";
-						minions[i].style.width = "16px";
-						minions[i].style.height = "16px";
+						setMinionSize(minions[i], hpBarMinions[i], MINION_SIZE);
 						minion_hp[i] = minionhp();
 						first_kill[i] = true;
 						minions[i]._isBoss = false;
@@ -922,8 +934,9 @@ function whereToMove(xpos, ypos, currentDir, minion, c) {
 	//Get direction from the minion asset.
 	var directionAngle = 0;
 	// convert the xpos and ypos to block coordinates
-	xpos = (xpos + TILE_W / 2) / TILE_W;
-	ypos = (ypos + TILE_H / 2) / TILE_H;
+	// (TILE_EPSILON absorbs float error from MAP_SCALE so exact tile edges floor the same way)
+	xpos = (xpos + TILE_W / 2) / TILE_W + TILE_EPSILON;
+	ypos = (ypos + TILE_H / 2) / TILE_H + TILE_EPSILON;
 
 	var xnewpos = Math.floor(xpos);
 	var ynewpos = Math.floor(ypos);
@@ -1001,9 +1014,13 @@ function resetwave(evt) {
 	// remove all the minions	
 	var minions = document.querySelectorAll(".minion");
 	var hpBarMinions = document.querySelectorAll(".hpBar");
+	var shieldBars = document.querySelectorAll(".shieldBar");
 	for (var i = 0; i < minions.length; i++) {
 		document.body.removeChild(minions[i]);
 		document.body.removeChild(hpBarMinions[i]);
+	}
+	for (var i = 0; i < shieldBars.length; i++) {
+		document.body.removeChild(shieldBars[i]);
 	}
 }
 
@@ -1042,8 +1059,8 @@ function processPendingMissiles() {
 			missile.timer--;
 			if (missile.projectileEl) {
 				var progress = 1 - missile.timer / missile.duration;
-				var tgtX = parseFloat(missile.minionElement.style.left) + 8;
-				var tgtY = parseFloat(missile.minionElement.style.top)  + 8;
+				var tgtX = parseFloat(missile.minionElement.style.left) + MINION_CENTER;
+				var tgtY = parseFloat(missile.minionElement.style.top)  + MINION_CENTER;
 				var curX = missile.startX + (tgtX - missile.startX) * progress;
 				var curY = missile.startY + (tgtY - missile.startY) * progress;
 				missile.projectileEl.style.left = curX + "px";
@@ -1084,12 +1101,44 @@ function showCriticalPopup(minionEl, shotTotal) {
 	var popup = document.createElement("div");
 	popup.className = "crit-popup";
 	popup.textContent = Math.round(shotTotal) + " Critical!";
-	popup.style.left = ((parseFloat(minionEl.style.left) || 0) + minionEl.offsetWidth / 2) + "px";
-	popup.style.top  = ((parseFloat(minionEl.style.top)  || 0) - 4) + "px";
+	var halfSize = (parseFloat(minionEl.style.height) || MINION_SIZE) / 2;
+	popup.style.left = ((parseFloat(minionEl.style.left) || 0) + MINION_CENTER) + "px";
+	popup.style.top  = ((parseFloat(minionEl.style.top)  || 0) + MINION_CENTER - halfSize - 4) + "px";
 	document.body.appendChild(popup);
 	setTimeout(function() {
 		if (popup.parentNode) document.body.removeChild(popup);
 	}, 900);
+}
+
+// Offset from a minion's logical position (style.left/top = tile top-left - MAP_SCALE)
+// to the center of the tile it walks on
+const MINION_CENTER = MAP_SCALE + TILE_W / 2;
+
+// Sizes a minion and its HP bar and centers both on the tile. The offset uses the
+// `translate` property, so style.left/top (read by range checks) stay unchanged.
+function setMinionSize(minionEl, hpBarEl, size) {
+	var offset = (MINION_CENTER - size / 2) + "px";
+	minionEl.style.width = size + "px";
+	minionEl.style.height = size + "px";
+	minionEl.style.translate = offset + " " + offset;
+	hpBarEl.style.width = size + "px";
+	hpBarEl.style.translate = offset + " " + offset;
+}
+
+// Protoss-style shield: a bar stacked on top of the HP bar, following it while the
+// enemy has a shield (it stays visible, empty, while the shield regenerates)
+function updateShieldBar(minionEl, hpBarEl) {
+	var bar = minionEl._shieldBar;
+	if (!bar) return;
+	var show = minionEl._shieldMax > 0 && hpBarEl.style.display !== "none";
+	bar.style.display = show ? "block" : "none";
+	if (!show) return;
+	bar.style.left = hpBarEl.style.left;
+	bar.style.top = hpBarEl.style.top;
+	bar.style.width = hpBarEl.style.width;
+	bar.style.translate = hpBarEl.style.translate;
+	bar.max = minionEl._shieldMax;
+	bar.value = Math.max(0, minionEl._shield);
 }
 
 function createProjectileImpact(minionEl, className, lifetimeMs) {
@@ -1097,8 +1146,8 @@ function createProjectileImpact(minionEl, className, lifetimeMs) {
 	var y = parseFloat(minionEl.style.top)  || 0;
 	var impact = document.createElement("div");
 	impact.className = className;
-	impact.style.left = (x + 8) + "px";
-	impact.style.top  = (y + 8) + "px";
+	impact.style.left = (x + MINION_CENTER) + "px";
+	impact.style.top  = (y + MINION_CENTER) + "px";
 	document.body.appendChild(impact);
 	setTimeout(function() {
 		if (impact.parentNode) document.body.removeChild(impact);

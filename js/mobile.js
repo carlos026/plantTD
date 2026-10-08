@@ -1,7 +1,8 @@
 // Mobile viewport scaling and touch drag-and-drop support
 
-var GAME_NATIVE_WIDTH  = 1422;
-var GAME_NATIVE_HEIGHT = 720;
+// The map plus the scaled HUD (panel column to the right, strip below)
+var GAME_NATIVE_WIDTH  = MAP_W * TILE_W + HUD_PANEL_WIDTH * HUD_SCALE;
+var GAME_NATIVE_HEIGHT = MAP_H * TILE_H + HUD_STRIP_HEIGHT * HUD_SCALE;
 var mobileScale = 1.0;
 
 function getMobileScale() {

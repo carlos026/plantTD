@@ -97,19 +97,23 @@
         </div>
     </div>
 
-    <!-- ── PLAYER HUD ──────────────────────────────────── -->
-    <div id="playerHud" class="player-hud" style="display:none;">
-        <div class="hud-row">
-            <span class="hud-label">&#128100; Player</span>
-            <span class="hud-value hud-nickname" id="hudNickname">—</span>
-        </div>
-        <div class="hud-row">
-            <span class="hud-label">&#128200; Record</span>
-            <span class="hud-value" id="hudRecord">0</span>
-        </div>
-        <div class="hud-row">
-            <span class="hud-label">&#127807; Seeds</span>
-            <span class="hud-value hud-seeds" id="hudSeeds">0</span>
+    <!-- ── GAME HUD STRIP (below the map, scaled by HUD_SCALE) ── -->
+    <!-- drawMap() adds the shop, buttons and status bar here -->
+    <div id="gameHud" class="game-hud">
+        <!-- ── PLAYER HUD ──────────────────────────────────── -->
+        <div id="playerHud" class="player-hud" style="display:none;">
+            <div class="hud-row">
+                <span class="hud-label">&#128100; Player</span>
+                <span class="hud-value hud-nickname" id="hudNickname">—</span>
+            </div>
+            <div class="hud-row">
+                <span class="hud-label">&#128200; Record</span>
+                <span class="hud-value" id="hudRecord">0</span>
+            </div>
+            <div class="hud-row">
+                <span class="hud-label">&#127807; Seeds</span>
+                <span class="hud-value hud-seeds" id="hudSeeds">0</span>
+            </div>
         </div>
     </div>
     <div id="registrationForm" class="character-info" style="display: none;">
