@@ -367,7 +367,11 @@ function turretUpgradeCosts(type, turretLvl) {
 	var upgradeCost = turretLvl * turretValue(type);
 	switch(type) {
 	case "machineGun":
-		upgradeCost = upgradeCost * 5;
+		if(turretLvl >= 5){
+			upgradeCost = upgradeCost * 6;
+		} else {
+			upgradeCost = upgradeCost * 5;
+		}
 		break;
 	case "laser":
 		upgradeCost = upgradeCost * 0.8;
@@ -471,20 +475,23 @@ function deleteProjectilesTargetingMinion(minionId) {
 function showTurretInfo(turret){
 	function upgrade(evt) {
 		var form = document.getElementById("registrationForm");
-		updateTurretInfo(turret);
-		document.getElementById("upgBtn").style.display = turret.level <= 7 ? "block" : "none";
-		if (form.style.display === "none") {
-			form.style.display = "block";
-			showRangeIndicator(
-				parseInt(turret.x) + 8,
-				parseInt(turret.y) + 8,
-				turret.range,
-				turretColor(turret.type)
-			);
-		} else {
+		// clicking the turret already shown closes the panel; any other turret replaces it
+		var sameTurret = document.getElementById("upgTurretId").value === turret.htmlElement.id;
+		if (form.style.display !== "none" && sameTurret) {
 			form.style.display = "none";
 			hideRangeIndicator();
+			return;
 		}
+		// only one turret dialog at a time: close the shop turret info
+		hideShopTurretInfo();
+		updateTurretInfo(turret);
+		form.style.display = "block";
+		showRangeIndicator(
+			parseInt(turret.x) + 8,
+			parseInt(turret.y) + 8,
+			turret.range,
+			turretColor(turret.type)
+		);
 	}
 	return upgrade;
 }
@@ -563,6 +570,8 @@ function updateTurretInfo(turret){
     }
     document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
     document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
+    // at max level the upgrade button is hidden.
+    document.getElementById("upgBtn").style.display = turret.level <= 7 ? "block" : "none";
 }
 
 // Change turret data
@@ -573,7 +582,7 @@ function upgradeTurretData(turret){
 	switch(turret.type){
 		case "machineGun":
 			turret.damage += upgradeDamage * 0.5;
-			turret.range += upgradeRange * 0.1;
+			turret.range += upgradeRange * 0.05;
 			break;
 		case "laser":
 			if(turret.level >= 5) {

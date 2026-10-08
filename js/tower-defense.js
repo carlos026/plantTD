@@ -134,6 +134,9 @@ function showShopTurretInfo(type) {
 		shopInfoOpenType = null;
 		return;
 	}
+	// only one turret dialog at a time: close the upgrade panel
+	document.getElementById("registrationForm").style.display = "none";
+	hideRangeIndicator();
 	shopInfoOpenType = type;
 	document.getElementById("shopInfoName").innerText = turretName(type);
 	document.getElementById("shopInfoDesc").innerText = turretDescription(type);
@@ -142,6 +145,11 @@ function showShopTurretInfo(type) {
 	document.getElementById("shopInfoCooldown").innerText = (getTurretShotCooldown(type, 1) / 100).toFixed(2) + " s";
 	document.getElementById("shopInfoCost").innerText = "$" + turretValue(type);
 	dialog.style.display = "block";
+}
+
+function hideShopTurretInfo() {
+	document.getElementById("turretShopInfoDialog").style.display = "none";
+	shopInfoOpenType = null;
 }
 ////////////////////// END TURRET SHOP INFO DIALOG
 
@@ -316,11 +324,11 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 		level:     1,
 		shotCd:    0,
 		audioCd:   0,
-		audioFile: turretSoundEffect(turretType),
+		audioFile: applyEffectsVolume(turretSoundEffect(turretType)),
 		totalDamage: 0
 	};
 	if (turretType === "missile") {
-		turretObj.audioFileImpact = new Audio("sound/missileImpact.mp3");
+		turretObj.audioFileImpact = applyEffectsVolume(new Audio("sound/missileImpact.mp3"));
 		turretObj.pendingMissiles = [];
 		turretObj.planeInRange = false;
 		turretObj.ammo = getMissileMaxAmmo(1);
@@ -461,7 +469,10 @@ function drawMap() {
 	drawTargetMap(currentLevel);
 
 	// create the turrets (only those the player has unlocked)
-	var turretTypes = UnlockManager.getUnlockedTowers();
+	// shop lists turrets from cheapest to most expensive
+	var turretTypes = UnlockManager.getUnlockedTowers().slice().sort(function(a, b) {
+		return turretValue(a) - turretValue(b);
+	});
 	for (var k = 0; k < turretTypes.length; k++) {
 		var turret = document.createElement("div");
 		turret.setAttribute("type", turretTypes[k]);
@@ -513,6 +524,14 @@ function drawMap() {
 	listenEvent(statsbutton, "click", showDamageStatsPanel);
 	document.body.appendChild(statsbutton);
 
+	// config (settings) button
+	var configbutton = document.createElement("div");
+	configbutton.setAttribute("id", "configbutton");
+	configbutton.setAttribute("class", "configbutton");
+	configbutton.innerHTML = "&#9881;&#65039; CONFIG";
+	listenEvent(configbutton, "click", openSettings);
+	document.body.appendChild(configbutton);
+
 	// status  bar
 	var statusbar = document.createElement("div");
 	statusbar.setAttribute("id", "statusbar");
@@ -542,29 +561,13 @@ function playMapSoundtrack(){
 	soundtrack.play().catch(function() {});
 }
 
-var volumeLevels = [1, 0.5, 0.25, 0.05, 0];
-var volumeIcons  = [ "&#128266;", "&#128266;", "&#128265;", "&#128264;", "&#128263;"];
-var volumeIdx = 0;
-
-function cycleVolume() {
-	volumeIdx = (volumeIdx + 1) % volumeLevels.length;
-	soundtrack.volume = volumeLevels[volumeIdx];
-	var pct = volumeLevels[volumeIdx] * 100;
-	document.getElementById("volumeBtn").innerHTML = volumeIcons[volumeIdx] + " " + pct + "%";
-}
-
 function playAudio() {
+	applyMusicVolume();
 	soundtrack.play().catch(function() {});
-	volumeIdx = -1;
-	cycleVolume();
-	document.getElementById("pause").style.display = "block";
-	document.getElementById("play").style.display = "none";
 }
 
 function pauseAudio() {
 	soundtrack.pause();
-	document.getElementById("play").style.display = "block";
-	document.getElementById("pause").style.display = "none";
 }
 
 // Map visuals are painted on a canvas behind the transparent .mapzone tiles
@@ -1072,6 +1075,7 @@ function processPendingMissiles() {
 
 // Floating "Critical!" text above a minion; throttled per minion so fast turrets don't spam it
 function showCriticalPopup(minionEl, shotTotal) {
+	if (!GameSettings.get("showCritical")) return;
 	if (minionEl.style.display === "none") return;
 	var now = Date.now();
 	if (minionEl._lastCritPopup && now - minionEl._lastCritPopup < CRIT_POPUP_THROTTLE_MS) return;
@@ -1627,7 +1631,6 @@ function btnUpgradeTurretClick() {
 	
 	// do we have enough money to make a upgrade?
 	for (var i = 0; i < turretPos.length; i++) {
-		document.getElementById("upgBtn").style.display = turretPos[i].level <= 6 ? "block" : "none";
 		if(turretPos[i].htmlElement.id == document.getElementById("upgTurretId").value) {
 			//Get Current turret upgrade cost.
 			var turretUpgradeCost = turretUpgradeCosts(turretPos[i].type, turretPos[i].level);

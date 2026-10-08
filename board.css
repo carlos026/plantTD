@@ -259,7 +259,7 @@ p {
 
 /* ── TURRET SHOP INFO DIALOG ───────────────────────── */
 #turretShopInfoDialog.character-info {
-  top: 8px;
+  top: 20px;
 }
 
 .shop-info-desc {
@@ -301,7 +301,8 @@ p {
 }
 
 /* ── DMG STATS BUTTON ──────────────────────────────── */
-.statsbutton {
+.statsbutton,
+.configbutton {
   position: absolute;
   width: 118px;
   height: 38px;
@@ -323,6 +324,21 @@ p {
   justify-content: center;
   user-select: none;
   transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.configbutton {
+  top: 614px;
+  background: linear-gradient(135deg, #00344d 0%, #006b99 100%);
+  box-shadow: 0 0 18px rgba(0, 160, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.configbutton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 28px rgba(0, 190, 255, 0.7), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.configbutton:active {
+  transform: scale(0.97);
 }
 
 .statsbutton:hover {
@@ -702,7 +718,7 @@ progress.toxic::-webkit-progress-value {
 }
 
 #registrationForm.character-info {
-  top: 110px;
+  top: 8px;
 }
 
 #damageStatsPanel.character-info {
@@ -763,17 +779,6 @@ progress.toxic::-webkit-progress-value {
   font-weight: 700;
   color: var(--success);
   text-shadow: 0 0 8px rgba(0, 230, 118, 0.5);
-}
-
-.panel-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 0 0 10px;
-  text-align: center;
 }
 
 .character-info h1 {
@@ -853,7 +858,8 @@ progress.toxic::-webkit-progress-value {
 
 /* ── SELL BUTTON ───────────────────────────────────── */
 .sellbtn {
-  flex: 1;
+  /* fixed half width so it keeps its size when the upgrade button is hidden at max level */
+  flex: 0 0 calc(50% - 4px);
   height: 44px;
   background: linear-gradient(135deg, #7a001a, #cc0030);
   color: #fff;
@@ -1156,34 +1162,6 @@ progress.toxic::-webkit-progress-value {
 }
 
 .hud-seeds { color: var(--gold); text-shadow: 0 0 8px rgba(255,200,0,0.5); }
-
-/* ── SOUNDTRACK BUTTONS ────────────────────────────── */
-.soundtrackbtn {
-  width: 100%;
-  padding: 9px 0;
-  background: linear-gradient(135deg, #003d22, #007744);
-  border: 1px solid rgba(0, 200, 80, 0.3);
-  color: #fff;
-  border-radius: 8px;
-  font-family: 'Exo 2', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
-  box-shadow: 0 0 12px rgba(0, 180, 60, 0.3);
-  display: block;
-}
-
-.soundtrackbtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 0 22px rgba(0, 210, 80, 0.55);
-}
-
-.soundtrackbtn:active {
-  transform: scale(0.97);
-}
 
 /* ── GENERIC BUTTON ────────────────────────────────── */
 button[type="button"] {
@@ -1774,4 +1752,84 @@ button[type="sellbutton"]:active {
 
 .tutorial-next:hover {
   box-shadow: 0 0 14px rgba(0, 160, 255, 0.55);
+}
+
+/* ── SETTINGS DIALOG ─────────────────────────────── */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 26, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9800;
+}
+
+.settings-panel {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: var(--shadow), 0 0 48px rgba(0, 180, 255, 0.12);
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.settings-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 0 16px var(--accent-glow);
+  margin: 0;
+  letter-spacing: 3px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.settings-row label {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.settings-slider {
+  flex: 1.4;
+  accent-color: var(--accent);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.settings-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  width: 38px;
+  text-align: right;
+  color: var(--accent);
+}
+
+.settings-toggle {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
 }

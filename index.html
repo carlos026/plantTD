@@ -15,6 +15,7 @@
 <script type="text/javascript" src="js/unlock-catalog.js"></script>
 <script type="text/javascript" src="js/unlock-manager.js"></script>
 <script type="text/javascript" src="js/tower-defense.js"></script>
+<script type="text/javascript" src="js/settings.js"></script>
 <script type="text/javascript" src="js/tutorial.js"></script>
 <script type="text/javascript" src="js/mobile.js"></script>
 </head>
@@ -72,6 +73,30 @@
         </div>
     </div>
 
+    <!-- ── SETTINGS DIALOG ─────────────────────────────── -->
+    <div id="settingsScreen" class="settings-overlay" style="display:none;" onclick="if(event.target===this) closeSettings()">
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h1 class="settings-title">&#9881;&#65039; SETTINGS</h1>
+                <button class="progression-close-btn" onclick="closeSettings()">&#10005;</button>
+            </div>
+            <div class="settings-row">
+                <label for="musicVolumeSlider">&#9834; Music</label>
+                <input type="range" id="musicVolumeSlider" class="settings-slider" min="0" max="100" step="5" oninput="onMusicVolumeChange(this.value)">
+                <span id="musicVolumeValue" class="settings-value">100%</span>
+            </div>
+            <div class="settings-row">
+                <label for="effectsVolumeSlider">&#128165; Effects</label>
+                <input type="range" id="effectsVolumeSlider" class="settings-slider" min="0" max="100" step="5" oninput="onEffectsVolumeChange(this.value)">
+                <span id="effectsVolumeValue" class="settings-value">100%</span>
+            </div>
+            <div class="settings-row">
+                <label for="showCriticalToggle">Show critical damage</label>
+                <input type="checkbox" id="showCriticalToggle" class="settings-toggle" onchange="onShowCriticalChange(this.checked)">
+            </div>
+        </div>
+    </div>
+
     <!-- ── PLAYER HUD ──────────────────────────────────── -->
     <div id="playerHud" class="player-hud" style="display:none;">
         <div class="hud-row">
@@ -86,18 +111,6 @@
             <span class="hud-label">&#127807; Seeds</span>
             <span class="hud-value hud-seeds" id="hudSeeds">0</span>
         </div>
-    </div>
-    <div class="character-info">
-        <p class="panel-title">&#9834; Soundtrack</p>
-        <table>
-            <td>
-                <button class="soundtrackbtn" onclick="cycleVolume()" id="volumeBtn">&#128266; 100%</button>
-            </td>
-            <td>
-                <button class="soundtrackbtn" onclick="playAudio()" id="play"  style="display: block;">&#9654; Play</button>
-                <button class="soundtrackbtn" onclick="pauseAudio()" id="pause" style="display: none;">&#9646;&#9646; Pause</button>
-            </td>
-        </table>
     </div>
     <div id="registrationForm" class="character-info" style="display: none;">
         <h1>Turret Upgrade</h1>
