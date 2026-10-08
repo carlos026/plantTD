@@ -5,7 +5,7 @@ var isPaused = false;
 var rangeIndicator = null;
 var isDraggingNewTurret = false;
 var draggedTurretEl = null; // turret being dragged from the shop (set on dragstart)
-var minion_count = 16;
+var minion_count = MAX_WAVE_ENEMIES;
 var currentWaveEnemyCount = 12;
 var interval_id = null;
 var currentWave = 0;
@@ -599,6 +599,8 @@ function startwave(evt) {
 	currentLives = 15;
 	currentCash = 100;
 	currentScore = RunSession.getScore();
+	difficultyKillCount = 0;
+	currentWaveEnemyCount = randomWaveEnemyCount();
 	turretPos = new Array();
 
 	// increase the wave count
@@ -783,10 +785,10 @@ function startwave(evt) {
 						// increase your cash a little bit  
 						if (isBossWave) {
 							currentCash += bossReward();
-							currentScore += 8;
+							currentScore += difficultyScore(8);
 						} else {
 							currentCash += minionreward();
-							currentScore++;
+							currentScore += regularKillScore();
 						}
 						if (minions_killed == currentWaveEnemyCount || (isBossWave && minions_killed == 1)) {
 							// wave over!
@@ -846,9 +848,7 @@ function startwave(evt) {
 				currentWave++;
 				isBossWave = currentWave % 10 == 0;
 				if (!isBossWave) {
-					currentWaveEnemyCount = currentWave >= 10
-						? Math.floor(Math.random() * 7) + 10
-						: 12;
+					currentWaveEnemyCount = randomWaveEnemyCount();
 				}
 				// Map finished after wave 30 — back to map selection
 				if (currentWave > 30) {
@@ -923,7 +923,7 @@ function finishMap() {
 	resetwave(null);
 	pauseAudio();
 	currentGoldSeed++;
-	currentScore += 100;
+	currentScore += difficultyScore(100);
 	PlayerData.updateScore(currentScore);
 	PlayerData.addGoldenSeeds(1);
 	RunSession.completeMap(currentLevel, currentScore);
@@ -1555,9 +1555,25 @@ function startNewRun() {
 	renderMapGrid();
 }
 
+// PLAY on a map card asks for the difficulty first; the map starts on confirmDifficulty()
+var pendingMapId = null;
+
 function startGameOnMap(mapId) {
 	if (RunSession.isMapPlayed(mapId) || !UnlockManager.isMapUnlocked(mapId)) return;
-	currentLevel = mapId;
+	pendingMapId = mapId;
+	document.getElementById('difficultyScreen').style.display = 'flex';
+}
+
+function closeDifficultySelect() {
+	pendingMapId = null;
+	document.getElementById('difficultyScreen').style.display = 'none';
+}
+
+function confirmDifficulty(difficultyId) {
+	if (pendingMapId === null) return;
+	setDifficulty(difficultyId);
+	currentLevel = pendingMapId;
+	closeDifficultySelect();
 	document.getElementById('mapSelectScreen').style.display = 'none';
 	drawMap();
 	Tutorial.startIfNeeded();

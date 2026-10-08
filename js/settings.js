@@ -55,6 +55,10 @@ function openSettings() {
 	document.getElementById("effectsVolumeSlider").value = GameSettings.get("effectsVolume");
 	document.getElementById("showCriticalToggle").checked = GameSettings.get("showCritical");
 	updateSettingsLabels();
+	// read-only: the difficulty is chosen before the map starts
+	var difficultyEl = document.getElementById("difficultyValue");
+	difficultyEl.textContent = getDifficulty().name;
+	difficultyEl.className = "settings-difficulty difficulty-" + currentDifficulty;
 	document.getElementById("settingsScreen").style.display = "flex";
 }
 

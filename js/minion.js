@@ -186,18 +186,18 @@ function removeDebuffs(minionElement, hpBarElement) {
 function getMinionSpeed(minionElement) {
 	if (isPlaneMinion(minionElement)) {
 		if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) {
-			return PLANE_FROZEN_SPEED;
+			return PLANE_FROZEN_SPEED * getDifficulty().speedMult;
 		}
-		return PLANE_SPEED;
+		return PLANE_SPEED * getDifficulty().speedMult;
 	}
 	var p = getEnemyProfile(minionElement);
 	if (hasDebuff(STUN_STATUS_ATTRIBUTE, minionElement)) {
 		return STUNNED_MINION_SPEED;
 	}
 	if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) {
-		return p && p.frozenSpeed !== undefined ? p.frozenSpeed : FROZEN_MINION_SPEED;
+		return (p && p.frozenSpeed !== undefined ? p.frozenSpeed : FROZEN_MINION_SPEED) * getDifficulty().speedMult;
 	}
-	return p ? p.speed : 1.0;
+	return (p ? p.speed : 1.0) * getDifficulty().speedMult;
 }
 
 
@@ -226,15 +226,17 @@ function minionhp() {
 	if(currentWave > 20) {
 		hpMax = 200000 * Math.pow(1.09, currentWave - 21);
 	}
-	return hpMax;
+	return hpMax * getDifficulty().hpMult;
 }
 
 function bossHp() {
+	var hp;
 	if (currentWave == 10){
-		return Math.pow(2, currentWave) * 15;
+		hp = Math.pow(2, currentWave) * 15;
 	} else if (currentWave == 20) {
-		return Math.pow(2, currentWave);
+		hp = Math.pow(2, currentWave);
 	} else if (currentWave == 30) {
-		return 2500000;
+		hp = 2500000;
 	}
+	return hp * getDifficulty().hpMult;
 }

@@ -1086,30 +1086,33 @@ progress.toxic::-webkit-progress-value {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 16px;
-  padding: 40px 48px;
+  padding: 56px 64px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  box-shadow: var(--shadow), 0 0 48px rgba(0, 180, 255, 0.15);
-  min-width: 300px;
+  gap: 24px;
+  box-shadow: var(--shadow), 0 0 64px rgba(0, 180, 255, 0.15);
+  width: min(520px, calc(100vw - 32px));
+  box-sizing: border-box;
 }
 
 .nickname-title {
   font-family: 'Orbitron', monospace;
-  font-size: 28px;
+  font-size: clamp(32px, 9vw, 48px);
   font-weight: 900;
   color: var(--accent);
-  text-shadow: 0 0 24px var(--accent-glow);
+  text-shadow: 0 0 32px var(--accent-glow);
   margin: 0;
-  letter-spacing: 4px;
+  letter-spacing: 6px;
+  text-align: center;
 }
 
 .nickname-sub {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text-muted);
   margin: 0;
   letter-spacing: 1px;
+  text-align: center;
 }
 
 .nickname-input {
@@ -1118,8 +1121,8 @@ progress.toxic::-webkit-progress-value {
   border-radius: 8px;
   color: var(--text);
   font-family: 'Exo 2', sans-serif;
-  font-size: 16px;
-  padding: 10px 16px;
+  font-size: 22px;
+  padding: 14px 20px;
   width: 100%;
   box-sizing: border-box;
   outline: none;
@@ -1134,8 +1137,8 @@ progress.toxic::-webkit-progress-value {
 }
 
 .nickname-message {
-  font-size: 12px;
-  margin: -6px 0;
+  font-size: 15px;
+  margin: -8px 0;
   text-align: center;
 }
 
@@ -1144,15 +1147,15 @@ progress.toxic::-webkit-progress-value {
 
 .nickname-btn {
   width: 100%;
-  height: 44px;
+  height: 60px;
   background: linear-gradient(135deg, #003d7a, #0077cc);
   border: 1px solid rgba(0, 180, 255, 0.4);
   border-radius: 8px;
   color: #fff;
   font-family: 'Orbitron', monospace;
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.2s;
   box-shadow: 0 0 16px rgba(0, 120, 255, 0.4);
@@ -1164,6 +1167,10 @@ progress.toxic::-webkit-progress-value {
 }
 
 .nickname-btn:active { transform: scale(0.97); }
+
+@media (max-width: 480px) {
+  .nickname-panel { padding: 36px 24px; gap: 18px; }
+}
 
 /* ── PLAYER HUD ───────────────────────────────────────── */
 .player-hud {
@@ -1490,6 +1497,81 @@ button[type="sellbutton"]:active {
 
 .map-select-score span {
   color: var(--gold);
+}
+
+/* ── DIFFICULTY DIALOG ─────────────────────────────── */
+.difficulty-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 26, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9500;
+}
+
+.difficulty-panel {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: var(--shadow), 0 0 48px rgba(0, 180, 255, 0.15);
+  width: min(560px, calc(100vw - 32px));
+  box-sizing: border-box;
+}
+
+.difficulty-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.difficulty-btn {
+  --diff-color: var(--accent);
+  background: rgba(0, 20, 60, 0.6);
+  border: 1.5px solid var(--diff-color);
+  border-radius: 10px;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.difficulty-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px var(--diff-color);
+}
+
+.difficulty-btn:active { transform: scale(0.97); }
+
+.difficulty-easy { --diff-color: var(--success); }
+.difficulty-hard { --diff-color: var(--danger); }
+
+.difficulty-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--diff-color);
+}
+
+.difficulty-desc {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .difficulty-options { grid-template-columns: 1fr; }
 }
 
 .map-select-footer {
@@ -1886,6 +1968,17 @@ button[type="sellbutton"]:active {
   text-align: right;
   color: var(--accent);
 }
+
+.settings-difficulty {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+}
+
+.settings-difficulty.difficulty-easy { color: var(--success); }
+.settings-difficulty.difficulty-hard { color: var(--danger); }
 
 .settings-toggle {
   width: 18px;

@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap">
 <link rel="stylesheet" href="board.css" type="text/css">
 <script type="text/javascript" src="js/constants.js"></script>
+<script type="text/javascript" src="js/difficulty.js"></script>
 <script type="text/javascript" src="js/map.js"></script>
 <script type="text/javascript" src="js/map-renderer.js"></script>
 <script type="text/javascript" src="js/turret.js"></script>
@@ -52,6 +53,30 @@
         </div>
     </div>
 
+    <!-- ── DIFFICULTY DIALOG ───────────────────────────── -->
+    <div id="difficultyScreen" class="difficulty-overlay" style="display:none;" onclick="if(event.target===this) closeDifficultySelect()">
+        <div class="difficulty-panel">
+            <div class="settings-header">
+                <h1 class="settings-title">SELECT DIFFICULTY</h1>
+                <button class="progression-close-btn" onclick="closeDifficultySelect()">&#10005;</button>
+            </div>
+            <div class="difficulty-options">
+                <button class="difficulty-btn difficulty-easy" onclick="confirmDifficulty('easy')">
+                    <span class="difficulty-name">EASY</span>
+                    <span class="difficulty-desc">Enemies -25% HP and speed<br>8&ndash;12 enemies per wave<br>Half score</span>
+                </button>
+                <button class="difficulty-btn difficulty-normal" onclick="confirmDifficulty('normal')">
+                    <span class="difficulty-name">NORMAL</span>
+                    <span class="difficulty-desc">Standard enemies<br>12&ndash;16 enemies per wave<br>Normal score</span>
+                </button>
+                <button class="difficulty-btn difficulty-hard" onclick="confirmDifficulty('hard')">
+                    <span class="difficulty-name">HARD</span>
+                    <span class="difficulty-desc">Enemies +25% HP and speed<br>15&ndash;20 enemies per wave<br>Double score</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ── PROGRESSION SCREEN ─────────────────────────── -->
     <div id="progressionScreen" class="progression-overlay" style="display:none;">
         <div class="progression-panel">
@@ -93,6 +118,10 @@
             <div class="settings-row">
                 <label for="showCriticalToggle">Show critical damage</label>
                 <input type="checkbox" id="showCriticalToggle" class="settings-toggle" onchange="onShowCriticalChange(this.checked)">
+            </div>
+            <div class="settings-row">
+                <label>Difficulty</label>
+                <span id="difficultyValue" class="settings-difficulty">Normal</span>
             </div>
         </div>
     </div>

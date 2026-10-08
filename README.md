@@ -180,12 +180,24 @@ Airplanes share the regular minion HP for their wave. Special enemies multiply i
 
 | Wave | Enemies | Count |
 |---|---|---|
-| 1–9 | Minions | 12 |
+| 1–9 | Minions | random, by difficulty |
 | 10 | Boss | 1 |
-| 11–19 | Minions + Airplanes | 10–16 (random) |
+| 11–19 | Minions + Airplanes | random, by difficulty |
 | 20 | Boss | 1 |
-| 21–29 | Minions + Airplanes + map special enemy | 10–16 (random) |
+| 21–29 | Minions + Airplanes + map special enemy | random, by difficulty |
 | 30 | **Map Boss** | 1 |
+
+## Difficulty
+
+After clicking **PLAY** on a map you choose its difficulty. It stays fixed for the whole map and is shown (read-only) on the **CONFIG** screen.
+
+| Difficulty | Enemy HP | Enemy speed | Enemies per wave | Score |
+|---|---|---|---|---|
+| Easy | −25% | −25% | 8–12 | 1 point per 2 kills, half boss and map-completion score |
+| Normal | — | — | 12–16 | as in the Rewards table |
+| Hard | +25% | +25% | 15–20 | 2 points per kill, double boss and map-completion score |
+
+The HP and speed changes apply to every enemy, including airplanes, special enemies and bosses.
 
 ## Rewards
 
@@ -194,6 +206,8 @@ Airplanes share the regular minion HP for their wave. Special enemies multiply i
 | Minion / airplane / special enemy killed | `(wave + 1)²` | +1 |
 | Boss killed | `(wave + 1)³` | +8 |
 | Map completed | — | +100 and **+1 Golden Seed** |
+
+Scores shown are for Normal difficulty (see [Difficulty](#difficulty)).
 
 ## Progression & Unlocks
 
@@ -281,6 +295,7 @@ Double-click `index.html` in your file browser.
 | `index.html` | Screens (nickname, map selection, progression), HUD and panels |
 | `board.css` | All styling and animations |
 | `js/constants.js` | Global tunables (map size, spawn interval, crit chances, boss lives cost…) |
+| `js/difficulty.js` | Difficulty levels (enemy HP/speed, enemies per wave, score rules) |
 | `js/map.js` | Road layout of each map (`isRoad`) |
 | `js/map-renderer.js` | Canvas map artwork and per-map themes |
 | `js/turret.js` | Tower stats, costs, upgrades, cooldowns and critical hits |
@@ -302,7 +317,7 @@ Double-click `index.html` in your file browser.
 | Action | How |
 |---|---|
 | Login / create profile | Enter nickname on startup screen, press **PLAY** or Enter |
-| Choose map | Click **PLAY** on an unlocked, not-yet-completed map |
+| Choose map | Click **PLAY** on an unlocked, not-yet-completed map, then pick a difficulty |
 | Unlock maps / towers | **PROGRESSION** button on the map selection screen |
 | Start a new run | **↻ NEW RUN** on the map selection screen |
 | Place tower (desktop) | Click a turret card, then drag it onto the map |
