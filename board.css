@@ -1071,6 +1071,45 @@ progress.toxic::-webkit-progress-value {
   transform: translateY(-1px);
 }
 
+/* ── TURRET TARGETING MODE ─────────────────────────── */
+.target-mode-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.target-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.target-mode-btn {
+  padding: 5px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(0, 180, 255, 0.06);
+  color: var(--text-muted);
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.target-mode-btn:hover {
+  color: var(--text);
+  border-color: var(--border-hi);
+}
+
+.target-mode-btn.target-mode-active {
+  background: linear-gradient(135deg, #0369a1, var(--accent));
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
 /* ── NICKNAME SCREEN ─────────────────────────────────── */
 .nickname-overlay {
   position: fixed;

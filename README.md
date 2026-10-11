@@ -9,8 +9,8 @@ Strategically place turrets on the map to stop waves of incoming enemies from re
 **Core loop:**
 - Pick a map from the **map selection screen**
 - Press **START**, then buy a turret from the shop and drag it onto any non-road tile
-- Click a placed turret to upgrade it, sell it, or manage its special features
-- Clear wave 30 to complete the map, earn a Golden Seed, and return to map selection
+- Click a placed turret to upgrade it, sell it, choose its target priority, or manage its special features
+- Clear wave 30 to complete the map, earn Golden Seeds, review your stats on the **Victory** screen and return to map selection
 
 You start every map with **$100** and **15 lives**.
 
@@ -18,12 +18,22 @@ You start every map with **$100** and **15 lives**.
 
 A **run** is a sequence of maps played in the same browser session:
 
-- When a map is completed (wave 30 cleared), the game returns to `index.html` and opens the map selection screen automatically — no need to log in again.
+- When a map is completed (wave 30 cleared), the [Victory screen](#victory-screen) shows the map's stats. Pressing **CONTINUE** returns to `index.html` and opens the map selection screen automatically — no need to log in again.
 - The **run score carries over** from map to map and is shown on the map selection screen.
 - **Each map can only be played once per run.** Completed maps are marked **✔ Completed** and can't be selected again.
 - Click **↻ NEW RUN** on the map selection screen to reset the run score and played maps (your profile, record and seeds are kept).
 - The run lives in `sessionStorage`: closing the tab starts a fresh run.
 - A **game over never completes a map** — not even on wave 30. You can press START to retry the same map.
+- **↩ MAP SELECTION** on the [CONFIG screen](#settings-config) abandons the current map: its score is discarded, but the map stays playable and the run keeps its score and played maps.
+
+### Victory Screen
+
+Completing a map opens a **VICTORY** screen with the map name and difficulty and, animated with a count-up:
+
+- **Score** — the run score after this map
+- **Kills** — enemies killed on this map
+- **Total damage** — damage dealt by every tower placed on the map, sold ones included
+- **Best turret** — the tower with the most damage, its level and its share of the total damage
 
 ## Maps
 
@@ -68,7 +78,7 @@ The wave is paused automatically on reading-only steps. The tutorial can be skip
 
 ## Towers
 
-All towers can be upgraded up to **level 8**. Damage and range are always whole numbers.
+All towers can be upgraded up to **level 8**. Damage and range are always whole numbers. A range circle is shown while placing a tower and when its panel is open.
 
 | Tower | Cost | Crit chance | Description |
 |---|---|---|---|
@@ -84,9 +94,26 @@ All towers can be upgraded up to **level 8**. Damage and range are always whole 
 
 Missile and Archery are **locked** at first and must be unlocked in Progression.
 
+### Target Priority
+
+Every tower except Blizzard (which hits every enemy in range) has a **Target** selector in its upgrade panel. Each tower keeps its own setting; new towers start on **First**.
+
+| Mode | Shoots at |
+|---|---|
+| First | The enemy closest to the end of the path |
+| Last | The enemy farthest from the end of the path |
+| Max HP | The enemy with the highest HP |
+| Min HP | The enemy with the lowest HP |
+
+- Path position is the **distance actually walked along the road** (not the straight-line distance to the exit), so slowed or stunned enemies are ranked correctly.
+- HP is the enemy's current HP; shields are not counted.
+- Only enemies the tower can hurt are considered: immune enemies are skipped, the Flamethrower ignores airplanes, and the Missile Turret still prioritises airplanes, applying the mode among them.
+- The Archery Turret sorts all its targets (1–3 arrows) by the selected mode.
+- The mode can be changed at any time, also while paused.
+
 ### Critical Hits
 
-When a hit is critical, a floating **"<damage> Critical!"** label pops above the enemy and fades out. The number is the **final** damage dealt (after airplane and special-enemy multipliers), rounded. For Missile and Archery the label appears when the projectile **lands**. To avoid clutter, each enemy shows at most one label every 300 ms (the damage itself is always applied).
+When a hit is critical, a floating **"<damage> Critical!"** label pops above the enemy and fades out (can be turned off on the [CONFIG screen](#settings-config)). The number is the **final** damage dealt (after airplane and special-enemy multipliers), rounded. For Missile and Archery the label appears when the projectile **lands**. To avoid clutter, each enemy shows at most one label every 300 ms (the damage itself is always applied).
 
 ### Storm Cannon Overheat
 
@@ -170,7 +197,7 @@ Each map has its own special enemy, defined in `SPECIAL_ENEMIES` (`js/minion.js`
 | 16–17 | `2^wave × 0.6` |
 | 18–20 | `2^wave × 0.4` |
 | 21–29 | `200000 × 1.09^(wave − 21)` |
-| Boss wave 10 | `2^wave × 10` |
+| Boss wave 10 | `2^wave × 15` |
 | Boss wave 20 | `2^wave` |
 | Boss wave 30 | 2,500,000 × the map enemy's HP multiplier |
 
@@ -232,17 +259,34 @@ Pausing stops the enemies and turrets, but you can still:
 - Buy and place new towers
 - Upgrade and sell towers
 - Queue missile ammo
+- Change a tower's target priority or toggle the Storm Cannon
 - Inspect enemies (Enemy Info panel)
 
 The status bar (cash) updates immediately while paused.
 
+Once a wave is started, the **START** button becomes **PAUSE**: click it to pause or resume.
+
+## Damage Stats
+
+**DMG STATS** opens a live panel with the total damage dealt by each tower type on the current map, shown as bars sorted from highest to lowest.
+
+## Settings (CONFIG)
+
+The **⚙️ CONFIG** button opens the settings screen:
+
+| Setting | Description |
+|---|---|
+| Music volume | 0–100%, applied to the per-map soundtrack |
+| Effects volume | 0–100%, applied to tower shots and missile impacts |
+| Critical popups | Show/hide the floating "Critical!" labels |
+| Difficulty | Read-only — the difficulty chosen for this map |
+| ↩ MAP SELECTION | Leave the map (its score is discarded) |
+
+Settings are saved in LocalStorage (`plantTD_settings`) and shared by every profile on the browser.
+
 ## Audio
 
-The game plays a per-map soundtrack that loops continuously. Use the **volume button** in the top-left panel to cycle through volume levels:
-
-`🔊 100%` → `🔊 50%` → `🔉 25%` → `🔈 5%` → `🔇 Mute` → back to 100%
-
-The **⏸ Pause** button mutes/resumes the soundtrack independently of the volume setting.
+Each map has its own looping soundtrack, plus sound effects for every tower. Volumes are set on the [CONFIG screen](#settings-config).
 
 ## Player Profile
 
@@ -296,15 +340,16 @@ Double-click `index.html` in your file browser.
 
 | File | Responsibility |
 |---|---|
-| `index.html` | Screens (nickname, map selection, progression), HUD and panels |
+| `index.html` | Screens (nickname, map selection, difficulty, progression, settings, victory), HUD and panels |
 | `board.css` | All styling and animations |
 | `js/constants.js` | Global tunables (map size, spawn interval, crit chances, boss lives cost…) |
 | `js/difficulty.js` | Difficulty levels (enemy HP/speed, enemies per wave, score rules) |
 | `js/map.js` | Road layout of each map (`isRoad`) |
 | `js/map-renderer.js` | Canvas map artwork and per-map themes |
-| `js/turret.js` | Tower stats, costs, upgrades, cooldowns and critical hits |
+| `js/turret.js` | Tower stats, costs, upgrades, cooldowns, target priority and critical hits |
 | `js/minion.js` | Enemy stats, status effects, map special enemies and bosses |
-| `js/tower-defense.js` | Game loop, waves, damage, UI screens and map flow |
+| `js/tower-defense.js` | Game loop, waves, targeting, damage, UI screens and map flow |
+| `js/settings.js` | CONFIG screen and persisted settings (volumes, critical popups) |
 | `js/player-data.js` | Player profile persistence and the per-session run (`RunSession`) |
 | `js/unlock-catalog.js` / `js/unlock-manager.js` | Unlockable items and purchase rules |
 | `js/tutorial.js` | First-time interactive tutorial |
@@ -327,11 +372,10 @@ Double-click `index.html` in your file browser.
 | Place tower (desktop) | Click a turret card, then drag it onto the map |
 | Place tower (mobile) | Touch a card, drag, release on a tile |
 | Tower info (shop) | Click the **ⓘ** button under a shop card |
-| Upgrade / Sell / Ammo | Click a placed tower |
+| Upgrade / Sell / Ammo / Target priority | Click a placed tower |
 | Enemy info | Click an enemy |
 | Damage statistics | Click **DMG STATS** |
 | Start wave | Click **START** |
-| Pause | Click **⏸ PAUSE** |
-| Reset | Click **⟳ RESET** |
-| Cycle volume | Click the volume button (top-left) |
-| Pause music | Click **⏸ Pause** (top-left) |
+| Pause / resume | Click **PAUSE** (the START button once a wave is running) |
+| Reset | Click **↻ RESET** |
+| Volume / critical popups / leave map | Click **⚙️ CONFIG** |

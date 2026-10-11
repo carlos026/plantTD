@@ -412,6 +412,47 @@ function getArcheryTargetCount(level) {
 	return 1;
 }
 
+// TARGETING PRIORITY
+// first: furthest along the path (closest to the end) / last: least along the path
+// strong: highest HP / weak: lowest HP
+const TARGET_MODES = ["first", "last", "strong", "weak"];
+
+// Blizzard hits every enemy in range, so targeting doesn't apply to it
+function turretHasTargeting(type) {
+	return type !== "blizzard";
+}
+
+// Sorts candidates ({ el, progress, hp }) so the preferred target comes first
+function sortByTargetMode(candidates, mode) {
+	candidates.sort(function(a, b) {
+		switch (mode) {
+		case "last":
+			return a.progress - b.progress;
+		case "strong":
+			return b.hp - a.hp;
+		case "weak":
+			return a.hp - b.hp;
+		default: // "first"
+			return b.progress - a.progress;
+		}
+	});
+	return candidates;
+}
+
+function updateTargetModeUI(turret) {
+	var row = document.getElementById("targetModeRow");
+	if (!turretHasTargeting(turret.type)) {
+		row.style.display = "none";
+		return;
+	}
+	row.style.display = "flex";
+	var buttons = row.querySelectorAll(".target-mode-btn");
+	for (var b = 0; b < buttons.length; b++) {
+		buttons[b].classList.toggle("target-mode-active", buttons[b].getAttribute("data-mode") === turret.targetMode);
+	}
+}
+// END TARGETING PRIORITY
+
 function getTurretSellPrice(type, upgradeTotalValue) {
 	return (turretValue(type) * (0.2)) + (upgradeTotalValue * 0.2);
 }
@@ -487,8 +528,8 @@ function showTurretInfo(turret){
 		updateTurretInfo(turret);
 		form.style.display = "block";
 		showRangeIndicator(
-			parseInt(turret.x) + 8,
-			parseInt(turret.y) + 8,
+			parseInt(turret.x) + TURRET_CENTER,
+			parseInt(turret.y) + TURRET_CENTER,
 			turret.range,
 			turretColor(turret.type)
 		);
@@ -568,6 +609,7 @@ function updateTurretInfo(turret){
     } else {
         document.getElementById("multiTargetRow").style.display = "none";
     }
+    updateTargetModeUI(turret);
     document.getElementById("sellBtn").innerText = getTurretSellPrice(turret.type, turretUpgradeCosts(turret.type, turret.level - 1)) + "\nSell!";
     document.getElementById("upgBtn").innerText = turretUpgradeCosts(turret.type, turret.level) + "\nUpgrade!";
     // at max level the upgrade button is hidden.

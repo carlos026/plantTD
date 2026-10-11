@@ -329,7 +329,9 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 		shotCd:    0,
 		audioCd:   0,
 		audioFile: applyEffectsVolume(turretSoundEffect(turretType)),
-		totalDamage: 0
+		totalDamage: 0,
+		targetMode: "first",
+		target:    null
 	};
 	if (turretType === "missile") {
 		turretObj.audioFileImpact = applyEffectsVolume(new Audio("sound/missileImpact.mp3"));
@@ -685,6 +687,7 @@ function startwave(evt) {
 		hpBarMinions[i].setAttribute("max", minionhp());
 		minion_hp[i] = minionhp();
 		first_kill[i] = true;
+		minions[i]._progress = 0;
 	}
 
 	interval_id = setInterval(function () {
@@ -692,6 +695,7 @@ function startwave(evt) {
 			blizzardPendingDamage = {};
 			processPendingMissiles();
 			updateMissileTurretPlaneFlags(minions, movex, movey);
+			updateTurretTargets(minions);
 			//timeLapsesSinceLastShot++;
 			for (var i = 0; i < minion_c; i++) {
 				// what direction do we want to go?
@@ -766,6 +770,8 @@ function startwave(evt) {
 					movex[i] -= speed;
 					break;
 				}
+				// distance walked along the path, used by the first/last targeting modes
+				minions[i]._progress += speed;
 				minions[i].style.display = "block";
 				minions[i].style.top = movey[i] + "px";
 				minions[i].style.left = movex[i] + "px";
@@ -781,6 +787,7 @@ function startwave(evt) {
 				// were already applied at each damage source; the shield absorbs first)
 				damage = absorbWithShield(minions[i], damage);
 				minion_hp[i] -= damage;
+				minions[i]._hp = minion_hp[i];
 				hpBarMinions[i].setAttribute("value", minion_hp[i]);
 				if (minion_hp[i] <= 0) {
 					// goodbye minion!
@@ -881,6 +888,7 @@ function startwave(evt) {
 						var bossProfile = isSPBossWave ? getBossProfile(currentLevel) : null;
 						minion_hp[i] = bossHp() * (bossProfile ? bossProfile.hpMult : 1);
 						first_kill[i] = true;
+						minions[i]._progress = 0;
 						minions[i]._isPlane = false;
 						minions[i]._isBoss = true;
 						setEnemyProfile(minions[i], bossProfile, minion_hp[i]);
@@ -900,6 +908,7 @@ function startwave(evt) {
 						setMinionSize(minions[i], hpBarMinions[i], MINION_SIZE);
 						minion_hp[i] = minionhp();
 						first_kill[i] = true;
+						minions[i]._progress = 0;
 						minions[i]._isBoss = false;
 						removeDebuffs(minions[i], hpBarMinions[i]);
 						var usePlane = currentWave >= 11 && currentWave != 20 && Math.random() < 0.5;
@@ -1247,6 +1256,46 @@ function updateMissileTurretPlaneFlags(minions, movex, movey) {
 	}
 }
 
+// Minions the turret can hit right now, sorted by its targeting mode (preferred first)
+function getTurretCandidates(turret, minions) {
+	var candidates = [];
+	for (var m = 0; m < minions.length; m++) {
+		var el = minions[m];
+		if (el.style.display === "none") continue;
+		if (getDamageMultiplier(el, turret.type) === 0) continue;
+		if (turret.type === "flamethrower" && isPlaneMinion(el)) continue;
+		if (turret.type === "missile" && turret.planeInRange && !isPlaneMinion(el)) continue;
+		var mx = parseFloat(el.style.left) || 0;
+		var my = parseFloat(el.style.top)  || 0;
+		if (euclidDistance(mx, turret.x, my, turret.y) > turret.range) continue;
+		candidates.push({ el: el, x: mx, y: my, progress: el._progress || 0, hp: el._hp || 0 });
+	}
+	return sortByTargetMode(candidates, turret.targetMode);
+}
+
+// Picks, once per tick, the minion each single-target turret will shoot
+function updateTurretTargets(minions) {
+	for (var i = 0; i < turretPos.length; i++) {
+		turretPos[i].target = null;
+		if (!turretHasTargeting(turretPos[i].type) || turretPos[i].type === "archery") continue;
+		if (turretPos[i].shotCd > 0) continue;
+		var candidates = getTurretCandidates(turretPos[i], minions);
+		if (candidates.length > 0) turretPos[i].target = candidates[0].el;
+	}
+}
+
+function setTurretTargetMode(mode) {
+	if (TARGET_MODES.indexOf(mode) < 0) return;
+	var turretId = document.getElementById("upgTurretId").value;
+	for (var i = 0; i < turretPos.length; i++) {
+		if (turretPos[i].htmlElement.id === turretId) {
+			turretPos[i].targetMode = mode;
+			updateTargetModeUI(turretPos[i]);
+			break;
+		}
+	}
+}
+
 function anyTurretsInRange(minion, x, y) {
 	var damage = 0;
 	for (var i = 0; i < turretPos.length; i++) {
@@ -1300,6 +1349,11 @@ function anyTurretsInRange(minion, x, y) {
 			continue;
 		}
 
+		// targeting priority: only shoot the minion picked for this tick
+		if (turretPos[i].target && turretPos[i].target !== minion) {
+			continue;
+		}
+
 		if (turretPos[i].type === "missile") {
 			if (!isPlaneMinion(minion) && turretPos[i].planeInRange) continue;
 			if (turretPos[i].ammo <= 0) continue;
@@ -1315,8 +1369,8 @@ function anyTurretsInRange(minion, x, y) {
 				turretPos[i].audioFile.currentTime = 0;
 				turretPos[i].audioFile.play();
 				turretPos[i].ammo--;
-				var projStartX = parseInt(turretPos[i].x) + 8;
-				var projStartY = parseInt(turretPos[i].y) + 8;
+				var projStartX = parseInt(turretPos[i].x) + TURRET_CENTER;
+				var projStartY = parseInt(turretPos[i].y) + TURRET_CENTER;
 				var projEl = createProjectileEl("missile-projectile", projStartX, projStartY);
 				turretPos[i].pendingMissiles.push({ minionElement: minion, damage: missileDmg, timer: 80, duration: 80, projectileEl: projEl, startX: projStartX, startY: projStartY, critical: missileCrit });
 				updateTurretCooldownPostShooting(turretPos[i]);
@@ -1331,27 +1385,16 @@ function anyTurretsInRange(minion, x, y) {
 			var inRangeArchery = euclidDistance(x, xt, y, yt) <= turretPos[i].range;
 			if (inRangeArchery && turretPos[i].shotCd <= 0) {
 				var maxTargets = getArcheryTargetCount(turretPos[i].level);
-				var nearbyMinions = document.getElementsByClassName("minion");
-				var candidates = [];
-				for (var m = 0; m < nearbyMinions.length; m++) {
-					if (nearbyMinions[m].style.display === "none") continue;
-					var mx = parseFloat(nearbyMinions[m].style.left) || 0;
-					var my = parseFloat(nearbyMinions[m].style.top)  || 0;
-					var dist = euclidDistance(mx, xt, my, yt);
-					if (dist <= turretPos[i].range) {
-						candidates.push({ el: nearbyMinions[m], dist: dist });
-					}
-				}
+				var candidates = getTurretCandidates(turretPos[i], document.getElementsByClassName("minion"));
 				if (candidates.length > 0) {
-					candidates.sort(function(a, b) { return a.dist - b.dist; });
-					rotateToTarget(x, y, parseInt(turretPos[i].x), parseInt(turretPos[i].y), turretPos[i].htmlElement);
+					rotateToTarget(candidates[0].x, candidates[0].y, parseInt(turretPos[i].x), parseInt(turretPos[i].y), turretPos[i].htmlElement);
 					turretPos[i].htmlElement.style.borderTop = "1px solid #c08a3e";
 					turretPos[i].htmlElement.style.borderRadius = "20px/20px";
 					turretPos[i].audioFile.currentTime = 0;
 					turretPos[i].audioFile.play();
 					var hits = Math.min(maxTargets, candidates.length);
-					var arrowStartX = parseInt(turretPos[i].x) + 8;
-					var arrowStartY = parseInt(turretPos[i].y) + 8;
+					var arrowStartX = parseInt(turretPos[i].x) + TURRET_CENTER;
+					var arrowStartY = parseInt(turretPos[i].y) + TURRET_CENTER;
 					for (var ti = 0; ti < hits; ti++) {
 						var arrowDmg = (calculateCriticalHitDamage(ARCHERY_CRIT_CHANCE, turretPos[i].damage) + turretPos[i].damage)
 							* getDamageMultiplier(candidates[ti].el, "archery");
@@ -1448,8 +1491,8 @@ function createFrostBurst(turretObj) {
 	var burst = document.createElement("div");
 	burst.className = "frost-burst";
 	var diameter = turretObj.range * 2;
-	var centerX = parseInt(turretObj.x) + 8;
-	var centerY = parseInt(turretObj.y) + 8;
+	var centerX = parseInt(turretObj.x) + TURRET_CENTER;
+	var centerY = parseInt(turretObj.y) + TURRET_CENTER;
 	burst.style.width  = diameter + "px";
 	burst.style.height = diameter + "px";
 	burst.style.left   = centerX + "px";
@@ -1792,8 +1835,8 @@ function btnUpgradeTurretClick() {
 					//Update inteface upgrade info.
 					updateTurretInfo(turretPos[i]);
 					showRangeIndicator(
-						parseInt(turretPos[i].x) + 8,
-						parseInt(turretPos[i].y) + 8,
+						parseInt(turretPos[i].x) + TURRET_CENTER,
+						parseInt(turretPos[i].y) + TURRET_CENTER,
 						turretPos[i].range,
 						turretColor(turretPos[i].type)
 					);

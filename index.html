@@ -232,6 +232,15 @@
             <span>Active</span>
             <button class="storm-toggle-btn storm-toggle-on" id="stormToggleBtn" onclick="toggleStormCannon()">On</button>
         </div>
+        <div class="info-item target-mode-item" id="targetModeRow" style="display: none;">
+            <span>Target Focus</span>
+            <div class="target-mode-grid">
+                <button class="target-mode-btn" data-mode="first" onclick="setTurretTargetMode('first')" type="button" title="Enemy closest to the end of the path">First</button>
+                <button class="target-mode-btn" data-mode="last" onclick="setTurretTargetMode('last')" type="button" title="Enemy farthest from the end of the path">Last</button>
+                <button class="target-mode-btn" data-mode="strong" onclick="setTurretTargetMode('strong')" type="button" title="Enemy with the highest HP">Max HP</button>
+                <button class="target-mode-btn" data-mode="weak" onclick="setTurretTargetMode('weak')" type="button" title="Enemy with the lowest HP">Min HP</button>
+            </div>
+        </div>
         <div class="info-item btn-row">
             <button class="sellbtn" id="sellBtn" onclick="btnSellTurretClick()" type="sellbutton">Sell!</button>
             <button class="upgradebutton" id="upgBtn" onclick="btnUpgradeTurretClick()" type="button">Upgrade!</button>

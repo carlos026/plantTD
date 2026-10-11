@@ -24,6 +24,8 @@ document.documentElement.style.setProperty("--map-height", MAP_H * TILE_H + "px"
 const TURRET_OFFSET = 148;
 const TURRET_GAP = 5;
 const TURRET_D = 40;
+// Offset from a placed turret's position (tile top-left) to its center
+const TURRET_CENTER = TILE_W / 2;
 const SHOOT_COOLDOWN = 30;
 const STORM_OVERHEAT_MAX = 200;
 const STORM_OVERHEAT_PER_SHOT = 1;
