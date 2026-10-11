@@ -73,6 +73,11 @@
                     <span class="difficulty-name">HARD</span>
                     <span class="difficulty-desc">Enemies +25% HP and speed<br>15&ndash;20 enemies per wave<br>Double score</span>
                 </button>
+                <button id="difficultyBtn-veryHard" class="difficulty-btn difficulty-veryHard" onclick="confirmDifficulty('veryHard')">
+                    <span class="difficulty-name">VERY HARD</span>
+                    <span class="difficulty-desc">Enemies +50% HP, +35% speed<br>20&ndash;25 enemies per wave<br>2.5x score, 2 Golden Seeds</span>
+                    <span class="difficulty-lock">&#127807; 2 Seeds &middot; unlock in Progression</span>
+                </button>
             </div>
         </div>
     </div>
@@ -93,6 +98,10 @@
                 <div class="progression-section">
                     <h2>Towers</h2>
                     <div id="progressionTowers" class="progression-items"></div>
+                </div>
+                <div class="progression-section">
+                    <h2>Difficulties</h2>
+                    <div id="progressionDifficulties" class="progression-items"></div>
                 </div>
             </div>
         </div>
@@ -123,6 +132,34 @@
                 <label>Difficulty</label>
                 <span id="difficultyValue" class="settings-difficulty">Normal</span>
             </div>
+            <button class="settings-leave-btn" onclick="returnToMapSelect()">&#8617; MAP SELECTION</button>
+        </div>
+    </div>
+
+    <!-- ── POST GAME STATS SCREEN ───────────────────────── -->
+    <div id="postGameScreen" class="postgame-overlay" style="display:none;">
+        <div class="postgame-panel">
+            <h1 class="postgame-title">VICTORY</h1>
+            <div id="postGameMap" class="postgame-map"></div>
+            <div class="postgame-grid">
+                <div class="postgame-stat postgame-score">
+                    <span class="postgame-label">Total Score</span>
+                    <span id="postGameScore" class="postgame-value">0</span>
+                </div>
+                <div class="postgame-stat postgame-kills">
+                    <span class="postgame-label">Kills</span>
+                    <span id="postGameKills" class="postgame-value">0</span>
+                </div>
+                <div class="postgame-stat postgame-damage">
+                    <span class="postgame-label">Total Damage</span>
+                    <span id="postGameDamage" class="postgame-value">0</span>
+                </div>
+            </div>
+            <div class="postgame-best">
+                <span class="postgame-label">Top Damage Turret</span>
+                <div id="postGameBestTurret" class="postgame-best-row"></div>
+            </div>
+            <button class="nickname-btn postgame-btn" onclick="closePostGameStats()">CONTINUE</button>
         </div>
     </div>
 

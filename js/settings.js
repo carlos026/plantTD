@@ -66,6 +66,13 @@ function closeSettings() {
 	document.getElementById("settingsScreen").style.display = "none";
 }
 
+// Abandons the current map: its score is discarded (the run is only saved when a
+// map is completed), the map stays playable and the run keeps its score/played maps
+function returnToMapSelect() {
+	if (!confirm("Return to map selection? You will lose the score for this map.")) return;
+	window.location.href = "index.html";
+}
+
 function updateSettingsLabels() {
 	document.getElementById("musicVolumeValue").textContent   = GameSettings.get("musicVolume") + "%";
 	document.getElementById("effectsVolumeValue").textContent = GameSettings.get("effectsVolume") + "%";

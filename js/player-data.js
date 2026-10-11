@@ -58,6 +58,9 @@ var PlayerData = (function () {
                 "toxic", "stormCannon", "railCannon"
             ];
         }
+        if (!Array.isArray(data.unlockedDifficulties)) {
+            data.unlockedDifficulties = [];
+        }
         // Migration: profiles created before the tutorial already know the game
         if (typeof data.tutorialDone !== 'boolean') {
             data.tutorialDone = true;
@@ -83,6 +86,7 @@ var PlayerData = (function () {
                 "machineGun", "laser", "flamethrower", "blizzard",
                 "toxic", "stormCannon", "railCannon"
             ],
+            unlockedDifficulties: [],
             tutorialDone:   false,
             createdAt:      now,
             lastPlayAt:     now

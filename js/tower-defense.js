@@ -30,6 +30,10 @@ var selectedHpBarEl = null;
 // damage stats panel state
 var damageStatsTick = 0;
 
+// post game stats (reset on every map start)
+var mapKills = 0;
+var placedTurrets = []; // every turret placed on this map, sold ones included
+
 ////////////////////// RANGE INDICATOR
 function hexToRgba(hex, alpha) {
 	var r = parseInt(hex.slice(1, 3), 16);
@@ -355,6 +359,7 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 		turretObj.overheatBar = overheatBar;
 	}
 	turretPos[turretPos.length] = turretObj;
+	placedTurrets.push(turretObj);
 	listenEvent(turretEl, "click", showTurretInfo(turretPos[turretPos.length - 1]));
 	turretEl.setAttribute("draggable", "false");
 	listenEvent(turretEl, "dragstart", nodrag);
@@ -602,6 +607,8 @@ function startwave(evt) {
 	difficultyKillCount = 0;
 	currentWaveEnemyCount = randomWaveEnemyCount();
 	turretPos = new Array();
+	mapKills = 0;
+	placedTurrets = [];
 
 	// increase the wave count
 	currentWave++;
@@ -782,6 +789,7 @@ function startwave(evt) {
 					if (first_kill[i]) {
 						first_kill[i] = false;
 						minions_killed++;
+						mapKills++;
 						// increase your cash a little bit  
 						if (isBossWave) {
 							currentCash += bossReward();
@@ -922,13 +930,72 @@ function startwave(evt) {
 function finishMap() {
 	resetwave(null);
 	pauseAudio();
-	currentGoldSeed++;
+	var seedReward = getDifficulty().seedReward;
+	currentGoldSeed += seedReward;
 	currentScore += difficultyScore(100);
 	PlayerData.updateScore(currentScore);
-	PlayerData.addGoldenSeeds(1);
+	PlayerData.addGoldenSeeds(seedReward);
 	RunSession.completeMap(currentLevel, currentScore);
+	updatePlayerHud();
+	showPostGameStats();
+}
+
+////////////////////// POST GAME STATS SCREEN
+function showPostGameStats() {
+	var totalDamage = 0;
+	var best = null;
+	for (var i = 0; i < placedTurrets.length; i++) {
+		totalDamage += placedTurrets[i].totalDamage;
+		if (!best || placedTurrets[i].totalDamage > best.totalDamage) best = placedTurrets[i];
+	}
+
+	var map = UnlockCatalog.getMaps().filter(function (m) { return m.id === currentLevel; })[0];
+	document.getElementById("postGameMap").textContent =
+		(map ? map.name : "Map " + currentLevel) + " • " + getDifficulty().name;
+
+	var bestEl = document.getElementById("postGameBestTurret");
+	if (best && best.totalDamage > 0) {
+		bestEl.innerHTML =
+			'<div class="postgame-turret-icon" style="background-image:' + turretImage(best.type) + ';border-color:' + turretColor(best.type) + '"></div>' +
+			'<div class="postgame-turret-info">' +
+				'<span class="postgame-turret-name">' + turretName(best.type) + '</span>' +
+				'<span class="postgame-turret-sub">Level ' + best.level + ' • ' +
+					Math.round(best.totalDamage / totalDamage * 100) + '% of total damage</span>' +
+			'</div>' +
+			'<span class="postgame-turret-dmg">' + formatDamage(best.totalDamage) + '</span>';
+	} else {
+		bestEl.innerHTML = '<span class="postgame-turret-sub">No turret dealt damage.</span>';
+	}
+
+	document.getElementById("damageStatsPanel").style.display = "none";
+	hideShopTurretInfo();
+	document.getElementById("postGameScreen").style.display = "flex";
+
+	countUp(document.getElementById("postGameScore"), currentScore, String);
+	countUp(document.getElementById("postGameKills"), mapKills, String);
+	countUp(document.getElementById("postGameDamage"), totalDamage, formatDamage);
+}
+
+// Animates a stat from 0 to its final value, like strategy-game score screens
+function countUp(el, target, format) {
+	var duration = 1200;
+	var start = null;
+	function step(ts) {
+		if (start === null) start = ts;
+		var t = Math.min(1, (ts - start) / duration);
+		var eased = 1 - Math.pow(1 - t, 3);
+		el.textContent = format(Math.round(target * eased));
+		if (t < 1) requestAnimationFrame(step);
+	}
+	el.textContent = format(0);
+	requestAnimationFrame(step);
+}
+
+function closePostGameStats() {
+	// back to map selection
 	window.location.href = "index.html";
 }
+////////////////////// END POST GAME STATS SCREEN
 
 function whereToMove(xpos, ypos, currentDir, minion, c) {
 	//Get direction from the minion asset.
@@ -1561,7 +1628,20 @@ var pendingMapId = null;
 function startGameOnMap(mapId) {
 	if (RunSession.isMapPlayed(mapId) || !UnlockManager.isMapUnlocked(mapId)) return;
 	pendingMapId = mapId;
+	renderDifficultyLocks();
 	document.getElementById('difficultyScreen').style.display = 'flex';
+}
+
+// Locked difficulties (e.g. Very Hard) stay disabled until bought in Progression
+function renderDifficultyLocks() {
+	var locked = UnlockCatalog.getDifficulties();
+	for (var i = 0; i < locked.length; i++) {
+		var btn = document.getElementById('difficultyBtn-' + locked[i].id);
+		if (!btn) continue;
+		var unlocked = UnlockManager.isDifficultyUnlocked(locked[i].id);
+		btn.disabled = !unlocked;
+		btn.classList.toggle('difficulty-locked', !unlocked);
+	}
 }
 
 function closeDifficultySelect() {
@@ -1571,6 +1651,7 @@ function closeDifficultySelect() {
 
 function confirmDifficulty(difficultyId) {
 	if (pendingMapId === null) return;
+	if (!UnlockManager.isDifficultyUnlocked(difficultyId)) return;
 	setDifficulty(difficultyId);
 	currentLevel = pendingMapId;
 	closeDifficultySelect();
@@ -1597,6 +1678,8 @@ function renderProgressionScreen() {
 	var lockableTowers = UnlockCatalog.getTowers().filter(function (t) { return t.locked; });
 	renderProgressionItems('maps',   lockableMaps,   'progressionMaps');
 	renderProgressionItems('towers', lockableTowers, 'progressionTowers');
+	var lockableDifficulties = UnlockCatalog.getDifficulties().filter(function (d) { return d.locked; });
+	renderProgressionItems('difficulties', lockableDifficulties, 'progressionDifficulties');
 }
 
 function renderProgressionItems(category, items, containerId) {
@@ -1607,9 +1690,7 @@ function renderProgressionItems(category, items, containerId) {
 
 	for (var i = 0; i < items.length; i++) {
 		var item  = items[i];
-		var owned = category === 'maps'
-			? UnlockManager.isMapUnlocked(item.id)
-			: UnlockManager.isTowerUnlocked(item.id);
+		var owned = UnlockManager.isOwned(category, item.id);
 
 		var row = document.createElement('div');
 		row.className = 'prog-item';

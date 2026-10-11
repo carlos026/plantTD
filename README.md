@@ -196,6 +196,9 @@ After clicking **PLAY** on a map you choose its difficulty. It stays fixed for t
 | Easy | −25% | −25% | 8–12 | 1 point per 2 kills, half boss and map-completion score |
 | Normal | — | — | 12–16 | as in the Rewards table |
 | Hard | +25% | +25% | 15–20 | 2 points per kill, double boss and map-completion score |
+| Very Hard 🔒 | +50% | +35% | 20–25 | 2.5 points per kill (5 per 2 kills), 2.5× boss and map-completion score, **+2 Golden Seeds** on completion |
+
+Very Hard is locked at first and must be unlocked in [Progression](#progression--unlocks).
 
 The HP and speed changes apply to every enemy, including airplanes, special enemies and bosses.
 
@@ -218,6 +221,7 @@ Golden Seeds are spent on the **PROGRESSION** screen (from map selection) to per
 | Wasteland, Swamp, Inferno, Void, Iceland (each) | 1 seed |
 | Archery Turret | 1 seed |
 | Missile Turret | 3 seeds |
+| Very Hard difficulty | 2 seeds |
 
 Only unlocked towers appear in the in-game shop. Costs are configured in `js/unlock-catalog.js`.
 

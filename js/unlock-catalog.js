@@ -20,8 +20,14 @@ var UnlockCatalog = (function () {
         { id: "archery",      name: "Archery Turret", locked: true,  cost: 1 }
     ];
 
+    // ids match DIFFICULTIES keys; difficulties not listed here are always available
+    var _difficulties = [
+        { id: "veryHard", name: "Very Hard Difficulty", locked: true, cost: 2 }
+    ];
+
     return {
-        getMaps:   function () { return _maps; },
-        getTowers: function () { return _towers; }
+        getMaps:         function () { return _maps; },
+        getTowers:       function () { return _towers; },
+        getDifficulties: function () { return _difficulties; }
     };
 })();

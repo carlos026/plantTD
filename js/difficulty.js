@@ -1,14 +1,17 @@
 // Difficulty levels, chosen before each map starts and locked while it is played.
 // hpMult/speedMult scale every enemy (minions, planes, special enemies and bosses);
 // scoreMult scales boss kills and the map-completion bonus; killsPerPoint/pointsPerKill
-// set the score of a regular kill; enemiesMin/Max is the random enemy count per wave.
+// set the score of a regular kill; enemiesMin/Max is the random enemy count per wave;
+// seedReward is the Golden Seeds earned on map completion.
+// Very Hard must be unlocked in Progression (see UnlockCatalog.getDifficulties).
 var DIFFICULTIES = {
-	easy:   { name: "Easy",   hpMult: 0.75, speedMult: 0.75, scoreMult: 0.5, killsPerPoint: 2, pointsPerKill: 1, enemiesMin: 8,  enemiesMax: 12 },
-	normal: { name: "Normal", hpMult: 1,    speedMult: 1,    scoreMult: 1,   killsPerPoint: 1, pointsPerKill: 1, enemiesMin: 12, enemiesMax: 16 },
-	hard:   { name: "Hard",   hpMult: 1.25, speedMult: 1.25, scoreMult: 2,   killsPerPoint: 1, pointsPerKill: 2, enemiesMin: 15, enemiesMax: 20 }
+	easy:     { name: "Easy",      hpMult: 0.75, speedMult: 0.75, scoreMult: 0.5, killsPerPoint: 2, pointsPerKill: 1, enemiesMin: 8,  enemiesMax: 12, seedReward: 1 },
+	normal:   { name: "Normal",    hpMult: 1,    speedMult: 1,    scoreMult: 1,   killsPerPoint: 1, pointsPerKill: 1, enemiesMin: 12, enemiesMax: 16, seedReward: 1 },
+	hard:     { name: "Hard",      hpMult: 1.25, speedMult: 1.25, scoreMult: 2,   killsPerPoint: 1, pointsPerKill: 2, enemiesMin: 15, enemiesMax: 20, seedReward: 1 },
+	veryHard: { name: "Very Hard", hpMult: 1.5,  speedMult: 1.35, scoreMult: 2.5, killsPerPoint: 2, pointsPerKill: 5, enemiesMin: 20, enemiesMax: 25, seedReward: 2 }
 };
 // Largest enemy count of any difficulty (number of minion elements created per map)
-var MAX_WAVE_ENEMIES = 20;
+var MAX_WAVE_ENEMIES = 25;
 
 var currentDifficulty = "normal";
 var difficultyKillCount = 0; // regular kills not yet turned into score (Easy)

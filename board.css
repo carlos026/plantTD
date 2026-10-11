@@ -1525,7 +1525,7 @@ button[type="sellbutton"]:active {
 
 .difficulty-options {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
@@ -1553,6 +1553,26 @@ button[type="sellbutton"]:active {
 
 .difficulty-easy { --diff-color: var(--success); }
 .difficulty-hard { --diff-color: var(--danger); }
+.difficulty-veryHard { --diff-color: var(--purple); }
+
+.difficulty-lock { display: none; }
+
+.difficulty-btn.difficulty-locked {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.6);
+}
+
+.difficulty-btn.difficulty-locked:hover { transform: none; box-shadow: none; }
+
+.difficulty-locked .difficulty-lock {
+  display: block;
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
 
 .difficulty-name {
   font-family: 'Orbitron', monospace;
@@ -1626,6 +1646,9 @@ button[type="sellbutton"]:active {
   box-shadow: var(--shadow), 0 0 48px rgba(0, 180, 255, 0.12);
   min-width: 420px;
   max-width: 520px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .progression-header {
@@ -1979,6 +2002,7 @@ button[type="sellbutton"]:active {
 
 .settings-difficulty.difficulty-easy { color: var(--success); }
 .settings-difficulty.difficulty-hard { color: var(--danger); }
+.settings-difficulty.difficulty-veryHard { color: var(--purple); }
 
 .settings-toggle {
   width: 18px;
@@ -1986,3 +2010,182 @@ button[type="sellbutton"]:active {
   accent-color: var(--accent);
   cursor: pointer;
 }
+
+/* ── POST GAME STATS SCREEN ──────────────────────── */
+.postgame-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 26, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9900;
+}
+
+.postgame-panel {
+  background: var(--panel);
+  border: 1.5px solid var(--border-hi);
+  border-radius: 16px;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  box-shadow: var(--shadow), 0 0 48px rgba(0, 180, 255, 0.2);
+  width: min(560px, calc(100vw - 32px));
+  box-sizing: border-box;
+  animation: postgame-in 0.4s ease-out;
+}
+
+@keyframes postgame-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+.postgame-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 24px rgba(255, 204, 0, 0.5);
+  letter-spacing: 6px;
+  margin: 0;
+}
+
+.postgame-map {
+  margin-top: -10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.postgame-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.postgame-stat {
+  --stat-color: var(--accent);
+  background: rgba(0, 20, 60, 0.6);
+  border: 1.5px solid var(--border);
+  border-top: 3px solid var(--stat-color);
+  border-radius: 10px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.postgame-score  { --stat-color: var(--gold); }
+.postgame-kills  { --stat-color: var(--danger); }
+.postgame-damage { --stat-color: var(--purple); }
+
+.postgame-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.postgame-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--stat-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.postgame-best {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.postgame-best-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 20, 60, 0.6);
+  border: 1.5px solid var(--gold-dim);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-height: 44px;
+}
+
+.postgame-turret-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.postgame-turret-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.postgame-turret-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.postgame-turret-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.postgame-turret-dmg {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--gold);
+}
+
+.postgame-btn {
+  height: 50px;
+  font-size: 15px;
+}
+
+@media (max-width: 480px) {
+  .postgame-panel { padding: 20px 16px; }
+  .postgame-grid { grid-template-columns: 1fr; }
+  .postgame-stat { flex-direction: row; justify-content: space-between; padding: 10px 14px; }
+}
+
+.settings-leave-btn {
+  margin-top: 4px;
+  padding: 10px 16px;
+  background: rgba(255, 61, 85, 0.12);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  color: var(--danger);
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.settings-leave-btn:hover {
+  background: rgba(255, 61, 85, 0.22);
+  box-shadow: 0 0 16px rgba(255, 61, 85, 0.45);
+}
+
+.settings-leave-btn:active { transform: scale(0.97); }
