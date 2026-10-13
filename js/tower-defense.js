@@ -33,6 +33,7 @@ var damageStatsTick = 0;
 // post game stats (reset on every map start)
 var mapKills = 0;
 var placedTurrets = []; // every turret placed on this map, sold ones included
+var endlessSeedsEarned = 0; // Golden Seeds won from Endless bosses this map
 
 ////////////////////// RANGE INDICATOR
 function hexToRgba(hex, alpha) {
@@ -605,12 +606,14 @@ function startwave(evt) {
 	currentWave = 0;
 	currentLives = 15;
 	currentCash = 100;
-	currentScore = RunSession.getScore();
+	// Endless is a standalone challenge: its score doesn't join the run
+	currentScore = isEndlessMode() ? 0 : RunSession.getScore();
 	difficultyKillCount = 0;
 	currentWaveEnemyCount = randomWaveEnemyCount();
 	turretPos = new Array();
 	mapKills = 0;
 	placedTurrets = [];
+	endlessSeedsEarned = 0;
 
 	// increase the wave count
 	currentWave++;
@@ -801,6 +804,10 @@ function startwave(evt) {
 						if (isBossWave) {
 							currentCash += bossReward();
 							currentScore += difficultyScore(8);
+							if (isEndlessMode() && currentWave >= ENDLESS_SEED_START_WAVE &&
+								Math.random() < ENDLESS_SEED_CHANCE) {
+								awardEndlessSeed();
+							}
 						} else {
 							currentCash += minionreward();
 							currentScore += regularKillScore();
@@ -852,6 +859,11 @@ function startwave(evt) {
 					PlayerData.savePlayer();
 					updatePlayerHud();
 					resetwave(null);
+					// Endless only ends on defeat: show the results of the run
+					if (isEndlessMode()) {
+						pauseAudio();
+						showPostGameStats(true);
+					}
 					// stop here: a game over (even on wave 30) must never complete the map
 					return;
 				}
@@ -865,8 +877,8 @@ function startwave(evt) {
 				if (!isBossWave) {
 					currentWaveEnemyCount = randomWaveEnemyCount();
 				}
-				// Map finished after wave 30 — back to map selection
-				if (currentWave > 30) {
+				// Map finished after wave 30 — back to map selection (Endless never finishes)
+				if (currentWave > 30 && !isEndlessMode()) {
 					finishMap();
 					return;
 				}
@@ -880,12 +892,14 @@ function startwave(evt) {
 						prevDir[i] = MOVE_S;
 						minions[i].style.display = "none";
 						hpBarMinions[i].style.display = "none";
-						var isSPBossWave = currentWave === 30;
+						// wave 30 (every 30 waves in Endless) brings a special boss
+						var isSPBossWave = currentWave % ENDLESS_BOSS_WAVES === 0;
 						minions[i].style.backgroundImage = isSPBossWave
 							? "url('img/min-lv1/sp-boss-up.png')"
 							: "url('img/min-lv1/boss-up.png')";
 						setMinionSize(minions[i], hpBarMinions[i], BOSS_SIZE);
-						var bossProfile = isSPBossWave ? getBossProfile(currentLevel) : null;
+						var bossMapId = isEndlessMode() ? randomEnemyMapId() : currentLevel;
+						var bossProfile = isSPBossWave ? getBossProfile(bossMapId) : null;
 						minion_hp[i] = bossHp() * (bossProfile ? bossProfile.hpMult : 1);
 						first_kill[i] = true;
 						minions[i]._progress = 0;
@@ -919,7 +933,8 @@ function startwave(evt) {
 							minions[i].style.backgroundImage = "url('img/pla-lv2/pla-up.png')";
 						} else if (useSpMin) {
 							// each map has its own special enemy (tinted via CSS class)
-							var special = getSpecialEnemy(currentLevel);
+							// Endless mixes the special enemies of every map
+							var special = getSpecialEnemy(isEndlessMode() ? randomEnemyMapId() : currentLevel);
 							minions[i]._isPlane = false;
 							minion_hp[i] = minionhp() * special.hpMult;
 							setEnemyProfile(minions[i], special, minion_hp[i]);
@@ -949,8 +964,34 @@ function finishMap() {
 	showPostGameStats();
 }
 
+// Endless: a lucky boss kill (wave 30 onwards) grants a Golden Seed on the spot
+function awardEndlessSeed() {
+	endlessSeedsEarned++;
+	currentGoldSeed++;
+	PlayerData.addGoldenSeeds(1);
+	updatePlayerHud();
+	showSeedNotification("Wave " + currentWave + " boss defeated! +1 Golden Seed");
+}
+
+var seedNotificationTimer = null;
+function showSeedNotification(text) {
+	var el = document.getElementById("seedNotification");
+	document.getElementById("seedNotificationText").textContent = text;
+	el.style.display = "flex";
+	// restart the animation if a notification is already showing
+	el.classList.remove("seed-notification-show");
+	void el.offsetWidth;
+	el.classList.add("seed-notification-show");
+	clearTimeout(seedNotificationTimer);
+	seedNotificationTimer = setTimeout(function () {
+		el.style.display = "none";
+		el.classList.remove("seed-notification-show");
+	}, 4000);
+}
+
 ////////////////////// POST GAME STATS SCREEN
-function showPostGameStats() {
+// isDefeat: Endless results after a game over (a regular map only shows this on victory)
+function showPostGameStats(isDefeat) {
 	var totalDamage = 0;
 	var best = null;
 	for (var i = 0; i < placedTurrets.length; i++) {
@@ -976,9 +1017,20 @@ function showPostGameStats() {
 		bestEl.innerHTML = '<span class="postgame-turret-sub">No turret dealt damage.</span>';
 	}
 
+	var title = document.getElementById("postGameTitle");
+	title.textContent = isDefeat ? "GAME OVER" : "VICTORY";
+	title.classList.toggle("postgame-defeat", !!isDefeat);
+	var endless = isEndlessMode();
+	document.getElementById("postGameEndless").style.display = endless ? "grid" : "none";
+
 	document.getElementById("damageStatsPanel").style.display = "none";
 	hideShopTurretInfo();
 	document.getElementById("postGameScreen").style.display = "flex";
+
+	if (endless) {
+		countUp(document.getElementById("postGameWave"), currentWave, String);
+		countUp(document.getElementById("postGameSeeds"), endlessSeedsEarned, String);
+	}
 
 	countUp(document.getElementById("postGameScore"), currentScore, String);
 	countUp(document.getElementById("postGameKills"), mapKills, String);

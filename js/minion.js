@@ -42,6 +42,12 @@ function getSpecialEnemy(mapId) {
 	return SPECIAL_ENEMIES[mapId] || SPECIAL_ENEMIES[1];
 }
 
+// Endless mode: any map's special enemy / boss can show up
+function randomEnemyMapId() {
+	var ids = Object.keys(SPECIAL_ENEMIES);
+	return parseInt(ids[Math.floor(Math.random() * ids.length)], 10);
+}
+
 // Wave 30 boss: the map's special enemy with all its traits, just bigger and named "Boss"
 var _bossProfiles = {};
 function getBossProfile(mapId) {
@@ -186,18 +192,18 @@ function removeDebuffs(minionElement, hpBarElement) {
 function getMinionSpeed(minionElement) {
 	if (isPlaneMinion(minionElement)) {
 		if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) {
-			return PLANE_FROZEN_SPEED * getDifficulty().speedMult;
+			return PLANE_FROZEN_SPEED * enemySpeedMult();
 		}
-		return PLANE_SPEED * getDifficulty().speedMult;
+		return PLANE_SPEED * enemySpeedMult();
 	}
 	var p = getEnemyProfile(minionElement);
 	if (hasDebuff(STUN_STATUS_ATTRIBUTE, minionElement)) {
 		return STUNNED_MINION_SPEED;
 	}
 	if (hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) {
-		return (p && p.frozenSpeed !== undefined ? p.frozenSpeed : FROZEN_MINION_SPEED) * getDifficulty().speedMult;
+		return (p && p.frozenSpeed !== undefined ? p.frozenSpeed : FROZEN_MINION_SPEED) * enemySpeedMult();
 	}
-	return (p ? p.speed : 1.0) * getDifficulty().speedMult;
+	return (p ? p.speed : 1.0) * enemySpeedMult();
 }
 
 
@@ -226,7 +232,7 @@ function minionhp() {
 	if(currentWave > 20) {
 		hpMax = 200000 * Math.pow(1.09, currentWave - 21);
 	}
-	return hpMax * getDifficulty().hpMult;
+	return hpMax * enemyHpMult();
 }
 
 function bossHp() {
@@ -237,6 +243,9 @@ function bossHp() {
 		hp = Math.pow(2, currentWave);
 	} else if (currentWave == 30) {
 		hp = 2500000;
+	} else {
+		// Endless bosses after wave 30 grow at the same rate as late-game minions
+		hp = 2500000 * Math.pow(1.09, currentWave - 30);
 	}
-	return hp * getDifficulty().hpMult;
+	return hp * enemyHpMult();
 }

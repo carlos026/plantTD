@@ -1593,6 +1593,7 @@ button[type="sellbutton"]:active {
 .difficulty-easy { --diff-color: var(--success); }
 .difficulty-hard { --diff-color: var(--danger); }
 .difficulty-veryHard { --diff-color: var(--purple); }
+.difficulty-endless { --diff-color: var(--gold); grid-column: 1 / -1; }
 
 .difficulty-lock { display: none; }
 
@@ -2042,6 +2043,7 @@ button[type="sellbutton"]:active {
 .settings-difficulty.difficulty-easy { color: var(--success); }
 .settings-difficulty.difficulty-hard { color: var(--danger); }
 .settings-difficulty.difficulty-veryHard { color: var(--purple); }
+.settings-difficulty.difficulty-endless { color: var(--gold); }
 
 .settings-toggle {
   width: 18px;
@@ -2123,6 +2125,54 @@ button[type="sellbutton"]:active {
 .postgame-score  { --stat-color: var(--gold); }
 .postgame-kills  { --stat-color: var(--danger); }
 .postgame-damage { --stat-color: var(--purple); }
+.postgame-wave   { --stat-color: var(--accent); }
+.postgame-seeds  { --stat-color: var(--gold); }
+
+.postgame-grid-endless { grid-template-columns: repeat(2, 1fr); }
+
+.postgame-title.postgame-defeat {
+  color: var(--danger);
+  text-shadow: 0 0 24px rgba(255, 61, 85, 0.5);
+}
+
+/* Golden Seed notification (Endless boss rewards) */
+.seed-notification {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9950;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  padding: 12px 22px;
+  background: var(--panel);
+  border: 1.5px solid var(--gold);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 0 28px rgba(255, 204, 0, 0.45);
+  pointer-events: none;
+}
+
+.seed-notification-show { animation: seed-notification 4s ease-in-out forwards; }
+
+@keyframes seed-notification {
+  0%   { opacity: 0; transform: translate(-50%, -16px); }
+  10%  { opacity: 1; transform: translate(-50%, 0); }
+  85%  { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -16px); }
+}
+
+.seed-notification-icon { font-size: 26px; }
+
+.seed-notification-text {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
 
 .postgame-label {
   font-size: 11px;
@@ -2203,7 +2253,7 @@ button[type="sellbutton"]:active {
 
 @media (max-width: 480px) {
   .postgame-panel { padding: 20px 16px; }
-  .postgame-grid { grid-template-columns: 1fr; }
+  .postgame-grid, .postgame-grid-endless { grid-template-columns: 1fr; }
   .postgame-stat { flex-direction: row; justify-content: space-between; padding: 10px 14px; }
 }
 

@@ -78,6 +78,11 @@
                     <span class="difficulty-desc">Enemies +50% HP, +35% speed<br>20&ndash;25 enemies per wave<br>2.5x score, 2 Golden Seeds</span>
                     <span class="difficulty-lock">&#127807; 2 Seeds &middot; unlock in Progression</span>
                 </button>
+                <button id="difficultyBtn-endless" class="difficulty-btn difficulty-endless" onclick="confirmDifficulty('endless')">
+                    <span class="difficulty-name">ENDLESS</span>
+                    <span class="difficulty-desc">Normal start, no last wave<br>+10% HP and +5% speed every 10 waves<br>Random special enemies after wave 20<br>Random boss every 30 waves<br>From wave 30, each boss: 50% chance of +1 Golden Seed</span>
+                    <span class="difficulty-lock">&#127807; 1 Seed &middot; unlock in Progression</span>
+                </button>
             </div>
         </div>
     </div>
@@ -139,7 +144,7 @@
     <!-- ── POST GAME STATS SCREEN ───────────────────────── -->
     <div id="postGameScreen" class="postgame-overlay" style="display:none;">
         <div class="postgame-panel">
-            <h1 class="postgame-title">VICTORY</h1>
+            <h1 id="postGameTitle" class="postgame-title">VICTORY</h1>
             <div id="postGameMap" class="postgame-map"></div>
             <div class="postgame-grid">
                 <div class="postgame-stat postgame-score">
@@ -155,12 +160,28 @@
                     <span id="postGameDamage" class="postgame-value">0</span>
                 </div>
             </div>
+            <div id="postGameEndless" class="postgame-grid postgame-grid-endless" style="display:none;">
+                <div class="postgame-stat postgame-wave">
+                    <span class="postgame-label">Wave Reached</span>
+                    <span id="postGameWave" class="postgame-value">0</span>
+                </div>
+                <div class="postgame-stat postgame-seeds">
+                    <span class="postgame-label">Golden Seeds Earned</span>
+                    <span id="postGameSeeds" class="postgame-value">0</span>
+                </div>
+            </div>
             <div class="postgame-best">
                 <span class="postgame-label">Top Damage Turret</span>
                 <div id="postGameBestTurret" class="postgame-best-row"></div>
             </div>
             <button class="nickname-btn postgame-btn" onclick="closePostGameStats()">CONTINUE</button>
         </div>
+    </div>
+
+    <!-- ── GOLDEN SEED NOTIFICATION (Endless boss rewards) ── -->
+    <div id="seedNotification" class="seed-notification" style="display:none;">
+        <span class="seed-notification-icon">&#127807;</span>
+        <span id="seedNotificationText" class="seed-notification-text"></span>
     </div>
 
     <!-- ── GAME HUD STRIP (below the map, scaled by HUD_SCALE) ── -->

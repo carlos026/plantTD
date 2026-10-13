@@ -229,6 +229,18 @@ Very Hard is locked at first and must be unlocked in [Progression](#progression-
 
 The HP and speed changes apply to every enemy, including airplanes, special enemies and bosses.
 
+### Endless Mode 🔒
+
+A challenge mode listed on the difficulty screen, unlocked in [Progression](#progression--unlocks) for **1 Golden Seed**. The map never ends: you play until you run out of lives.
+
+- Starts with **Normal** stats (12–16 enemies per wave, normal score).
+- Every 10 waves enemies get **+10% HP** and **+5% speed**, stacking (waves 11–20: +10% / +5%, waves 21–30: +20% / +10%, ...).
+- Every 10th wave is still a boss wave. After wave 20, special enemies from **any** map can show up.
+- Every 30 waves (30, 60, 90, ...) a **random map boss** spawns.
+- Starting with wave 30, every boss wave (30, 40, 50, ...) defeated has a **50% chance** of granting **+1 Golden Seed** right away, with an on-screen notification.
+- On defeat a **GAME OVER** results screen shows the score, kills, total damage, best turret, **wave reached** and **Golden Seeds earned**.
+- The Endless score counts toward your record but not toward the run score, and the map is not marked as completed.
+
 ## Rewards
 
 | Event | Cash | Score |

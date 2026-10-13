@@ -22,7 +22,8 @@ var UnlockCatalog = (function () {
 
     // ids match DIFFICULTIES keys; difficulties not listed here are always available
     var _difficulties = [
-        { id: "veryHard", name: "Very Hard Difficulty", locked: true, cost: 2 }
+        { id: "veryHard", name: "Very Hard Difficulty", locked: true, cost: 2 },
+        { id: "endless",  name: "Endless Mode",         locked: true, cost: 1 }
     ];
 
     return {
