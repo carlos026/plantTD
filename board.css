@@ -279,6 +279,43 @@ p {
   top: 8px;
 }
 
+#turretShopInfoDialog.character-info {
+  max-height: calc((var(--map-height) - 16px) / var(--hud-scale));
+  overflow-y: auto;
+}
+
+.shop-info-list {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.shop-info-branches {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.shop-info-subtitle {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.shop-info-branch {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.shop-info-branch b { color: var(--text); }
+
 .shop-info-desc {
   font-size: 11px;
   color: var(--text-muted);
@@ -735,6 +772,10 @@ progress.stunned::-webkit-progress-value {
 
 progress.toxic::-webkit-progress-value {
     background: #8c037a;
+}
+
+progress.burning::-webkit-progress-value {
+  background: #ff6a00;
 }
 
 /* ── DRAG ──────────────────────────────────────────── */
@@ -1558,7 +1599,7 @@ button[type="sellbutton"]:active {
   flex-direction: column;
   gap: 18px;
   box-shadow: var(--shadow), 0 0 48px rgba(0, 180, 255, 0.15);
-  width: min(560px, calc(100vw - 32px));
+  width: min(600px, calc(120vw - 32px));
   box-sizing: border-box;
 }
 
@@ -1626,12 +1667,85 @@ button[type="sellbutton"]:active {
   font-family: 'Exo 2', sans-serif;
   font-size: 12px;
   line-height: 1.5;
-  color: var(--text-muted);
+  color: #c9c9c9;
   text-align: center;
 }
 
 @media (max-width: 480px) {
   .difficulty-options { grid-template-columns: 1fr; }
+}
+
+/* ── TURRET BRANCH CHOICE ──────────────────────────── */
+.branch-panel {
+  width: min(860px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 32px 36px;
+  gap: 24px;
+}
+
+.branch-panel .difficulty-options { gap: 20px; }
+
+.branch-panel .difficulty-btn {
+  padding: 24px 20px;
+  gap: 16px;
+}
+
+.branch-panel .difficulty-name { font-size: 20px; }
+.branch-panel .difficulty-desc { font-size: 15px; }
+.branch-panel .branch-stats { font-size: 14px; gap: 6px; }
+.branch-panel .branch-stats b { min-width: 100px; }
+
+@media (max-width: 480px) {
+  .branch-panel { padding: 20px 16px; gap: 16px; }
+  .branch-panel .difficulty-btn { padding: 16px 14px; }
+  .branch-panel .difficulty-name { font-size: 17px; }
+  .branch-panel .difficulty-desc { font-size: 13px; }
+  .branch-panel .branch-stats { font-size: 13px; }
+}
+
+.branch-subtitle {
+  margin: 0;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.branch-sniper { --diff-color: var(--danger); }
+.branch-twin { --diff-color: var(--accent); }
+.branch-precision { --diff-color: var(--danger); }
+.branch-chain { --diff-color: var(--gold); }
+.branch-inferno { --diff-color: var(--danger); }
+.branch-firestorm { --diff-color: var(--gold); }
+.branch-avalanche { --diff-color: var(--accent); }
+.branch-snowKing { --diff-color: var(--success); }
+.branch-corrosive { --diff-color: #1f9d45; }
+.branch-contamination { --diff-color: var(--gold); }
+.branch-chaoticTempest { --diff-color: var(--danger); }
+.branch-doubleStorm { --diff-color: var(--accent); }
+.branch-heavyPayload { --diff-color: var(--danger); }
+.branch-autoReload { --diff-color: var(--success); }
+.branch-pulverizer { --diff-color: var(--accent); }
+.branch-annihilator { --diff-color: var(--danger); }
+.branch-hawkeye { --diff-color: var(--danger); }
+.branch-advancedCrossbow { --diff-color: var(--gold); }
+
+.branch-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 12px;
+  color: var(--text);
+  text-align: left;
+}
+
+.branch-stats b {
+  display: inline-block;
+  min-width: 82px;
+  color: var(--diff-color);
 }
 
 .map-select-footer {

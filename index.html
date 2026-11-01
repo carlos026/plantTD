@@ -87,6 +87,15 @@
         </div>
     </div>
 
+    <!-- ── TURRET BRANCH CHOICE (pauses the game until picked) ── -->
+    <div id="branchScreen" class="difficulty-overlay" style="display:none;">
+        <div class="difficulty-panel branch-panel">
+            <h1 class="settings-title">CHOOSE SPECIALIZATION</h1>
+            <p id="branchSubtitle" class="branch-subtitle"></p>
+            <div id="branchOptions" class="difficulty-options"></div>
+        </div>
+    </div>
+
     <!-- ── PROGRESSION SCREEN ─────────────────────────── -->
     <div id="progressionScreen" class="progression-overlay" style="display:none;">
         <div class="progression-panel">
@@ -241,6 +250,10 @@
                 <button class="ammo-buy-btn" id="ammoBuyBtn" onclick="btnBuyAmmoClick()" type="button">$50 | Buy</button>
             </div>
         </div>
+        <div class="info-item" id="autoReloadRow" style="display: none;">
+            <span>Auto Reload</span>
+            <button class="storm-toggle-btn storm-toggle-on" id="autoReloadBtn" onclick="toggleAutoReload()" type="button">On</button>
+        </div>
         <div class="info-item" id="multiTargetRow" style="display: none;">
             <span>Targets</span>
             <span id="upgTargets"></span>
@@ -296,6 +309,15 @@
         <div class="info-item">
             <span>Cost</span>
             <span id="shopInfoCost"></span>
+        </div>
+        <div class="info-item">
+            <span>Max Level</span>
+            <span id="shopInfoMaxLevel"></span>
+        </div>
+        <ul id="shopInfoSpecials" class="shop-info-list"></ul>
+        <div id="shopInfoBranches" class="shop-info-branches">
+            <div class="shop-info-subtitle">Level 5 specializations</div>
+            <div id="shopInfoBranchList"></div>
         </div>
     </div>
     <div id="enemyInfoDialog" class="character-info" style="display: none;">

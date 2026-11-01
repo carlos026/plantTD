@@ -5,6 +5,7 @@ const STUN_STATUS_ATTRIBUTE = "stunned";
 const STUNNED_MINION_SPEED = 0;
 const TOXIC_STATUS_ATTRIBUTE = "toxic";
 const TOXIC_MINION_DAMAGE = 40;
+const BURNING_STATUS_ATTRIBUTE = "burning";
 const PLANE_STATUS_ATTRIBUTE = "miniontype";
 const PLANE_TYPE_VALUE = "plane";
 const PLANE_SPEED = 3.0;
@@ -138,8 +139,55 @@ function stunMinion(minionElement, duration) {
 	minionElement._stunned = duration;
 }
 
-function toxicMinion(minionElement, duration) {
+// damage (per tick) and sourceTurret are optional: without them the base poison damage is used
+function toxicMinion(minionElement, duration, damage, sourceTurret) {
 	minionElement._toxic = duration;
+	minionElement._toxicDamage = damage || TOXIC_MINION_DAMAGE;
+	minionElement._toxicSource = sourceTurret || null;
+}
+
+// Contamination: poisons the other enemies within radius px of the hit one.
+// An enemy already poisoned keeps its poison unless the new one lasts longer.
+function spreadToxic(sourceMinion, duration, radius, sourceTurret) {
+	var minions = document.getElementsByClassName("minion");
+	var sx = parseFloat(sourceMinion.style.left) || 0;
+	var sy = parseFloat(sourceMinion.style.top) || 0;
+	for (var m = 0; m < minions.length; m++) {
+		var el = minions[m];
+		if (el === sourceMinion || el.style.display === "none") continue;
+		if (euclidDistance(sx, parseFloat(el.style.left) || 0, sy, parseFloat(el.style.top) || 0) > radius) continue;
+		if (hasDebuff(TOXIC_STATUS_ATTRIBUTE, el) && el._toxic >= duration) continue;
+		toxicMinion(el, duration, getToxicPoisonDamage(sourceTurret), sourceTurret);
+	}
+}
+
+// Snow King: adds a freeze stack; the stacks are lost once the freeze wears off.
+// At BLIZZARD_STUN_STACKS the enemy is stunned and the stacks restart (stun immune enemies just restart them).
+// Call right after freezeMinion; wasFrozen is whether the enemy was already frozen before that call.
+function addFreezeStack(minionElement, wasFrozen) {
+	if (!wasFrozen) minionElement._freezeStacks = 0;
+	if (!hasDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement)) return; // freeze immune: nothing to stack
+	minionElement._freezeStacks = (minionElement._freezeStacks || 0) + 1;
+	if (minionElement._freezeStacks >= BLIZZARD_STUN_STACKS) {
+		minionElement._freezeStacks = 0;
+		stunMinion(minionElement, BLIZZARD_STUN_DURATION);
+	}
+}
+
+// Burning is not refreshed while active, otherwise a turret hitting every tick would never let it finish.
+// sourceTurret is credited with the damage when it triggers.
+function burnMinion(minionElement, sourceTurret) {
+	if (hasDebuff(BURNING_STATUS_ATTRIBUTE, minionElement)) return;
+	minionElement._burning = BURN_DURATION;
+	minionElement._burnSource = sourceTurret;
+}
+
+// Burning damage for this tick: a percentage of the enemy's max HP, dealt on its last tick.
+// Enemies weak to the flamethrower (damage multiplier above 1) take the higher percentage.
+function getBurnDamage(minionElement, maxHp) {
+	if (minionElement._burning !== 1) return 0;
+	var pct = getDamageMultiplier(minionElement, "flamethrower") > 1 ? BURN_WEAK_HP_PCT : BURN_HP_PCT;
+	return maxHp * pct / 100;
 }
 
 function applyDebuff(debuff, minionElement, duration) {
@@ -181,12 +229,16 @@ function tickDownMinionDebuffs(minionElement, hpBarElement){
 	addToDebuffDuration(FROZEN_STATUS_ATTRIBUTE, minionElement, hpBarElement, -1);
 	addToDebuffDuration(STUN_STATUS_ATTRIBUTE, minionElement, hpBarElement, -1);
 	addToDebuffDuration(TOXIC_STATUS_ATTRIBUTE, minionElement, hpBarElement, -1);
+	addToDebuffDuration(BURNING_STATUS_ATTRIBUTE, minionElement, hpBarElement, -1);
 }
 
 function removeDebuffs(minionElement, hpBarElement) {
 	removeDebuff(FROZEN_STATUS_ATTRIBUTE, minionElement, hpBarElement);
 	removeDebuff(STUN_STATUS_ATTRIBUTE, minionElement, hpBarElement);
 	removeDebuff(TOXIC_STATUS_ATTRIBUTE, minionElement, hpBarElement);
+	removeDebuff(BURNING_STATUS_ATTRIBUTE, minionElement, hpBarElement);
+	minionElement._burnSource = null;
+	minionElement._freezeStacks = 0;
 }
 
 function getMinionSpeed(minionElement) {
@@ -210,7 +262,7 @@ function getMinionSpeed(minionElement) {
 function getToxicDamage(minionElement) {
 	let damage = 0;
 	if (hasDebuff(TOXIC_STATUS_ATTRIBUTE, minionElement)) {
-		damage = TOXIC_MINION_DAMAGE;
+		damage = minionElement._toxicDamage || TOXIC_MINION_DAMAGE;
 	}
 	return damage;
 }
