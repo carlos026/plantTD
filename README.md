@@ -282,6 +282,12 @@ Once a wave is started, the **START** button becomes **PAUSE**: click it to paus
 
 **DMG STATS** opens a live panel with the total damage dealt by each tower type on the current map, shown as bars sorted from highest to lowest.
 
+## Wave Preview
+
+**WAVE PREVIEW** (hotkey **G**) opens a panel, in the same place as DMG STATS, with what the next wave brings (wave 1 before the game starts): enemy count, and for each enemy type its HP, speed, special traits and the chance of showing up. The exact mix of Jets and special enemies is only rolled when the wave starts, so they are listed with their chance. Boss waves show the boss, its HP and the lives it costs if it escapes.
+
+DMG STATS, WAVE PREVIEW and the enemy info share the same space: opening one closes the others.
+
 ## Settings (CONFIG)
 
 The **⚙️ CONFIG** button opens the settings screen:
@@ -391,3 +397,16 @@ Double-click `index.html` in your file browser.
 | Pause / resume | Click **PAUSE** (the START button once a wave is running) |
 | Reset | Click **↻ RESET** |
 | Volume / critical popups / leave map | Click **⚙️ CONFIG** |
+| Next wave preview | Click **WAVE PREVIEW** |
+
+### Keyboard shortcuts
+
+| Key | Action |
+|---|---|
+| **Space** | Start the game, then pause / resume |
+| **Q** | Toggle game speed (1x / 2x) |
+| **1** – **9** | Buy the matching shop tower (in shop order), then drag it onto the map |
+| **W** | DMG STATS |
+| **G** | WAVE PREVIEW |
+| **L** | Reset (asks for confirmation) |
+| **Esc** | CONFIG |

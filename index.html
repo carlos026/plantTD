@@ -19,6 +19,7 @@
 <script type="text/javascript" src="js/settings.js"></script>
 <script type="text/javascript" src="js/tutorial.js"></script>
 <script type="text/javascript" src="js/mobile.js"></script>
+<script type="text/javascript" src="js/hotkeys.js"></script>
 </head>
 <body>
     <!-- ── NICKNAME SCREEN ─────────────────────────────── -->
@@ -147,6 +148,20 @@
                 <span id="difficultyValue" class="settings-difficulty">Normal</span>
             </div>
             <button class="settings-leave-btn" onclick="returnToMapSelect()">&#8617; MAP SELECTION</button>
+        </div>
+    </div>
+
+    <!-- ── RESET CONFIRMATION DIALOG (hotkey L) ─────────── -->
+    <div id="resetConfirmScreen" class="settings-overlay" style="display:none;" onclick="if(event.target===this) Hotkeys.cancelReset()">
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h1 class="settings-title">&#8635; RESET RUN?</h1>
+            </div>
+            <p class="confirm-text">Do you really want to reset the current run? Your waves, turrets and cash on this map will be lost.</p>
+            <div class="confirm-actions">
+                <button class="confirm-btn confirm-btn-cancel" type="button" onclick="Hotkeys.cancelReset()">CANCEL <span class="confirm-key">Esc</span></button>
+                <button class="confirm-btn confirm-btn-danger" type="button" onclick="Hotkeys.confirmReset()">RESET <span class="confirm-key">Enter</span></button>
+            </div>
         </div>
     </div>
 
@@ -284,6 +299,10 @@
     <div id="damageStatsPanel" class="character-info" style="display: none;">
         <h1>Damage Stats</h1>
         <div id="damageStatsList" class="dmg-list"></div>
+    </div>
+    <div id="wavePreviewPanel" class="character-info" style="display: none;">
+        <h1>Wave Preview</h1>
+        <div id="wavePreviewBody"></div>
     </div>
     <div id="turretShopInfoDialog" class="character-info" style="display: none;">
         <h1>Turret Info</h1>

@@ -22,6 +22,7 @@ document.documentElement.style.setProperty("--hud-scale", HUD_SCALE);
 document.documentElement.style.setProperty("--map-width", MAP_W * TILE_W + "px");
 document.documentElement.style.setProperty("--map-height", MAP_H * TILE_H + "px");
 const MAX_TURRET_LEVEL = 8;
+const HOTKEY_TURRET_COUNT = 9; // keys 1..N buy the Nth shop turret
 const TURRET_OFFSET = 148;
 const TURRET_GAP = 5;
 const TURRET_D = 40;

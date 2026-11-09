@@ -9,6 +9,9 @@ var draggedTurretEl = null; // turret being dragged from the shop (set on dragst
 var minion_count = MAX_WAVE_ENEMIES;
 var currentWaveEnemyCount = 12;
 var interval_id = null;
+// game speed multiplier: 1 = normal, 2 = double speed
+var gameSpeed = 1;
+var GAME_SPEEDS = [1, 2];
 var currentWave = 0;
 var isBossWave = 0;
 var currentLevel = 5;
@@ -199,14 +202,21 @@ function setStormOverheated(turret, overheated) {
 ////////////////////// END STORM CANNON OVERHEAT
 
 ////////////////////// DAMAGE STATS PANEL
+// DMG Stats and Wave Preview share the same slot: opening one closes the other
 function showDamageStatsPanel() {
 	var panel = document.getElementById("damageStatsPanel");
 	if (panel.style.display === "none") {
+		hideWavePreviewPanel();
+		hideEnemyInfoDialog();
 		updateDamageStatsPanel(true);
 		panel.style.display = "block";
 	} else {
 		panel.style.display = "none";
 	}
+}
+
+function hideDamageStatsPanel() {
+	document.getElementById("damageStatsPanel").style.display = "none";
 }
 
 function updateDamageStatsPanel(force) {
@@ -262,6 +272,176 @@ function formatDamage(n) {
 }
 ////////////////////// END DAMAGE STATS PANEL
 
+////////////////////// WAVE PREVIEW PANEL
+// Shows what the next wave will bring. The wave's exact enemy mix is only rolled when
+// it starts, so Jets / special enemies are listed with their chance of showing up.
+var wavePreviewShownWave = -1;
+
+function showWavePreviewPanel() {
+	var panel = document.getElementById("wavePreviewPanel");
+	if (panel.style.display === "none") {
+		hideDamageStatsPanel();
+		hideEnemyInfoDialog();
+		renderWavePreview();
+		panel.style.display = "block";
+	} else {
+		panel.style.display = "none";
+	}
+}
+
+function hideWavePreviewPanel() {
+	document.getElementById("wavePreviewPanel").style.display = "none";
+}
+
+// Wave that starts after the one in progress (wave 1 before the game starts)
+function getPreviewWave() {
+	return isRunning ? currentWave + 1 : 1;
+}
+
+// Keeps an open panel in sync when the wave changes
+function updateWavePreviewPanel() {
+	var panel = document.getElementById("wavePreviewPanel");
+	if (panel.style.display === "none") return;
+	if (getPreviewWave() !== wavePreviewShownWave) renderWavePreview();
+}
+
+// HP and speed scale with currentWave, so evaluate fn as if `wave` were the current one
+function atWave(wave, fn) {
+	var saved = currentWave;
+	currentWave = wave;
+	try { return fn(); } finally { currentWave = saved; }
+}
+
+function formatRange(min, max, format) {
+	return min === max ? format(min) : format(min) + "-" + format(max);
+}
+
+function enemyTraitLines(profile) {
+	var lines = [];
+	if (profile.immuneFreeze && profile.immuneStun) lines.push("Immune to freeze & stun");
+	else if (profile.immuneFreeze) lines.push("Immune to freeze");
+	else if (profile.immuneStun) lines.push("Immune to stun");
+	if (profile.shield) lines.push("Shielded");
+	if (profile.damageMult !== 1) lines.push("Takes x" + profile.damageMult + " damage");
+	if (profile.turretMult) {
+		for (var type in profile.turretMult) {
+			var m = profile.turretMult[type];
+			lines.push(m === 0 ? turretName(type) + ": immune" : turretName(type) + " x" + m);
+		}
+	}
+	return lines;
+}
+
+// Special enemy profiles that can show up on the previewed wave (every map's in Endless)
+function previewSpecialProfiles(boss) {
+	var profiles = [];
+	if (isEndlessMode()) {
+		for (var id in SPECIAL_ENEMIES) {
+			profiles.push(boss ? getBossProfile(parseInt(id, 10)) : SPECIAL_ENEMIES[id]);
+		}
+	} else {
+		profiles.push(boss ? getBossProfile(currentLevel) : getSpecialEnemy(currentLevel));
+	}
+	return profiles;
+}
+
+// One preview entry for an enemy kind. profiles = special profiles it can be (null = regular)
+function previewEntry(wave, name, chance, baseHp, baseSpeed, profiles, extraTraits) {
+	var hpMults = [1], speeds = [baseSpeed], traits = extraTraits.slice();
+	if (profiles) {
+		hpMults = profiles.map(function(p) { return p.hpMult; });
+		speeds = profiles.map(function(p) { return p.speed; });
+		// traits only make sense when a single profile is possible
+		if (profiles.length === 1) traits = traits.concat(enemyTraitLines(profiles[0]));
+	}
+	traits = traits.filter(function(t, i) { return traits.indexOf(t) === i; }); // no duplicates
+	var speedMult = atWave(wave, enemySpeedMult);
+	var hpMin = baseHp * Math.min.apply(null, hpMults), hpMax = baseHp * Math.max.apply(null, hpMults);
+	var spMin = Math.min.apply(null, speeds) * speedMult, spMax = Math.max.apply(null, speeds) * speedMult;
+	return {
+		name: name,
+		chance: chance,
+		hp: formatRange(hpMin, hpMax, formatDamage),
+		speed: formatRange(spMin, spMax, function(v) { return v.toFixed(1); }),
+		traits: traits
+	};
+}
+
+function buildWavePreview(wave) {
+	var d = getDifficulty();
+	var isBoss = wave % 10 === 0;
+	var entries = [];
+	var count;
+
+	if (isBoss) {
+		count = "1 boss";
+		var special = wave % ENDLESS_BOSS_WAVES === 0;
+		var hp = atWave(wave, bossHp);
+		var profiles = special ? previewSpecialProfiles(true) : null;
+		var name = !special ? "Destroyer"
+			: profiles.length === 1 ? profiles[0].name : "Random special boss";
+		var entry = previewEntry(wave, name, null, hp, 1.0, profiles, ["Immune to stun"]);
+		// escaping costs BOSS_LIVES_COST x the enemy's own cost
+		var costs = (profiles || [{ livesCost: 1 }]).map(function(p) { return p.livesCost * BOSS_LIVES_COST; });
+		entry.traits.push("Costs " + formatRange(Math.min.apply(null, costs), Math.max.apply(null, costs), String) + " lives if it escapes");
+		entries.push(entry);
+	} else {
+		count = formatRange(d.enemiesMin, d.enemiesMax, String);
+		var minionHp = atWave(wave, minionhp);
+		var jetChance = wave >= 11 ? 0.5 : 0;                        // see the wave start in startwave()
+		var specialChance = wave >= 20 ? (1 - jetChance) * 0.3 : 0;
+		var tankChance = 1 - jetChance - specialChance;
+		entries.push(previewEntry(wave, "Tank", tankChance, minionHp, 1.0, null, []));
+		if (jetChance > 0) {
+			entries.push(previewEntry(wave, "Jet", jetChance, minionHp, PLANE_SPEED, null, ["Immune to stun"]));
+		}
+		if (specialChance > 0) {
+			var specials = previewSpecialProfiles(false);
+			var spName = specials.length === 1 ? specials[0].name : "Random special";
+			var spEntry = previewEntry(wave, spName, specialChance, minionHp, 1.0, specials, []);
+			var spCosts = specials.map(function(p) { return p.livesCost; });
+			var maxCost = Math.max.apply(null, spCosts);
+			if (maxCost > 1) {
+				spEntry.traits.push("Costs " + formatRange(Math.min.apply(null, spCosts), maxCost, String) + " lives if it escapes");
+			}
+			entries.push(spEntry);
+		}
+	}
+	return { wave: wave, isBoss: isBoss, count: count, entries: entries };
+}
+
+function renderWavePreview() {
+	var wave = getPreviewWave();
+	wavePreviewShownWave = wave;
+	var body = document.getElementById("wavePreviewBody");
+
+	// regular maps end after wave 30
+	if (!isEndlessMode() && wave > 30) {
+		body.innerHTML = '<div class="dmg-empty">No more waves. Clear wave 30 to finish the map.</div>';
+		return;
+	}
+
+	var preview = buildWavePreview(wave);
+	var html =
+		'<div class="info-item"><span>Wave ' + preview.wave +
+			(preview.isBoss ? ' <b class="wave-boss-tag">BOSS</b>' : '') + '</span><span>' +
+			preview.count + (preview.isBoss ? '' : ' enemies') + '</span></div>';
+	preview.entries.forEach(function(e) {
+		// a single short trait (e.g. a Jet's stun immunity) shares the stats line to save height
+		var inlineTrait = e.traits.length === 1 && e.traits[0].length <= 16;
+		html += '<div class="wave-enemy">' +
+			'<div class="wave-enemy-head"><span class="wave-enemy-name">' + e.name + '</span>' +
+				(e.chance !== null ? '<span class="wave-enemy-chance">' + Math.round(e.chance * 100) + '%</span>' : '') +
+			'</div>' +
+			'<div class="wave-enemy-stats">HP ' + e.hp + ' &middot; Speed ' + e.speed +
+				(inlineTrait ? ' &middot; ' + e.traits[0] : '') + '</div>' +
+			(e.traits.length && !inlineTrait ? '<div class="wave-enemy-traits">' + e.traits.join(' &middot; ') + '</div>' : '') +
+			'</div>';
+	});
+	body.innerHTML = html;
+}
+////////////////////// END WAVE PREVIEW PANEL
+
 ////////////////////// TURRET FUNCTIONS that requires global values (others declared on object/turret.js)
 function turretClick(turret) {
 	function tclick(evt) {
@@ -299,35 +479,86 @@ function turretClick(turret) {
 			y = (evt.clientY + offsetY) / scale;
 		}
 
-		// create a new shaped turret at the mouse coords	
-		var turretD = document.createElement("div");
-		var turretType = turret.getAttribute("type");
-		turretD.setAttribute("id", turretType + ":" + turretCounter++);
-		turretD.setAttribute("class", "turretdrag");
-		turretD.style.left = x + "px";
-		turretD.style.top = y + "px";
-		//turretD.style.backgroundColor = turretColor(turretType);
-		turretD.style.backgroundImage = turretImage(turretType);
-		turretD.setAttribute("draggable", "true");
-		listenEvent(turretD, "dragstart", turretDrag(turretD));
-		document.body.appendChild(turretD);
-
-		// mostra range indicator durante o drag
-		isDraggingNewTurret = true;
-		showRangeIndicator(x, y, turretRange(turretType), turretColor(turretType));
-
-		// ao soltar (com ou sem drop válido), limpa o indicator
-		listenEvent(turretD, "dragend", function() {
-			isDraggingNewTurret = false;
-			draggedTurretEl = null;
-			hideRangeIndicator();
-		});
-
-		// reduce our available cash by what we just spent
-		currentCash -= turretValue(turretType);
-		updateStatus(); // the game loop doesn't refresh the HUD while paused
+		spawnPurchasedTurret(turret.getAttribute("type"), x, y);
 	}
 	return tclick;
+}
+
+// Small tag showing the keyboard shortcut of a HUD button / shop card
+function addHotkeyBadge(el, key) {
+	var badge = document.createElement("span");
+	badge.className = "hotkey-badge";
+	badge.textContent = key;
+	el.appendChild(badge);
+}
+
+// Changes a HUD button's text without dropping its hotkey badge
+function setButtonLabel(btn, html) {
+	btn.querySelector(".btn-label").innerHTML = html;
+}
+
+// Buys a turret: creates the draggable turret at (x, y) (game coords) and charges its cost
+function spawnPurchasedTurret(turretType, x, y) {
+	// create a new shaped turret at the given coords
+	var turretD = document.createElement("div");
+	turretD.setAttribute("id", turretType + ":" + turretCounter++);
+	turretD.setAttribute("class", "turretdrag");
+	turretD.style.left = x + "px";
+	turretD.style.top = y + "px";
+	//turretD.style.backgroundColor = turretColor(turretType);
+	turretD.style.backgroundImage = turretImage(turretType);
+	turretD.setAttribute("draggable", "true");
+	listenEvent(turretD, "dragstart", turretDrag(turretD));
+	document.body.appendChild(turretD);
+
+	// mostra range indicator durante o drag
+	isDraggingNewTurret = true;
+	showRangeIndicator(x, y, turretRange(turretType), turretColor(turretType));
+
+	// ao soltar (com ou sem drop válido), limpa o indicator
+	listenEvent(turretD, "dragend", function() {
+		isDraggingNewTurret = false;
+		draggedTurretEl = null;
+		hideRangeIndicator();
+	});
+
+	// reduce our available cash by what we just spent
+	currentCash -= turretValue(turretType);
+	updateStatus(); // the game loop doesn't refresh the HUD while paused
+}
+
+// Hotkey purchase: the Nth shop card (0-based, same order as the shop). The turret appears
+// under the mouse cursor, like clicking the card, ready to be dragged onto the map.
+// A turret bought earlier but not placed yet is refunded and swapped for the new one.
+function buyTurretByHotkey(index, mouseX, mouseY) {
+	if (!isRunning || draggedTurretEl) return;
+	var cards = document.querySelectorAll("#gameHud .turret");
+	var card = cards[index];
+	if (!card) return;
+	var turretType = card.getAttribute("type");
+
+	var pending = document.querySelector('.turretdrag[draggable="true"]');
+	var refund = pending ? turretValue(pending.id.substring(0, pending.id.indexOf(":"))) : 0;
+	if (currentCash + refund < turretValue(turretType)) return;
+	if (pending) {
+		currentCash += refund;
+		document.body.removeChild(pending);
+		isDraggingNewTurret = false;
+		hideRangeIndicator();
+	}
+
+	var scale = getMobileScale();
+	var x, y;
+	if (mouseX === null || mouseY === null) {
+		// no mouse movement seen yet: fall back to the shop card
+		var r = card.getBoundingClientRect();
+		x = (r.left + r.width / 2 + window.pageXOffset) / scale;
+		y = (r.top + r.height / 2 + window.pageYOffset) / scale;
+	} else {
+		x = mouseX / scale;
+		y = mouseY / scale;
+	}
+	spawnPurchasedTurret(turretType, x, y);
 }
 
 function placeTurretAtMapzone(mapzone, x, y, turretEl) {
@@ -518,6 +749,8 @@ function drawMap() {
 		turret.style.borderColor = turretColor(turret.getAttribute("type"));
 		turret.innerHTML = '<div class="turret-icon" style="background-image:' + turretImage(turretTypes[k]) + ';"></div><span class="turret-cost">$' + turretValue(turretTypes[k]) + '</span>';
 
+		if (k < HOTKEY_TURRET_COUNT) addHotkeyBadge(turret, String(k + 1));
+
 		// turrets are draggable (desktop: click; mobile: touch)
 		listenEvent(turret, "click", turretClick(turret));
 		initTouchDragForCard(turret);
@@ -541,31 +774,56 @@ function drawMap() {
 	var startbutton = document.createElement("div");
 	startbutton.setAttribute("id", "startbutton");
 	startbutton.setAttribute("class", "startbutton");
-	startbutton.innerHTML = "&#9654; START";
-	listenEvent(startbutton, "click", startwave);
+	startbutton.innerHTML = '<span class="btn-label">&#9654; START</span>';
+	addHotkeyBadge(startbutton, "Space");
+	listenEvent(startbutton, "click", startOrPauseWave);
 	hud.appendChild(startbutton);
+
+	// game speed button (1x / 2x), only visible once the wave has started
+	var speedbutton = document.createElement("div");
+	speedbutton.setAttribute("id", "speedbutton");
+	speedbutton.setAttribute("class", "speedbutton");
+	speedbutton.style.display = "none";
+	speedbutton.innerHTML = '<span class="btn-label"></span>';
+	addHotkeyBadge(speedbutton, "Q");
+	listenEvent(speedbutton, "click", toggleGameSpeed);
+	hud.appendChild(speedbutton);
+	updateSpeedButton();
 
 	// reset button
 	var resetbutton = document.createElement("div");
 	resetbutton.setAttribute("id", "resetbutton");
 	resetbutton.setAttribute("class", "resetbutton");
-	resetbutton.innerHTML = "&#8635; RESET";
-	listenEvent(resetbutton, "click", resetwave);
+	resetbutton.innerHTML = '<span class="btn-label">&#8635; RESET</span>';
+	addHotkeyBadge(resetbutton, "L");
+	// asks for confirmation first (same dialog as the L hotkey)
+	listenEvent(resetbutton, "click", function () { Hotkeys.showResetDialog(); });
 	hud.appendChild(resetbutton);
 
 	// damage stats button
 	var statsbutton = document.createElement("div");
 	statsbutton.setAttribute("id", "statsbutton");
 	statsbutton.setAttribute("class", "statsbutton");
-	statsbutton.innerHTML = "&#9881; DMG STATS";
+	statsbutton.innerHTML = '<span class="btn-label">&#9881; DMG STATS</span>';
+	addHotkeyBadge(statsbutton, "W");
 	listenEvent(statsbutton, "click", showDamageStatsPanel);
 	hud.appendChild(statsbutton);
+
+	// wave preview button
+	var wavebutton = document.createElement("div");
+	wavebutton.setAttribute("id", "wavebutton");
+	wavebutton.setAttribute("class", "wavebutton");
+	wavebutton.innerHTML = '<span class="btn-label">&#9873; WAVE PREVIEW</span>';
+	addHotkeyBadge(wavebutton, "G");
+	listenEvent(wavebutton, "click", showWavePreviewPanel);
+	hud.appendChild(wavebutton);
 
 	// config (settings) button
 	var configbutton = document.createElement("div");
 	configbutton.setAttribute("id", "configbutton");
 	configbutton.setAttribute("class", "configbutton");
-	configbutton.innerHTML = "&#9881;&#65039; CONFIG";
+	configbutton.innerHTML = '<span class="btn-label">&#9881;&#65039; CONFIG</span>';
+	addHotkeyBadge(configbutton, "Esc");
 	listenEvent(configbutton, "click", openSettings);
 	hud.appendChild(configbutton);
 
@@ -624,9 +882,13 @@ function startwave(evt) {
 
 	// make the pause button visible
 	var sb = document.getElementById("startbutton");
-	sb.innerHTML = "&#9646;&#9646; PAUSE";
-	listenEvent(sb, "click", pausewave);
-	// reset globals	
+	setButtonLabel(sb, "&#9646;&#9646; PAUSE");
+	// START shrinks to make room for the speed button beside it
+	sb.classList.add("startbutton-compact");
+	gameSpeed = 1;
+	updateSpeedButton();
+	document.getElementById("speedbutton").style.display = "flex";
+	// reset globals
 	currentWave = 0;
 	currentLives = 15;
 	currentCash = 100;
@@ -717,7 +979,7 @@ function startwave(evt) {
 		minions[i]._progress = 0;
 	}
 
-	interval_id = setInterval(function () {
+	var gameTick = function () {
 		if (!isPaused && !branchTurret) {
 			blizzardPendingDamage = {};
 			processPendingMissiles();
@@ -878,6 +1140,7 @@ function startwave(evt) {
 			}
 			updateEnemyInfoDialog();
 			updateDamageStatsPanel(false);
+			updateWavePreviewPanel();
 
 			// is the wave over?
 			if (wave_over) {
@@ -976,6 +1239,13 @@ function startwave(evt) {
 					}
 				}
 			}
+		}
+	};
+
+	// the whole simulation is tick based, so game speed = ticks run per interval
+	interval_id = setInterval(function () {
+		for (var s = 0; s < gameSpeed && isRunning; s++) {
+			gameTick();
 		}
 	}, 10);
 }
@@ -1148,7 +1418,31 @@ function sleep(ms) {
 }
 
 function pausewave(evt) {
+	if (!isRunning) return;
 	isPaused = !isPaused;
+}
+
+// The same button starts the wave and, once running, pauses/resumes it
+function startOrPauseWave(evt) {
+	if (isRunning) {
+		pausewave(evt);
+	} else {
+		startwave(evt);
+	}
+}
+
+function toggleGameSpeed() {
+	if (!isRunning) return;
+	var idx = GAME_SPEEDS.indexOf(gameSpeed);
+	gameSpeed = GAME_SPEEDS[(idx + 1) % GAME_SPEEDS.length];
+	updateSpeedButton();
+}
+
+function updateSpeedButton() {
+	var btn = document.getElementById("speedbutton");
+	if (!btn) return;
+	setButtonLabel(btn, gameSpeed + "x");
+	btn.classList.toggle("speedbutton-active", gameSpeed > 1);
 }
 
 function resetwave(evt) {
@@ -1157,8 +1451,14 @@ function resetwave(evt) {
 
 	// make the start button visible
 	var sb = document.getElementById("startbutton");
-	sb.innerHTML = "&#9654; START";
-	listenEvent(sb, "click", startwave);
+	setButtonLabel(sb, "&#9654; START");
+	sb.classList.remove("startbutton-compact");
+	isPaused = false;
+
+	// hide the speed button and go back to normal speed
+	gameSpeed = 1;
+	updateSpeedButton();
+	document.getElementById("speedbutton").style.display = "none";
 
 	// stop the timers
 	clearInterval(interval_id);
@@ -1180,6 +1480,9 @@ function resetwave(evt) {
 	for (var i = 0; i < shieldBars.length; i++) {
 		document.body.removeChild(shieldBars[i]);
 	}
+
+	// an open Wave Preview goes back to wave 1
+	updateWavePreviewPanel();
 }
 
 function updateStatus() {
