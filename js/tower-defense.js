@@ -149,6 +149,7 @@ function showShopTurretInfo(type) {
 	shopInfoOpenType = type;
 	document.getElementById("shopInfoName").innerText = turretName(type);
 	document.getElementById("shopInfoDesc").innerText = turretDescription(type);
+	document.getElementById("shopInfoDamageRow").style.display = TURRET_DEFS[type].support ? "none" : "flex";
 	document.getElementById("shopInfoDamage").innerText = turretDamage(type);
 	document.getElementById("shopInfoRange").innerText = (turretRange(type) / TILE_W) + " tiles";
 	document.getElementById("shopInfoCooldown").innerText = (getTurretShotCooldown(type, 1) / 100).toFixed(2) + " s";
@@ -229,6 +230,7 @@ function updateDamageStatsPanel(force) {
 	var byType = {};
 	for (var i = 0; i < turretPos.length; i++) {
 		var type = turretPos[i].type;
+		if (TURRET_DEFS[type].support) continue; // support towers deal no damage
 		byType[type] = (byType[type] || 0) + turretPos[i].totalDamage;
 	}
 
@@ -389,11 +391,21 @@ function buildWavePreview(wave) {
 		count = formatRange(d.enemiesMin, d.enemiesMax, String);
 		var minionHp = atWave(wave, minionhp);
 		var jetChance = wave >= 11 ? 0.5 : 0;                        // see the wave start in startwave()
-		var specialChance = wave >= 20 ? (1 - jetChance) * 0.3 : 0;
-		var tankChance = 1 - jetChance - specialChance;
+		var medicChance = wave >= MEDIC_MIN_WAVE ? (1 - jetChance) * MEDIC_SPAWN_CHANCE : 0;
+		var stealthChance = wave >= STEALTH_MIN_WAVE ? (1 - jetChance) * STEALTH_SPAWN_CHANCE : 0;
+		var specialChance = wave >= 20 ? (1 - jetChance - medicChance - stealthChance) * 0.3 : 0;
+		var tankChance = 1 - jetChance - medicChance - stealthChance - specialChance;
 		entries.push(previewEntry(wave, "Tank", tankChance, minionHp, 1.0, null, []));
 		if (jetChance > 0) {
 			entries.push(previewEntry(wave, "Jet", jetChance, minionHp, PLANE_SPEED, null, ["Immune to stun"]));
+		}
+		if (medicChance > 0) {
+			entries.push(previewEntry(wave, MEDIC_ENEMY.name, medicChance, minionHp, 1.0, [MEDIC_ENEMY],
+				["Heals nearby enemies 10% HP and removes their debuffs"]));
+		}
+		if (stealthChance > 0) {
+			entries.push(previewEntry(wave, STEALTH_ENEMY.name, stealthChance, minionHp, 1.0, [STEALTH_ENEMY],
+				["Camouflaged: only a Pulse Scanner can reveal it"]));
 		}
 		if (specialChance > 0) {
 			var specials = previewSpecialProfiles(false);
@@ -509,6 +521,7 @@ function spawnPurchasedTurret(turretType, x, y) {
 	turretD.style.backgroundImage = turretImage(turretType);
 	turretD.setAttribute("draggable", "true");
 	listenEvent(turretD, "dragstart", turretDrag(turretD));
+	addTurretOverlay(turretD, turretType);
 	document.body.appendChild(turretD);
 
 	// mostra range indicator durante o drag
@@ -616,6 +629,8 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 		document.body.appendChild(overheatBar);
 		turretObj.overheatBar = overheatBar;
 	}
+	// the Pulse Scanner antenna keeps spinning from the moment it is placed
+	if (turretType === "pulseScanner") turretEl.classList.add("turret-spinning");
 	turretPos[turretPos.length] = turretObj;
 	placedTurrets.push(turretObj);
 	listenEvent(turretEl, "click", showTurretInfo(turretPos[turretPos.length - 1]));
@@ -623,7 +638,27 @@ function placeTurretAtMapzone(mapzone, x, y, turretEl) {
 	listenEvent(turretEl, "dragstart", nodrag);
 	isDraggingNewTurret = false;
 	hideRangeIndicator();
+	refreshPulseAuras();
+	syncOpenTurretPanel();
 	return true;
+}
+
+// Redraws the open turret panel and its range circle (a Pulse Scanner placed, upgraded or sold can change another turret's stats)
+function syncOpenTurretPanel() {
+	if (document.getElementById("registrationForm").style.display === "none") return;
+	var turretId = document.getElementById("upgTurretId").value;
+	for (var i = 0; i < turretPos.length; i++) {
+		if (turretPos[i].htmlElement.id === turretId) {
+			updateTurretInfo(turretPos[i]);
+			showRangeIndicator(
+				parseInt(turretPos[i].x) + TURRET_CENTER,
+				parseInt(turretPos[i].y) + TURRET_CENTER,
+				getTurretRange(turretPos[i]),
+				turretColor(turretPos[i].type)
+			);
+			return;
+		}
+	}
 }
 
 function mapDrop(mapzone, x, y) {
@@ -748,8 +783,9 @@ function drawMap() {
 		turret.style.left = TURRET_OFFSET + (TURRET_D + TURRET_GAP) * k + "px";
 		turret.style.borderColor = turretColor(turret.getAttribute("type"));
 		turret.innerHTML = '<div class="turret-icon" style="background-image:' + turretImage(turretTypes[k]) + ';"></div><span class="turret-cost">$' + turretValue(turretTypes[k]) + '</span>';
+		addTurretOverlay(turret.querySelector(".turret-icon"), turretTypes[k]);
 
-		if (k < HOTKEY_TURRET_COUNT) addHotkeyBadge(turret, String(k + 1));
+		if (k < HOTKEY_TURRET_COUNT) addHotkeyBadge(turret, String((k + 1) % 10));
 
 		// turrets are draggable (desktop: click; mobile: touch)
 		listenEvent(turret, "click", turretClick(turret));
@@ -980,10 +1016,12 @@ function startwave(evt) {
 	}
 
 	var gameTick = function () {
+		syncPauseState();
 		if (!isPaused && !branchTurret) {
 			blizzardPendingDamage = {};
 			processPendingMissiles();
 			updateMissileTurretPlaneFlags(minions, movex, movey);
+			updatePulseScanners(minions); // before the targets are picked: revealed enemies can be targeted this tick
 			updateTurretTargets(minions);
 			//timeLapsesSinceLastShot++;
 			for (var i = 0; i < minion_c; i++) {
@@ -1061,6 +1099,11 @@ function startwave(evt) {
 				}
 				// distance walked along the path, used by the first/last targeting modes
 				minions[i]._progress += speed;
+				// the Stealth Tank announces itself with a sound when it leaves the gate
+				if (isStealthEnemy(minions[i]) && !minions[i]._spawnSoundPlayed) {
+					minions[i]._spawnSoundPlayed = true;
+					playStealthSpawnSound();
+				}
 				minions[i].style.display = "block";
 				minions[i].style.top = movey[i] + "px";
 				minions[i].style.left = movex[i] + "px";
@@ -1114,6 +1157,29 @@ function startwave(evt) {
 				} else {
 					tickDownMinionDebuffs(minions[i], hpBarMinions[i]);
 					tickShield(minions[i]);
+				tickStealth(minions[i]);
+				}
+			}
+			// Medic Trucks: heal and cleanse nearby enemies every MEDIC_PULSE_TICKS
+			for (var mi = 0; mi < minion_c; mi++) {
+				var medic = minions[mi];
+				if (!medic._enemy || !medic._enemy.medic || medic.style.display === "none") continue;
+				if (--medic._medicTimer > 0) continue;
+				medic._medicTimer = MEDIC_PULSE_TICKS;
+				var mx = parseFloat(medic.style.left) || 0, my = parseFloat(medic.style.top) || 0;
+				var mRange = MEDIC_RANGE_TILES * TILE_W;
+				createProjectileImpact(medic, "medic-pulse", 600, mRange * 2);
+				try {
+					applyEffectsVolume(new Audio(MEDIC_HEAL_SOUND)).play().catch(function () {});
+				} catch (e) {}
+				for (var t = 0; t < minion_c; t++) {
+					if (minions[t].style.display === "none" || minion_hp[t] <= 0) continue;
+					if (euclidDistance(mx, parseFloat(minions[t].style.left) || 0, my, parseFloat(minions[t].style.top) || 0) > mRange) continue;
+					var tMax = parseFloat(hpBarMinions[t].getAttribute("max")) || 0;
+					minion_hp[t] = Math.min(tMax, minion_hp[t] + tMax * MEDIC_HEAL_PCT);
+					minions[t]._hp = minion_hp[t];
+					hpBarMinions[t].setAttribute("value", minion_hp[t]);
+					removeDebuffs(minions[t], hpBarMinions[t]);
 				}
 			}
 			for (var s = 0; s < minions.length; s++) {
@@ -1169,6 +1235,10 @@ function startwave(evt) {
 				if (!isBossWave) {
 					currentWaveEnemyCount = randomWaveEnemyCount();
 				}
+				// the wave 10 boss is over: warn about the new enemies of wave 11 (Stealth Tank needs a Pulse Scanner)
+				if (currentWave === STEALTH_MIN_WAVE) {
+					showNewEnemiesDialog();
+				}
 				// Map finished after wave 30 — back to map selection (Endless never finishes)
 				if (currentWave > 30 && !isEndlessMode()) {
 					finishMap();
@@ -1218,8 +1288,25 @@ function startwave(evt) {
 						minions[i]._isBoss = false;
 						removeDebuffs(minions[i], hpBarMinions[i]);
 						var usePlane = currentWave >= 11 && currentWave != 20 && Math.random() < 0.5;
-						var useSpMin = !usePlane && currentWave >= 20 && Math.random() < 0.3;
-						if (usePlane) {
+						// one roll shared by the wave 11+ support enemies: Medic Truck, then Stealth Tank (each a share of the non-jets)
+						var supportRoll = Math.random();
+						var useMedic = !usePlane && currentWave >= MEDIC_MIN_WAVE && supportRoll < MEDIC_SPAWN_CHANCE;
+						var useStealth = !usePlane && !useMedic && currentWave >= STEALTH_MIN_WAVE &&
+							supportRoll < MEDIC_SPAWN_CHANCE + STEALTH_SPAWN_CHANCE;
+						var useSpMin = !usePlane && !useMedic && !useStealth && currentWave >= 20 && Math.random() < 0.3;
+						minions[i]._medicTimer = Math.floor(Math.random() * MEDIC_PULSE_TICKS);
+						if (useMedic) {
+							minions[i]._isPlane = false;
+							minion_hp[i] = minionhp() * MEDIC_ENEMY.hpMult;
+							setEnemyProfile(minions[i], MEDIC_ENEMY, minion_hp[i]);
+							minions[i].style.backgroundImage = "url('" + MEDIC_ENEMY.sprite + "')";
+						} else if (useStealth) {
+							minions[i]._isPlane = false;
+							minion_hp[i] = minionhp() * STEALTH_ENEMY.hpMult;
+							setEnemyProfile(minions[i], STEALTH_ENEMY, minion_hp[i]);
+							// both sprites are drawn (and crossfaded) by the .enemy-stealth CSS
+							minions[i].style.backgroundImage = "none";
+						} else if (usePlane) {
 							minions[i]._isPlane = true;
 							setEnemyProfile(minions[i], null, minion_hp[i]);
 							minions[i].style.backgroundImage = "url('img/pla-lv2/pla-up.png')";
@@ -1417,6 +1504,15 @@ function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Mirrors the pause state on <body> so CSS can freeze animations (the Pulse Scanner antenna).
+// isPaused has many writers (pause button, dialogs, tutorial), so it is synced from the game loop.
+function syncPauseState() {
+	var paused = isRunning && (isPaused || !!branchTurret);
+	if (document.body.classList.contains("game-paused") !== paused) {
+		document.body.classList.toggle("game-paused", paused);
+	}
+}
+
 function pausewave(evt) {
 	if (!isRunning) return;
 	isPaused = !isPaused;
@@ -1454,6 +1550,7 @@ function resetwave(evt) {
 	setButtonLabel(sb, "&#9654; START");
 	sb.classList.remove("startbutton-compact");
 	isPaused = false;
+	syncPauseState();
 
 	// hide the speed button and go back to normal speed
 	gameSpeed = 1;
@@ -1468,6 +1565,7 @@ function resetwave(evt) {
 	closeBranchChoice();
 	hideRangeIndicator();
 	hideEnemyInfoDialog();
+	closeNewEnemiesDialog();
 
 	// remove all the minions
 	var minions = document.querySelectorAll(".minion");
@@ -1551,6 +1649,38 @@ function processPendingMissiles() {
 		}
 		turretPos[i].pendingMissiles = remaining;
 	}
+}
+
+// NEW ENEMIES NOTICE
+// Shown once the wave 10 boss is over: freezes the game until the player closes it
+var newEnemiesPausedGame = false;
+
+function showNewEnemiesDialog() {
+	document.getElementById("newEnemiesScannerCost").textContent = "$" + turretValue("pulseScanner");
+	if (!isPaused) {
+		isPaused = true;
+		newEnemiesPausedGame = true;
+	}
+	document.getElementById("newEnemiesScreen").style.display = "flex";
+}
+
+function isNewEnemiesDialogOpen() {
+	return document.getElementById("newEnemiesScreen").style.display !== "none";
+}
+
+function closeNewEnemiesDialog() {
+	document.getElementById("newEnemiesScreen").style.display = "none";
+	if (newEnemiesPausedGame) {
+		isPaused = false;
+		newEnemiesPausedGame = false;
+	}
+}
+// END NEW ENEMIES NOTICE
+
+function playStealthSpawnSound() {
+	try {
+		applyEffectsVolume(new Audio(STEALTH_HIDE_SOUND)).play().catch(function () {});
+	} catch (e) {}
 }
 
 // Floating "Critical!" text above a minion; throttled per minion so fast turrets don't spam it
@@ -1658,7 +1788,7 @@ function updateMissileTurretPlaneFlags(minions, movex, movey) {
 		if (!isPlaneMinion(minions[j])) continue;
 		for (var i = 0; i < turretPos.length; i++) {
 			if (turretPos[i].type !== "missile" || turretPos[i].shotCd > 0) continue;
-			if (euclidDistance(movex[j], turretPos[i].x, movey[j], turretPos[i].y) <= turretPos[i].range) {
+			if (euclidDistance(movex[j], turretPos[i].x, movey[j], turretPos[i].y) <= getTurretRange(turretPos[i])) {
 				turretPos[i].planeInRange = true;
 			}
 		}
@@ -1671,12 +1801,13 @@ function getTurretCandidates(turret, minions) {
 	for (var m = 0; m < minions.length; m++) {
 		var el = minions[m];
 		if (el.style.display === "none") continue;
+		if (isMinionHidden(el)) continue; // camouflaged: only a Pulse Scanner can reveal it
 		if (getDamageMultiplier(el, turret.type) === 0) continue;
 		if (turret.type === "flamethrower" && isPlaneMinion(el)) continue;
 		if (turret.type === "missile" && turret.planeInRange && !isPlaneMinion(el)) continue;
 		var mx = parseFloat(el.style.left) || 0;
 		var my = parseFloat(el.style.top)  || 0;
-		if (euclidDistance(mx, turret.x, my, turret.y) > turret.range) continue;
+		if (euclidDistance(mx, turret.x, my, turret.y) > getTurretRange(turret)) continue;
 		candidates.push({ el: el, x: mx, y: my, progress: el._progress || 0, hp: el._hp || 0 });
 	}
 	return sortByTargetMode(candidates, turret.targetMode);
@@ -1712,23 +1843,52 @@ function setTurretTargetMode(mode) {
 	}
 }
 
+// Pulse Scanners: every pulse reveals the camouflaged enemies in range (no damage, so they have no target).
+// A scanner only pulses (and plays its sound) while a camouflaged enemy is in range: ordinary enemies don't trigger it.
+// A camouflaged enemy keeps triggering it while it is revealed, so the detection never lapses between pulses.
+function updatePulseScanners(minions) {
+	for (var i = 0; i < turretPos.length; i++) {
+		var scanner = turretPos[i];
+		if (scanner.type !== "pulseScanner" || scanner.shotCd > 0) continue;
+		var range = getTurretRange(scanner);
+		var detected = false;
+		for (var m = 0; m < minions.length; m++) {
+			var el = minions[m];
+			if (el.style.display === "none" || !isStealthEnemy(el)) continue;
+			if (euclidDistance(parseFloat(el.style.left) || 0, scanner.x, parseFloat(el.style.top) || 0, scanner.y) > range) continue;
+			detected = true;
+			revealMinion(el, PULSE_REVEAL_TICKS);
+		}
+		if (detected) {
+			createPulseBurst(scanner);
+			scanner.audioFile.currentTime = 0;
+			scanner.audioFile.play().catch(function () {});
+			scanner.shotCd = getTurretShotCooldown(scanner.type, scanner.level, scanner);
+		}
+	}
+}
+
 function anyTurretsInRange(minion, x, y) {
 	var damage = 0;
+	var hidden = isMinionHidden(minion);
 	for (var i = 0; i < turretPos.length; i++) {
 		var xt = turretPos[i].x;
 		var yt = turretPos[i].y;
 
+		// the Pulse Scanner deals no damage (see updatePulseScanners); camouflaged enemies can't be hit
+		if (turretPos[i].type === "pulseScanner" || hidden) continue;
+
 		// Blizzard dispara em área — trata separado para não re-disparar por minion
 		if (turretPos[i].type == "blizzard") {
-			var inRange = euclidDistance(x, xt, y, yt) <= turretPos[i].range;
+			var inRange = euclidDistance(x, xt, y, yt) <= getTurretRange(turretPos[i]);
 			if (inRange && turretPos[i].shotCd === 0) {
 				var aoeMinions = document.getElementsByClassName("minion");
 				var aoeDamage = 0;
 				for (var m = 0; m < aoeMinions.length; m++) {
-					if (aoeMinions[m].style.display === "none") continue;
+					if (aoeMinions[m].style.display === "none" || isMinionHidden(aoeMinions[m])) continue;
 					var mx = parseFloat(aoeMinions[m].style.left) || 0;
 					var my = parseFloat(aoeMinions[m].style.top)  || 0;
-					if (euclidDistance(mx, xt, my, yt) <= turretPos[i].range) {
+					if (euclidDistance(mx, xt, my, yt) <= getTurretRange(turretPos[i])) {
 						var wasFrozen = hasDebuff(FROZEN_STATUS_ATTRIBUTE, aoeMinions[m]);
 						freezeMinion(aoeMinions[m], 100 + turretPos[i].level);
 						var blizzBranch = getTurretBranch(turretPos[i]);
@@ -1778,12 +1938,12 @@ function anyTurretsInRange(minion, x, y) {
 		if (turretPos[i].type === "missile") {
 			if (!isPlaneMinion(minion) && turretPos[i].planeInRange) continue;
 			if (turretPos[i].ammo <= 0) continue;
-			if (euclidDistance(x, xt, y, yt) <= turretPos[i].range && turretPos[i].shotCd <= 0) {
+			if (euclidDistance(x, xt, y, yt) <= getTurretRange(turretPos[i]) && turretPos[i].shotCd <= 0) {
 				rotateToTarget(x, y, parseInt(turretPos[i].x), parseInt(turretPos[i].y), turretPos[i].htmlElement);
 				//turretPos[i].htmlElement.style.borderTop = "3px solid #FFD700";
 				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
 				// base damage on a normal hit, 2x on a critical (shown on impact)
-				var missileDmg = calculateCriticalHitDamage(MISSILE_CRIT_CHANCE, turretPos[i].damage);
+				var missileDmg = calculateCriticalHitDamage(MISSILE_CRIT_CHANCE + getCritBonus(turretPos[i]), turretPos[i].damage);
 				var missileCrit = lastHitCritical;
 				if (isPlaneMinion(minion)) missileDmg *= 5;
 				missileDmg *= getDamageMultiplier(minion, "missile");
@@ -1805,7 +1965,7 @@ function anyTurretsInRange(minion, x, y) {
 		}
 
 		if (turretPos[i].type === "archery") {
-			var inRangeArchery = euclidDistance(x, xt, y, yt) <= turretPos[i].range;
+			var inRangeArchery = euclidDistance(x, xt, y, yt) <= getTurretRange(turretPos[i]);
 			if (inRangeArchery && turretPos[i].shotCd <= 0) {
 				var maxTargets = getTurretTargetCount(turretPos[i]);
 				var candidates = getTurretCandidates(turretPos[i], document.getElementsByClassName("minion"));
@@ -1833,7 +1993,7 @@ function anyTurretsInRange(minion, x, y) {
 			continue;
 		}
 
-		if ((euclidDistance(x, xt, y, yt) <= turretPos[i].range) && (turretPos[i].shotCd <= 0 || inVolley)) {
+		if ((euclidDistance(x, xt, y, yt) <= getTurretRange(turretPos[i])) && (turretPos[i].shotCd <= 0 || inVolley)) {
 			if (inVolley) turretPos[i].volley.splice(turretPos[i].volley.indexOf(minion), 1);
 			rotateToTarget(x, y, parseInt(turretPos[i].x), parseInt(turretPos[i].y), turretPos[i].htmlElement);
 			if(turretPos[i].type == "machineGun"){
@@ -1920,13 +2080,28 @@ function anyTurretsInRange(minion, x, y) {
 function createFrostBurst(turretObj) {
 	var burst = document.createElement("div");
 	burst.className = "frost-burst";
-	var diameter = turretObj.range * 2;
+	var diameter = getTurretRange(turretObj) * 2;
 	var centerX = parseInt(turretObj.x) + TURRET_CENTER;
 	var centerY = parseInt(turretObj.y) + TURRET_CENTER;
 	burst.style.width  = diameter + "px";
 	burst.style.height = diameter + "px";
 	burst.style.left   = centerX + "px";
 	burst.style.top    = centerY + "px";
+	document.body.appendChild(burst);
+	setTimeout(function() {
+		if (burst.parentNode) document.body.removeChild(burst);
+	}, 680);
+}
+
+// Radar ring of a Pulse Scanner: as big as its range (same animation idea as the frost wave)
+function createPulseBurst(turretObj) {
+	var burst = document.createElement("div");
+	burst.className = "pulse-burst";
+	var diameter = getTurretRange(turretObj) * 2;
+	burst.style.width  = diameter + "px";
+	burst.style.height = diameter + "px";
+	burst.style.left   = (parseInt(turretObj.x) + TURRET_CENTER) + "px";
+	burst.style.top    = (parseInt(turretObj.y) + TURRET_CENTER) + "px";
 	document.body.appendChild(burst);
 	setTimeout(function() {
 		if (burst.parentNode) document.body.removeChild(burst);
@@ -2263,6 +2438,7 @@ function btnUpgradeTurretClick() {
 					//Level up before upgrade the turret.
 					turretPos[i].level++;
 					upgradeTurretData(turretPos[i]);
+					refreshPulseAuras(); // a scanner's aura (and range) grows with its level
 					//Money reduce
 					currentCash = currentCash - turretUpgradeCost;
 					updateStatus();
@@ -2272,7 +2448,7 @@ function btnUpgradeTurretClick() {
 					showRangeIndicator(
 						parseInt(turretPos[i].x) + TURRET_CENTER,
 						parseInt(turretPos[i].y) + TURRET_CENTER,
-						turretPos[i].range,
+						getTurretRange(turretPos[i]),
 						turretColor(turretPos[i].type)
 					);
 					if (turretNeedsBranchChoice(turretPos[i])) {
@@ -2300,6 +2476,12 @@ function openBranchChoice(turret) {
 		var branch = def.branches[branchId];
 		var preview = previewTurretBranch(turret, branchId);
 		var crit = branch.critChance ? branch.critChance + "%" : "None";
+		// support towers deal no damage: only their range and the branch's own stats matter
+		var attackStats = def.support ? "" :
+			'<span><b>Damage</b> ' + turret.damage + ' &rarr; ' + preview.damage + '</span>';
+		var targetStats = def.support ? "" :
+			'<span><b>Targets</b> ' + formatTargetCount(branch.targets) + '</span>' +
+			'<span><b>Crit chance</b> ' + crit + '</span>';
 		var btn = document.createElement("button");
 		btn.type = "button";
 		btn.className = "difficulty-btn branch-btn branch-" + branchId;
@@ -2307,11 +2489,10 @@ function openBranchChoice(turret) {
 			'<span class="difficulty-name">' + branch.name.toUpperCase() + '</span>' +
 			'<span class="difficulty-desc">' + branch.description + '</span>' +
 			'<span class="branch-stats">' +
-				'<span><b>Damage</b> ' + turret.damage + ' &rarr; ' + preview.damage + '</span>' +
+				attackStats +
 				'<span><b>Range</b> ' + Math.round(turret.range / MAP_SCALE) + ' &rarr; ' + Math.round(preview.range / MAP_SCALE) + '</span>' +
 				(branch.cooldownMult ? '<span><b>Cooldown</b> ' + (getTurretShotCooldown(turret.type, turret.level, turret) / 100).toFixed(2) + ' s &rarr; ' + (preview.cooldown / 100).toFixed(2) + ' s</span>' : '') +
-				'<span><b>Targets</b> ' + formatTargetCount(branch.targets) + '</span>' +
-				'<span><b>Crit chance</b> ' + crit + '</span>' +
+				targetStats +
 				(branch.extraStats || []).map(function(line) { return '<span>' + line + '</span>'; }).join('') +
 			'</span>';
 		btn.onclick = function() { confirmBranchChoice(branchId); };
@@ -2324,6 +2505,7 @@ function confirmBranchChoice(branchId) {
 	var turret = branchTurret;
 	if (!turret || !TURRET_DEFS[turret.type].branches[branchId]) return;
 	applyTurretBranch(turret, branchId);
+	refreshPulseAuras();
 	closeBranchChoice();
 	// refresh the info panel and range circle for the new stats
 	if (document.getElementById("upgTurretId").value === turret.htmlElement.id) {
@@ -2331,7 +2513,7 @@ function confirmBranchChoice(branchId) {
 		showRangeIndicator(
 			parseInt(turret.x) + TURRET_CENTER,
 			parseInt(turret.y) + TURRET_CENTER,
-			turret.range,
+			getTurretRange(turret),
 			turretColor(turret.type)
 		);
 	}
@@ -2419,6 +2601,7 @@ function btnSellTurretClick(){
 			}
 			document.body.removeChild(turretPos[i].htmlElement);
 			turretPos.splice(i, 1);
+			refreshPulseAuras(); // towers it was boosting lose the bonus
 			//Increases money.
 			currentCash += turretSellPrice;
 			updateStatus();

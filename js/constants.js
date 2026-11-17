@@ -22,7 +22,7 @@ document.documentElement.style.setProperty("--hud-scale", HUD_SCALE);
 document.documentElement.style.setProperty("--map-width", MAP_W * TILE_W + "px");
 document.documentElement.style.setProperty("--map-height", MAP_H * TILE_H + "px");
 const MAX_TURRET_LEVEL = 8;
-const HOTKEY_TURRET_COUNT = 9; // keys 1..N buy the Nth shop turret
+const HOTKEY_TURRET_COUNT = 10; // keys 1..9 buy the 1st..9th shop turret, 0 the 10th
 const TURRET_OFFSET = 148;
 const TURRET_GAP = 5;
 const TURRET_D = 40;
@@ -67,6 +67,11 @@ const HAWKEYE_CRIT_CHANCE = 100;
 const HAWKEYE_RANGE_PENALTY = 0.2;
 // Archery - Advanced Crossbow branch: multiplier over the shot cooldown (below 1 = faster)
 const CROSSBOW_COOLDOWN_MULT = 0.7;
+// Pulse Scanner: detects camouflaged enemies (they stay revealed for PULSE_REVEAL_TICKS after a pulse, 100 ticks = 1 s).
+// Level 5 branches give nearby towers a bonus (%), indexed by scanner level; levels below 5 have no branch and no bonus.
+const PULSE_REVEAL_TICKS = 150;
+const PULSE_AMPLIFIER_RANGE_BONUS = { 5: 10, 6: 13, 7: 16, 8: 20 }; // range (%)
+const PULSE_OVERDRIVE_CRIT_BONUS = { 5: 5, 6: 7, 7: 9, 8: 12 };     // crit chance (percentage points)
 const SNIPER_CRIT_CHANCE = 10; // Machine Gun - Sniper branch
 const MIN_SPAWN_INTERVAL = 40;
 const MAX_SPAWN_INTERVAL = 160;

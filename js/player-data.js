@@ -58,6 +58,10 @@ var PlayerData = (function () {
                 "toxic", "stormCannon", "railCannon"
             ];
         }
+        // Migration: the Pulse Scanner is free for everyone (the Stealth Tank can only be beaten with it)
+        if (data.unlockedTowers.indexOf("pulseScanner") === -1) {
+            data.unlockedTowers.push("pulseScanner");
+        }
         if (!Array.isArray(data.unlockedDifficulties)) {
             data.unlockedDifficulties = [];
         }
@@ -84,7 +88,7 @@ var PlayerData = (function () {
             unlockedMaps:   [1],
             unlockedTowers: [
                 "machineGun", "laser", "flamethrower", "blizzard",
-                "toxic", "stormCannon", "railCannon"
+                "toxic", "stormCannon", "railCannon", "pulseScanner"
             ],
             unlockedDifficulties: [],
             tutorialDone:   false,

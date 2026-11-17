@@ -10,7 +10,7 @@ var Hotkeys = (function () {
 
 	// overlays that take over the screen: shortcuts are inactive while one is open
 	var BLOCKING_SCREENS = ["nicknameScreen", "mapSelectScreen", "difficultyScreen",
-		"progressionScreen", "branchScreen", "postGameScreen"];
+		"progressionScreen", "branchScreen", "postGameScreen", "newEnemiesScreen"];
 
 	function _isShown(id) {
 		var el = document.getElementById(id);
@@ -31,11 +31,12 @@ var Hotkeys = (function () {
 		return tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable;
 	}
 
-	// 0-based shop index for Digit1..Digit9 / Numpad1..Numpad9, or -1
+	// 0-based shop index for Digit1..Digit9 (1st..9th turret) and Digit0 (10th), also on the numpad, or -1
 	function _turretIndex(code) {
-		var m = /^(?:Digit|Numpad)([1-9])$/.exec(code);
+		var m = /^(?:Digit|Numpad)([0-9])$/.exec(code);
 		if (!m) return -1;
 		var n = parseInt(m[1], 10);
+		if (n === 0) n = 10;
 		return n <= HOTKEY_TURRET_COUNT ? n - 1 : -1;
 	}
 
@@ -92,6 +93,19 @@ var Hotkeys = (function () {
 				if (active && active.tagName === "BUTTON") return;
 				e.preventDefault();
 				confirmReset();
+			}
+			return;
+		}
+
+		// the new enemies notice owns the keyboard while it is open
+		if (isNewEnemiesDialogOpen()) {
+			if (e.code === "Escape" || ((e.code === "Enter" || e.code === "NumpadEnter") && !e.repeat)) {
+				var focused = document.activeElement;
+				if (e.code !== "Escape" && focused && focused.tagName === "BUTTON") return; // the button handles Enter itself
+				e.preventDefault();
+				closeNewEnemiesDialog();
+			} else if (e.code === "Space") {
+				e.preventDefault(); // don't resume the game behind the notice
 			}
 			return;
 		}

@@ -48,12 +48,7 @@ const TURRET_DEFS = {
 			style.borderTop = "1px solid #cdfb00";
 			style.borderRadius = "20px/20px";
 			var branch = getTurretBranch(turret);
-			if (branch && branch.critChance) {
-				// a critical hit adds the base damage once more (2x total)
-				calculateCriticalHitDamage(branch.critChance, turret.damage);
-				return lastHitCritical ? turret.damage : 0;
-			}
-			return 0;
+			return extraCritDamage(turret, (branch && branch.critChance) || 0);
 		}
 	},
 	laser: {
@@ -97,7 +92,7 @@ const TURRET_DEFS = {
 		onShoot: function(turret, minion, style) {
 			style.borderTop = "1px solid #ff0000";
 			style.borderRadius = "10px/10px";
-			return calculateCriticalHitDamage(LASER_CRIT_CHANCE, turret.damage);
+			return calculateCriticalHitDamage(LASER_CRIT_CHANCE + getCritBonus(turret), turret.damage);
 		}
 	},
 	flamethrower: {
@@ -143,7 +138,7 @@ const TURRET_DEFS = {
 			style.borderRadius = "10px/10px";
 			var branch = getTurretBranch(turret);
 			if (branch && branch.burn) burnMinion(minion, turret);
-			return 0;
+			return extraCritDamage(turret, 0);
 		}
 	},
 	blizzard: {
@@ -244,7 +239,7 @@ const TURRET_DEFS = {
 			var poisonDuration = 125 + (turret.level * 20);
 			toxicMinion(minion, poisonDuration, getToxicPoisonDamage(turret), turret);
 			if (branch && branch.spreadTiles) spreadToxic(minion, poisonDuration, branch.spreadTiles * TILE_W, turret);
-			return calculateCriticalHitDamage(20, turret.damage);
+			return calculateCriticalHitDamage(20 + getCritBonus(turret), turret.damage);
 		}
 	},
 	stormCannon: {
@@ -288,7 +283,7 @@ const TURRET_DEFS = {
 		onShoot: function(turret, minion, style) {
 			style.borderTop = "3px solid #0905eb";
 			style.borderRadius = "20px/20px";
-			return 0;
+			return extraCritDamage(turret, 0);
 		}
 	},
 	railCannon: {
@@ -340,7 +335,7 @@ const TURRET_DEFS = {
 			style.borderRadius = "20px/20px";
 			var branch = getTurretBranch(turret);
 			stunMinion(minion, (branch && branch.stunTicks) ? branch.stunTicks(turret.level) : 150 + (turret.level * 50));
-			return calculateCriticalHitDamage(30, turret.damage);
+			return calculateCriticalHitDamage(30 + getCritBonus(turret), turret.damage);
 		}
 	},
 	missile: {
@@ -435,8 +430,63 @@ const TURRET_DEFS = {
 		onShoot: function(turret, minion, style) {
 			return calculateCriticalHitDamage(70, turret.damage * 2);
 		}
+	},
+	pulseScanner: {
+		name: "Pulse Scanner",
+		description: "A rotating antenna that sends out radar pulses to reveal camouflaged enemies. It deals no damage.",
+		specials: ["Deals no damage", "Reveals camouflaged enemies in range", "Range: 1 tile less than the Blizzard Tower", "Level 5: boosts the towers near it"],
+		color: "#39d98a", // Radar Green
+		image: "url('img/tw/pulse.png')", // the base (24x24)
+		// drawn centered on the base; this is the only part that spins (18x22 inside the 24x24 base, see .turret-overlay)
+		overlay: { image: "url('img/tw/antenna.png')", width: 18, height: 22, baseSize: 24, spins: true },
+		sound: "sound/scanner.wav", // played on every pulse
+		value: 500,
+		rangeTiles: 4, // Blizzard Tower (5) - 1 tile
+		damage: 0,
+		support: true, // no damage: hides the damage/targets/crit stats and is left out of the damage stats
+		targeting: false,
+		// ticks between pulses: the same at every level; a pulse keeps enemies revealed for PULSE_REVEAL_TICKS (longer than the cooldown)
+		cooldown: function(level) { return 110; },
+		animationCooldown: function(level) { return 0; },
+		upgradeCostMult: function(level) { return 0.2; },
+		// rng 0.025 makes the range grow exactly like the Blizzard Tower's, so it stays 1 tile shorter at every level
+		upgrade: function(level) { return { dmg: 0, rng: 0.025 }; },
+		// rangeBonus / critBonus: bonus given to the towers near the scanner, indexed by scanner level (see getPulseAura)
+		branchLevel: 5,
+		branches: {
+			amplifier: {
+				name: "Pulse Amplifier",
+				summary: "Nearby towers get more range (10% to 20%)",
+				description: "Besides revealing enemies, the pulse amplifies the towers near it, increasing their range. The bonus grows with the scanner's level.",
+				chooseBonus: { dmg: 0, rng: 0 },
+				upgrade: function(level) { return { dmg: 0, rng: 0.025 }; },
+				rangeBonus: PULSE_AMPLIFIER_RANGE_BONUS,
+				extraStats: ["Nearby towers' range: " + formatPulseBonus(PULSE_AMPLIFIER_RANGE_BONUS) + " (levels 5-8)"],
+				critChance: 0,
+				targets: 1
+			},
+			overdrive: {
+				name: "Pulse Overdrive",
+				summary: "Nearby towers get more crit chance (5% to 12%)",
+				description: "Besides revealing enemies, the pulse overdrives the towers near it, increasing their critical hit chance. The bonus grows with the scanner's level.",
+				chooseBonus: { dmg: 0, rng: 0 },
+				upgrade: function(level) { return { dmg: 0, rng: 0.025 }; },
+				critBonus: PULSE_OVERDRIVE_CRIT_BONUS,
+				extraStats: ["Nearby towers' crit chance: " + formatPulseBonus(PULSE_OVERDRIVE_CRIT_BONUS) + " (levels 5-8)"],
+				critChance: 0,
+				targets: 1
+			}
+		},
+		onShoot: function(turret, minion, style) {
+			return 0;
+		}
 	}
 };
+
+// "+10%, +13%, +16%, +20%" for a { level: bonus } table (function declarations are hoisted, so TURRET_DEFS can use it)
+function formatPulseBonus(table) {
+	return Object.keys(table).map(function(level) { return "+" + table[level] + "%"; }).join(", ");
+}
 
 // Turret functions
 function getTurretTypes(){
@@ -606,6 +656,22 @@ function turretSoundEffect(type){
 	return new Audio(TURRET_DEFS[type].sound);
 }
 
+// Adds the turret's second sprite (if it has one) centered on the element that shows its base sprite.
+// The size is in percent of the base so it scales with the element (map turret, shop card, ghost, stats icon).
+function addTurretOverlay(el, type) {
+	var def = TURRET_DEFS[type].overlay;
+	if (!def) return null;
+	var o = document.createElement("div");
+	o.className = "turret-overlay" + (def.spins ? " turret-overlay-spin" : "");
+	o.style.backgroundImage = def.image;
+	o.style.width = (def.width / def.baseSize * 100) + "%";
+	o.style.height = (def.height / def.baseSize * 100) + "%";
+	o.style.left = ((def.baseSize - def.width) / 2 / def.baseSize * 100) + "%";
+	o.style.top = ((def.baseSize - def.height) / 2 / def.baseSize * 100) + "%";
+	el.appendChild(o);
+	return o;
+}
+
 function turretImage(type) {
 	return TURRET_DEFS[type].image;
 }
@@ -707,8 +773,75 @@ function getStormHeatPerShot(turret) {
 // Critical hit chance (%) of an arrow
 function getArcheryCritChance(turret) {
 	var branch = getTurretBranch(turret);
-	return (branch && branch.critChance !== undefined) ? branch.critChance : ARCHERY_CRIT_CHANCE;
+	return ((branch && branch.critChance !== undefined) ? branch.critChance : ARCHERY_CRIT_CHANCE) + getCritBonus(turret);
 }
+
+// PULSE SCANNER AURA
+// Bonus the scanner gives to the towers near it: { range: % of range, crit: crit chance points }.
+// Levels below the branch level have no branch, so no bonus.
+function getPulseAura(scanner) {
+	var branch = getTurretBranch(scanner);
+	return {
+		range: (branch && branch.rangeBonus && branch.rangeBonus[scanner.level]) || 0,
+		crit:  (branch && branch.critBonus  && branch.critBonus[scanner.level])  || 0
+	};
+}
+
+// Range in px the turret really has: its own range plus the Pulse Amplifier bonus
+function getTurretRange(turret) {
+	return turret.range * (1 + (turret.rangeBonus || 0) / 100);
+}
+
+// Crit chance bonus (percentage points) from a nearby Pulse Overdrive
+function getCritBonus(turret) {
+	return turret.critBonus || 0;
+}
+
+// Crit roll for turrets whose shot is not computed from its own crit roll: baseChance (%) plus the
+// Pulse Overdrive bonus. A critical adds the base damage once more (2x total); returns that extra damage.
+function extraCritDamage(turret, baseChance) {
+	var chance = baseChance + getCritBonus(turret);
+	if (chance <= 0) return 0;
+	calculateCriticalHitDamage(chance, turret.damage);
+	return lastHitCritical ? turret.damage : 0;
+}
+
+// Recomputes the aura bonuses of every placed turret: each one keeps the strongest bonus of
+// the scanners that cover it (they don't stack). Scanners are support towers and are never boosted.
+// Call whenever a turret is placed, sold, upgraded or picks a branch.
+function refreshPulseAuras() {
+	var scanners = [];
+	for (var i = 0; i < turretPos.length; i++) {
+		turretPos[i].rangeBonus = 0;
+		turretPos[i].critBonus = 0;
+		if (turretPos[i].type === "pulseScanner") scanners.push(turretPos[i]);
+	}
+	for (var s = 0; s < scanners.length; s++) {
+		var aura = getPulseAura(scanners[s]);
+		if (!aura.range && !aura.crit) continue;
+		for (var t = 0; t < turretPos.length; t++) {
+			var target = turretPos[t];
+			if (TURRET_DEFS[target.type].support) continue;
+			if (euclidDistance(scanners[s].x, target.x, scanners[s].y, target.y) > scanners[s].range) continue;
+			target.rangeBonus = Math.max(target.rangeBonus, aura.range);
+			target.critBonus = Math.max(target.critBonus, aura.crit);
+		}
+	}
+	for (var b = 0; b < turretPos.length; b++) {
+		var el = turretPos[b].htmlElement;
+		el.classList.toggle("pulse-boosted", turretPos[b].rangeBonus > 0 || turretPos[b].critBonus > 0);
+	}
+}
+
+// Text of the "Aura" / "Pulse bonus" row of the turret panel ("" when there is nothing to show)
+function getPulseBonusText(turret) {
+	var info = turret.type === "pulseScanner" ? getPulseAura(turret) : { range: turret.rangeBonus || 0, crit: turret.critBonus || 0 };
+	var parts = [];
+	if (info.range) parts.push("+" + info.range + "% range");
+	if (info.crit) parts.push("+" + info.crit + "% crit");
+	return parts.join(", ");
+}
+// END PULSE SCANNER AURA
 
 // Extra facts shown on the shop info dialog
 function turretSpecials(type) {
@@ -856,7 +989,7 @@ function showTurretInfo(turret){
 		showRangeIndicator(
 			parseInt(turret.x) + TURRET_CENTER,
 			parseInt(turret.y) + TURRET_CENTER,
-			turret.range,
+			getTurretRange(turret),
 			turretColor(turret.type)
 		);
 	}
@@ -897,8 +1030,14 @@ function updateTurretInfo(turret){
     var turretBranch = getTurretBranch(turret);
     document.getElementById("upgName").innerText = turretName(turret.type) + (turretBranch ? " - " + turretBranch.name : "");
     document.getElementById("upgLevel").innerText = turret.level;
+    document.getElementById("damageRow").style.display = TURRET_DEFS[turret.type].support ? "none" : "flex";
     document.getElementById("upgDamage").innerText = turret.damage;
-    document.getElementById("range").innerText = Math.round(turret.range / MAP_SCALE);
+    document.getElementById("range").innerText = Math.round(getTurretRange(turret) / MAP_SCALE) + (turret.rangeBonus ? " (+" + turret.rangeBonus + "%)" : "");
+    // Pulse Scanner: the aura it gives; other towers: the bonus they receive from a scanner
+    var pulseBonusText = getPulseBonusText(turret);
+    document.getElementById("pulseBonusRow").style.display = pulseBonusText ? "flex" : "none";
+    document.getElementById("pulseBonusLabel").innerText = turret.type === "pulseScanner" ? "Aura" : "Pulse bonus";
+    document.getElementById("pulseBonus").innerText = pulseBonusText;
     document.getElementById("upgCooldown").innerText = (getTurretShotCooldown(turret.type, turret.level, turret) / 100).toFixed(2) + " s";
     if (turret.type === "stormCannon") {
         var pct = Math.round((turret.overheat / STORM_OVERHEAT_MAX) * 100);

@@ -3,7 +3,7 @@ var UnlockManager = (function () {
     var _defaultMaps   = [1];
     var _defaultTowers = [
         "machineGun", "laser", "flamethrower", "blizzard",
-        "toxic", "stormCannon", "railCannon"
+        "toxic", "stormCannon", "railCannon", "pulseScanner"
     ];
 
     function getDefaults() {

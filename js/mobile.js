@@ -51,6 +51,7 @@ function initTouchDragForCard(card) {
 		turretD.style.backgroundImage = turretImage(turretType);
 		turretD.style.left = "-200px";
 		turretD.style.top  = "-200px";
+		addTurretOverlay(turretD, turretType);
 		document.body.appendChild(turretD);
 
 		showRangeIndicator(gameX, gameY, turretRange(turretType), turretColor(turretType));
@@ -71,6 +72,7 @@ function initTouchDragForCard(card) {
 		ghost.style.opacity          = "0.85";
 		ghost.style.borderRadius     = "6px";
 		ghost.style.border           = "1.5px solid rgba(0,180,255,0.6)";
+		addTurretOverlay(ghost, turretType);
 		document.body.appendChild(ghost);
 
 		touchDrag.active       = true;

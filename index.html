@@ -97,6 +97,49 @@
         </div>
     </div>
 
+    <!-- ── NEW ENEMIES NOTICE (after the wave 10 boss; pauses the game until closed) ── -->
+    <div id="newEnemiesScreen" class="difficulty-overlay" style="display:none;">
+        <div class="difficulty-panel newenemies-panel">
+            <h1 class="settings-title">&#9888; NEW ENEMIES AHEAD</h1>
+            <p class="branch-subtitle">The wave 10 boss is down. From <b>wave 11</b> on, three new threats join the attack:</p>
+            <div class="newenemy-list">
+                <div class="newenemy newenemy-danger">
+                    <div class="newenemy-icon newenemy-icon-stealth"></div>
+                    <div class="newenemy-text">
+                        <b>Stealth Tank</b>
+                        <span>Camouflaged: <b>no tower can target or hit it</b> until a Pulse Scanner detects it. Speed 1.10, same HP as a regular tank. 20% of the ground enemies.</span>
+                    </div>
+                </div>
+                <div class="newenemy">
+                    <div class="newenemy-icon newenemy-icon-medic"></div>
+                    <div class="newenemy-text">
+                        <b>Medic Truck</b>
+                        <span>Heals nearby enemies 10% HP every 1.5 s and removes their debuffs. Kill it first.</span>
+                    </div>
+                </div>
+                <div class="newenemy">
+                    <div class="newenemy-icon newenemy-icon-jet"></div>
+                    <div class="newenemy-text">
+                        <b>Jet</b>
+                        <span>Flies 3x faster than a tank and is immune to stun. The Flamethrower can't hit it.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="newenemy-tip">
+                <b>&#128225; Pulse Scanner strategy</b> (<span id="newEnemiesScannerCost">$500</span> in your shop)
+                <ul>
+                    <li>Its pulse reveals enemies <b>only inside its range</b> (4 tiles) and keeps them revealed for 1.5 s. Place it so its circle <b>overlaps the range of your damage towers</b>, near the road.</li>
+                    <li>Put it a little <b>upstream</b> of your killing zone: the Stealth Tank is already revealed when it reaches your towers.</li>
+                    <li>At level 5 it boosts the towers around it (<b>range</b> or <b>crit chance</b>), so a scanner in the middle of your defense pays for itself.</li>
+                    <li>Long road? Use one scanner per kill zone: a Stealth Tank that slips through unseen still costs a life.</li>
+                </ul>
+            </div>
+            <div class="confirm-actions">
+                <button class="confirm-btn confirm-btn-cancel" type="button" onclick="closeNewEnemiesDialog()">GOT IT <span class="confirm-key">Enter</span></button>
+            </div>
+        </div>
+    </div>
+
     <!-- ── PROGRESSION SCREEN ─────────────────────────── -->
     <div id="progressionScreen" class="progression-overlay" style="display:none;">
         <div class="progression-panel">
@@ -237,13 +280,17 @@
             <span>Level</span>
             <span id="upgLevel"></span>
         </div>
-        <div class="info-item">
+        <div class="info-item" id="damageRow">
             <span>Damage</span>
             <span id="upgDamage"></span>
         </div>
         <div class="info-item">
             <span>Range</span>
             <span id="range"></span>
+        </div>
+        <div class="info-item" id="pulseBonusRow" style="display: none;">
+            <span id="pulseBonusLabel">Pulse bonus</span>
+            <span id="pulseBonus"></span>
         </div>
         <div class="info-item">
             <span>Cooldown</span>
@@ -313,7 +360,7 @@
         <div class="shop-info-desc">
             <span id="shopInfoDesc"></span>
         </div>
-        <div class="info-item">
+        <div class="info-item" id="shopInfoDamageRow">
             <span>Damage</span>
             <span id="shopInfoDamage"></span>
         </div>

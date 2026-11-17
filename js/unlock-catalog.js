@@ -17,7 +17,8 @@ var UnlockCatalog = (function () {
         { id: "stormCannon",  name: "Storm Cannon",   locked: false },
         { id: "railCannon",   name: "Rail Cannon",    locked: false },
         { id: "missile",      name: "Missile Turret", locked: true, cost: 3 },
-        { id: "archery",      name: "Archery Turret", locked: true,  cost: 1 }
+        { id: "archery",      name: "Archery Turret", locked: true,  cost: 1 },
+        { id: "pulseScanner", name: "Pulse Scanner",  locked: false }
     ];
 
     // ids match DIFFICULTIES keys; difficulties not listed here are always available

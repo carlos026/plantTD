@@ -91,12 +91,13 @@ All towers can be upgraded up to **level 8**. Damage and range are always whole 
 | Rail Cannon | $1500 | 30% | Extreme single-target damage, stuns enemies — 2× damage vs airplanes |
 | Missile Turret | $2000 | 20% | Prioritizes airplanes; homing missiles with an ammo queue — see [Missile Ammo Queue](#missile-ammo-queue). **5× damage vs airplanes** |
 | Archery Turret | $250 | **35%** | Homing arrows with unlimited ammo — see [Archery Multi-Shot](#archery-multi-shot) |
+| Pulse Scanner | $500 | — | Support tower, **no damage**: a spinning antenna whose radar pulse reveals camouflaged enemies — see [Pulse Scanner](#pulse-scanner) |
 
-Missile and Archery are **locked** at first and must be unlocked in Progression.
+Missile and Archery are **locked** at first and must be unlocked in Progression. The Pulse Scanner is available from the start (it is the only answer to the [Stealth Tank](#stealth-tank)).
 
 ### Target Priority
 
-Every tower except Blizzard (which hits every enemy in range) has a **Target** selector in its upgrade panel. Each tower keeps its own setting; new towers start on **First**.
+Every tower except Blizzard (which hits every enemy in range) and the Pulse Scanner (which deals no damage) has a **Target** selector in its upgrade panel. Each tower keeps its own setting; new towers start on **First**.
 
 | Mode | Shoots at |
 |---|---|
@@ -142,11 +143,31 @@ The Archery Turret fires homing **arrow projectiles** (`arrowShot.png`) that fly
 - **Level 5–7:** fires at **2 targets** simultaneously
 - **Level 8:** fires at **3 targets** simultaneously
 
+### Pulse Scanner
+
+A support tower that **deals no damage**. It is drawn with two sprites: a fixed base (`img/tw/pulse.png`) and an antenna (`img/tw/antenna.png`) centered on it. Only the antenna spins, constantly from the moment the scanner is placed (it stops while the game is paused). It pulses every 1.1 s at every level — upgrading it only grows its range. While a **camouflaged enemy** is in range (ordinary enemies don't trigger it) it sends out a radar pulse (a green ring, like the Blizzard frost wave) that **reveals camouflaged enemies**. A revealed enemy stays visible for 1.5 s (`PULSE_REVEAL_TICKS`), longer than the time between pulses, so everything inside the range stays detected.
+
+- **Camouflaged enemies** (an enemy profile with `stealth: true`, like the [Stealth Tank](#stealth-tank)) **cannot be targeted or hit by any tower** — including the Blizzard frost wave — until a scanner reveals them.
+- **Range:** base 4 tiles (Blizzard Tower − 1 tile). It grows with every level exactly like the Blizzard's, so it is always 1 tile shorter.
+- **Pulse interval:** `120 - level × 10` ticks (1.10 s at level 1, 0.40 s at level 8).
+- At **level 5** it picks a path. The bonus goes to every other tower inside the scanner's range (they get a green glow, and the bonus shows in their upgrade panel):
+
+| Level | Pulse Amplifier — range | Pulse Overdrive — crit chance |
+|---|---|---|
+| 5 | +10% | +5% |
+| 6 | +13% | +7% |
+| 7 | +16% | +9% |
+| 8 | +20% | +12% |
+
+- Overdrive adds **percentage points** to the tower's own crit chance (towers with no crit chance get that chance outright; a critical adds the base damage once more). The Blizzard Tower has no crit mechanic, so it gains nothing from Overdrive.
+- Bonuses of several scanners **don't stack**: each tower keeps the strongest one covering it. Scanners are never boosted themselves.
+
 ## Enemies
 
 | Enemy | Appears | Speed | Notes |
 |---|---|---|---|
 | Minion | Wave 1+ | 1.0 | Standard enemy |
+| Stealth Tank | Wave 11+ (20% of non-airplane spawns) | 1.10 | Camouflaged — see [Stealth Tank](#stealth-tank) |
 | Airplane | Waves 11–29 (50% of spawns) | 3.0 | Immune to stun; freeze slows to 1.0; immune to Flamethrower; 2× damage from Machine Gun, Laser and Rail Cannon; **5× damage** from Missile Turret |
 | Special enemy | Waves 21–29 (30% of non-airplane spawns) | varies | Depends on the map — see below |
 | Boss | Waves 10 and 20 | 1.0 | Single enemy, high reward |
@@ -155,6 +176,16 @@ The Archery Turret fires homing **arrow projectiles** (`arrowShot.png`) that fly
 Enemies leave the spawn at **random intervals** (0.4 s – 1.6 s, configured by `MIN_SPAWN_INTERVAL` / `MAX_SPAWN_INTERVAL`), so waves arrive in irregular groups instead of a fixed rhythm.
 
 Click any enemy (also while paused) to open the **Enemy Info** panel with its name, HP (and shield) and speed.
+
+### Stealth Tank
+
+Appears from **wave 11** (every map): **20% of the non-airplane enemies** (same share as the Medic Truck). Same HP as a regular tank, speed **1.10**, costs 1 life if it escapes (`STEALTH_ENEMY` in `js/minion.js`).
+
+- **Camouflaged:** no tower can target or hit it until a [Pulse Scanner](#pulse-scanner) reveals it, so a defense without a scanner lets every Stealth Tank walk through.
+- It plays `sound/hide.wav` when it leaves the gate.
+- Its sprite is `stealth-tank-onstealth.png` while hidden and slowly crossfades (0.9 s) to `stealth-tank.png` when a scanner detects it, and back when the detection runs out.
+- **Wave 10 notice:** when the wave 10 boss is over, a dialog pauses the game and introduces the enemies of wave 11 (Stealth Tank, Medic Truck, Jet) with tips on where to place the Pulse Scanner. Close it with **GOT IT**, **Enter** or **Esc** to resume.
+- The Wave Preview panel lists the Stealth Tank from wave 11.
 
 ### Map Special Enemies
 

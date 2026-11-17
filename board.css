@@ -527,7 +527,7 @@ p {
 .statusbar {
   position: absolute;
   top: 0;
-  left: 565px;
+  left: 610px;
   height: 80px;
   background: var(--panel);
   border: 1.5px solid var(--border);
@@ -636,6 +636,130 @@ p {
   );
   animation: frostFill 0.6s cubic-bezier(0.2, 0, 0.3, 1) forwards;
 }
+
+/* ── PULSE SCANNER ─────────────────────────────────── */
+/* The scanner is two sprites: the base (pulse.png, the element's background) and the antenna
+   (antenna.png, a .turret-overlay child centered on it, see addTurretOverlay). Only the antenna spins. */
+.turret-overlay {
+  position: absolute;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* the antenna spins forever once the scanner is placed on the map */
+@keyframes antennaSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.turretdrag.turret-spinning > .turret-overlay-spin {
+  animation: antennaSpin 3s linear infinite;
+}
+
+/* the antenna stops while the game is paused (class set by syncPauseState) */
+body.game-paused .turretdrag.turret-spinning > .turret-overlay-spin {
+  animation-play-state: paused;
+}
+
+.turret-icon,
+.postgame-turret-icon {
+  position: relative;
+}
+
+/* radar ring sent out by every pulse (same idea as the Blizzard frost wave, in radar green) */
+.pulse-burst {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  border: 2px solid rgba(57, 217, 138, 0.95);
+  background: radial-gradient(
+    circle,
+    rgba(57, 217, 138, 0.04) 0%,
+    rgba(57, 217, 138, 0.14) 70%,
+    rgba(57, 217, 138, 0.28) 100%
+  );
+  box-shadow:
+    0 0 12px rgba(57, 217, 138, 0.5),
+    inset 0 0 20px rgba(57, 217, 138, 0.15);
+  animation: frostRing 0.6s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+  z-index: 50;
+}
+
+/* towers inside the aura of a Pulse Amplifier / Overdrive */
+.turretdrag.pulse-boosted {
+  filter: drop-shadow(0 0 6px var(--accent-glow)) drop-shadow(0 0 4px rgba(57, 217, 138, 0.9)) brightness(1.1);
+}
+
+/* camouflaged enemy that no Pulse Scanner has revealed yet */
+.minion.stealthed {
+  opacity: 0.3;
+}
+
+/* ── STEALTH TANK ──────────────────────────────────── */
+/* Both sprites are drawn as layers and crossfaded: the camouflaged one while hidden, the tank
+   itself once a Pulse Scanner detects it (the .stealthed class is toggled by the game). */
+.minion.enemy-stealth { background-image: none; } /* both sprites are the ::before / ::after layers */
+.minion.enemy-stealth::before,
+.minion.enemy-stealth::after {
+  content: '';
+  position: absolute;
+  inset: 8px; /* the content box of .minion (it has 8px padding) */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  transition: opacity 0.9s ease;
+}
+.minion.enemy-stealth::before { background-image: url('img/min-lv1/stealth-tank-onstealth.png'); opacity: 0; }
+.minion.enemy-stealth::after  { background-image: url('img/min-lv1/stealth-tank.png');           opacity: 1; }
+.minion.enemy-stealth.stealthed::before { opacity: 1; }
+.minion.enemy-stealth.stealthed::after  { opacity: 0; }
+/* its camouflaged sprite already looks hidden: no extra dimming */
+.minion.enemy-stealth.stealthed { opacity: 1; }
+
+/* ── NEW ENEMIES NOTICE ────────────────────────────── */
+.newenemies-panel {
+  width: min(640px, calc(120vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  gap: 14px;
+}
+.newenemy-list { display: flex; flex-direction: column; gap: 8px; }
+.newenemy {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: rgba(0, 20, 60, 0.6);
+}
+.newenemy-danger { border-color: var(--danger); box-shadow: 0 0 14px rgba(255, 61, 85, 0.25); }
+.newenemy-icon {
+  flex: 0 0 44px;
+  height: 44px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+}
+.newenemy-icon-stealth { background-image: url('img/min-lv1/stealth-tank.png'); }
+.newenemy-icon-medic   { background-image: url('img/min-lv1/medic-truck.png'); }
+.newenemy-icon-jet     { background-image: url('img/pla-lv2/pla-up.png'); }
+.newenemy-text { display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--text); }
+.newenemy-text b { font-size: 16px; }
+.newenemy-tip {
+  padding: 10px 14px;
+  border: 1.5px solid #39d98a;
+  border-radius: 10px;
+  background: rgba(57, 217, 138, 0.08);
+  font-size: 14px;
+  color: var(--text);
+}
+.newenemy-tip ul { margin: 6px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
 
 /* ── MISSILE PROJECTILE ────────────────────────────── */
 .missile-projectile {
@@ -798,6 +922,20 @@ p {
 /* ── HP BARS ───────────────────────────────────────── */
 /* Map-specific special enemies: sp-min sprite (blue) tinted per theme */
 /* Mecha / Ice Mecha have their own directional art: only a soft glow, no tint */
+@keyframes medicPulse {
+  0%   { transform: translate(-50%, -50%) scale(0.1); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1);   opacity: 0; }
+}
+.medic-pulse {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  border: 2px solid rgba(80, 255, 120, 0.9);
+  background: radial-gradient(circle, rgba(80, 255, 120, 0.25), rgba(80, 255, 120, 0) 70%);
+  animation: medicPulse 0.6s ease-out forwards;
+  z-index: 5;
+}
+.minion.enemy-medic       { --enemy-filter: drop-shadow(0 0 3px rgba(80, 255, 120, 0.8)); background-position: center; }
 .minion.enemy-mecha       { --enemy-filter: drop-shadow(0 0 2px rgba(255, 170, 60, 0.6)); }
 .minion.enemy-forest-tank { --enemy-filter: hue-rotate(-110deg) saturate(1.5) drop-shadow(0 0 2px rgba(90, 255, 120, 0.7)); }
 .minion.enemy-fire-tank   { --enemy-filter: hue-rotate(130deg) saturate(2.2) brightness(1.2) drop-shadow(0 0 3px rgba(255, 90, 0, 0.9)); }
@@ -1900,6 +2038,8 @@ button[type="sellbutton"]:active {
 .branch-pulverizer { --diff-color: var(--accent); }
 .branch-annihilator { --diff-color: var(--danger); }
 .branch-hawkeye { --diff-color: var(--danger); }
+.branch-amplifier { --diff-color: var(--accent); }
+.branch-overdrive { --diff-color: var(--gold); }
 .branch-advancedCrossbow { --diff-color: var(--gold); }
 
 .branch-stats {

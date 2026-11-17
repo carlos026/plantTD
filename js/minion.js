@@ -39,6 +39,32 @@ const SPECIAL_ENEMIES = {
 	     immuneFreeze: true, immuneStun: true, damageMult: 1, sprite: "img/min-lv1/mecha-up.png" }
 };
 
+// Medic Truck: appears from wave 11 on (every map). Periodically heals nearby enemies
+// and cleanses their debuffs (see medicPulse in tower-defense.js).
+const MEDIC_MIN_WAVE = 11;
+const MEDIC_SPAWN_CHANCE = 0.2;      // of the non-jet enemies
+const MEDIC_PULSE_TICKS = 150;       // 1.5s at 10ms per tick (1x speed)
+const MEDIC_HEAL_PCT = 0.10;         // of the healed enemy's max HP
+// Enemies leave the gate 40-160 ticks apart (~2.7-10.7 tiles at speed 1.0), so the range must be wide
+const MEDIC_RANGE_TILES = 6;
+const MEDIC_HEAL_SOUND = "sound/healing.wav";
+const MEDIC_ENEMY = {
+	name: "Medic Truck", cssClass: "enemy-medic", speed: 1.25, hpMult: 0.5, livesCost: 1,
+	immuneFreeze: false, immuneStun: false, damageMult: 1, sprite: "img/min-lv1/medic-truck.png", medic: true
+};
+
+// Stealth Tank: appears from wave 11 on (every map). Camouflaged (see CAMOUFLAGE below): no turret can
+// target it until a Pulse Scanner reveals it. Its sprites are crossfaded by CSS (.enemy-stealth in board.css):
+// sprite while hidden, revealedSprite once a scanner detects it. STEALTH_SPAWN_CHANCE is a share of the non-jet enemies.
+const STEALTH_MIN_WAVE = 11;
+const STEALTH_SPAWN_CHANCE = 0.2;
+const STEALTH_HIDE_SOUND = "sound/hide.wav";
+const STEALTH_ENEMY = {
+	name: "Stealth Tank", cssClass: "enemy-stealth", speed: 1.10, hpMult: 1, livesCost: 1,
+	immuneFreeze: false, immuneStun: false, damageMult: 1, stealth: true,
+	sprite: "img/min-lv1/stealth-tank-onstealth.png", revealedSprite: "img/min-lv1/stealth-tank.png"
+};
+
 function getSpecialEnemy(mapId) {
 	return SPECIAL_ENEMIES[mapId] || SPECIAL_ENEMIES[1];
 }
@@ -62,6 +88,34 @@ function getBossProfile(mapId) {
 	return _bossProfiles[mapId];
 }
 
+// CAMOUFLAGE
+// An enemy whose profile has stealth: true is camouflaged: no turret can target or hit it until a
+// Pulse Scanner reveals it (_revealed = ticks left). The "stealthed" class is on the element while it is hidden.
+function isStealthEnemy(minionElement) {
+	var p = getEnemyProfile(minionElement);
+	return !!(p && p.stealth);
+}
+
+// true while the enemy is camouflaged and not detected
+function isMinionHidden(minionElement) {
+	return isStealthEnemy(minionElement) && !(minionElement._revealed > 0);
+}
+
+// Pulse Scanner detection: keeps a camouflaged enemy revealed for at least `ticks` more ticks
+function revealMinion(minionElement, ticks) {
+	if (!isStealthEnemy(minionElement)) return;
+	if (!(minionElement._revealed >= ticks)) minionElement._revealed = ticks;
+	minionElement.classList.remove("stealthed");
+}
+
+// Every tick: the detection wears off and the camouflage comes back
+function tickStealth(minionElement) {
+	if (!isStealthEnemy(minionElement)) return;
+	if (minionElement._revealed > 0) minionElement._revealed--;
+	minionElement.classList.toggle("stealthed", minionElement._revealed <= 0);
+}
+// END CAMOUFLAGE
+
 function getEnemyProfile(minionElement) {
 	return minionElement._enemy || null;
 }
@@ -76,7 +130,9 @@ function setEnemyProfile(minionElement, profile, hp) {
 	minionElement._shieldMax = profile && profile.shield ? hp : 0;
 	minionElement._shield = minionElement._shieldMax;
 	minionElement._shieldRegen = 0;
-	minionElement.className = "minion" + (profile && profile.cssClass ? " " + profile.cssClass : "");
+	minionElement._revealed = 0;
+	minionElement._spawnSoundPlayed = false;
+	minionElement.className = "minion" + (profile && profile.cssClass ? " " + profile.cssClass : "") + (profile && profile.stealth ? " stealthed" : "");
 }
 
 function getEnemyHpMult(minionElement) {
@@ -290,7 +346,7 @@ function minionhp() {
 function bossHp() {
 	var hp;
 	if (currentWave == 10){
-		hp = Math.pow(2, currentWave) * 15;
+		hp = Math.pow(2, currentWave) * 20;
 	} else if (currentWave == 20) {
 		hp = Math.pow(2, currentWave);
 	} else if (currentWave == 30) {
