@@ -527,7 +527,7 @@ p {
 .statusbar {
   position: absolute;
   top: 0;
-  left: 610px;
+  left: 650px;
   height: 80px;
   background: var(--panel);
   border: 1.5px solid var(--border);
@@ -546,7 +546,7 @@ p {
   align-items: center;
   justify-content: center;
   min-width: 70px;
-  padding: 0 12px;
+  padding: 0 7px;
   gap: 2px;
 }
 
@@ -1826,14 +1826,16 @@ button[type="sellbutton"]:active {
   color: var(--text-muted);
   letter-spacing: 2px;
   text-transform: uppercase;
+  display:none;
 }
 
 .map-card-name {
   font-family: 'Exo 2', sans-serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text);
   text-align: center;
+  margin-bottom: 1em;
 }
 
 .map-card-btn {
