@@ -154,6 +154,7 @@ const TURRET_DEFS = {
 		value: 600,
 		rangeTiles: 5,
 		damage: 10,
+		canCrit: false, // onShoot never crits, so a Pulse Overdrive bonus does nothing here
 		critChance: 0,
 		targeting: false,
 		cooldown: function(level) { return 202 - (level * 20); },
@@ -260,7 +261,7 @@ const TURRET_DEFS = {
 		cooldown: function(level) { return 10; },
 		animationCooldown: function(level) { return 0; },
 		upgradeCostMult: function(level) { return 0.3; },
-		upgrade: function(level) { return { dmg: 0.2, rng: 0.01 }; },
+		upgrade: function(level) { return level >= 5 ? { dmg: 0.3, rng: 0.02 } : { dmg: 0.2, rng: 0.025 }; },
 		// overheatPerShot: overheat added per volley (default STORM_OVERHEAT_PER_SHOT); targets: Infinity = every enemy in range
 		branchLevel: 5,
 		branches: {
@@ -269,6 +270,7 @@ const TURRET_DEFS = {
 				summary: "One huge shot hits every enemy, then overcharges",
 				description: "A single massive discharge strikes every enemy in range, then the cannon overcharges and shuts down until it cools off.",
 				chooseBonus: { dmg: STORM_TEMPEST_DAMAGE_BONUS, rng: 0 },
+				sound: "sound/thunder.wav",
 				upgrade: function(level) { return { dmg: 3, rng: 0.01 }; },
 				overheatPerShot: STORM_OVERHEAT_MAX,
 				extraStats: ["Overcharges after a single shot"],
@@ -288,7 +290,8 @@ const TURRET_DEFS = {
 		onShoot: function(turret, minion, style) {
 			style.borderTop = "3px solid #0905eb";
 			style.borderRadius = "20px/20px";
-			return extraCritDamage(turret, 0);
+			var branch = getTurretBranch(turret);
+			return extraCritDamage(turret, (branch && branch.critChance) || 0);
 		}
 	},
 	railCannon: {
@@ -398,7 +401,7 @@ const TURRET_DEFS = {
 	archery: {
 		name: "Archery Turret",
 		description: "Fires homing arrows with unlimited ammo and the highest critical hit chance of any tower.",
-		specials: ["Critical chance: " + ARCHERY_CRIT_CHANCE + "%", "Targets: 1 (2 at level 5, 3 at level 8)"],
+		specials: ["Targets: 1 (2 at level 5, 3 at level 8)"],
 		color: "#c08a3e", // Bronze/Wood
 		image: "url('img/tw/archery.png')",
 		sound: "sound/arrowHit.mp3",
@@ -449,7 +452,7 @@ const TURRET_DEFS = {
 		overlay: { image: "url('img/tw/antenna.png')", width: 18, height: 22, baseSize: 24, spins: true },
 		sound: "sound/scanner.wav", // played on every pulse
 		value: 500,
-		rangeTiles: 4, // Blizzard Tower (5) - 1 tile
+		rangeTiles: 4,
 		damage: 0,
 		support: true, // no damage: hides the damage/targets/crit stats and is left out of the damage stats
 		targeting: false,
@@ -651,13 +654,26 @@ function updateTurretCooldownPostTurn(turrets){
 
 // It plays the sound effect while the turret is firing.
 function updateTurretSoundPostShooting(turrets){
+		var shotAudio = getTurretShotAudio(turrets);
 		if (turrets.audioCd < 0) {
-			turrets.audioFile.play();
+			shotAudio.play();
 			turrets.audioCd = getTurretShotCooldown(turrets.type, turrets.level, turrets);
 		} else {
 			turrets.audioCd--;
-			turrets.audioFile.play();
+			shotAudio.play();
 		}
+}
+
+// The audio a turret plays when it shoots: its branch sound (branch.sound) if it has one, otherwise the turret's own.
+// The branch is picked after the turret is placed, so the branch audio is created the first time it is needed.
+function getTurretShotAudio(turret) {
+	var branch = getTurretBranch(turret);
+	if (!branch || !branch.sound) return turret.audioFile;
+	if (!turret.branchAudioFile || turret.branchAudioSrc !== branch.sound) {
+		turret.branchAudioSrc = branch.sound;
+		turret.branchAudioFile = applyEffectsVolume(new Audio(branch.sound));
+	}
+	return turret.branchAudioFile;
 }
 
 function turretSoundEffect(type){
@@ -807,6 +823,16 @@ function getTurretRange(turret) {
 // Crit chance bonus (percentage points) from a nearby Pulse Overdrive
 function getCritBonus(turret) {
 	return turret.critBonus || 0;
+}
+
+// Total crit chance (%) of a placed turret: its branch (or base) chance plus the Pulse Overdrive bonus.
+// 0 for support towers and towers that never roll a crit.
+function getTurretCritChance(turret) {
+	var def = TURRET_DEFS[turret.type];
+	if (def.support || def.canCrit === false) return 0;
+	var branch = getTurretBranch(turret);
+	var base = (branch && branch.critChance !== undefined) ? branch.critChance : (def.critChance || 0);
+	return Math.min(100, base + getCritBonus(turret));
 }
 
 // Crit roll for turrets whose shot is not computed from its own crit roll: baseChance (%) plus the
@@ -1044,12 +1070,15 @@ function updateTurretInfo(turret){
     document.getElementById("upgLevel").innerText = turret.level;
     document.getElementById("damageRow").style.display = TURRET_DEFS[turret.type].support ? "none" : "flex";
     document.getElementById("upgDamage").innerText = turret.damage;
+    var critChance = getTurretCritChance(turret);
+    document.getElementById("upgCritRow").style.display = critChance > 0 ? "flex" : "none";
+    document.getElementById("upgCritChance").innerText = critChance + "%" + (turret.critBonus ? " (+" + turret.critBonus + "%)" : "");
     document.getElementById("range").innerText = Math.round(getTurretRange(turret) / MAP_SCALE) + (turret.rangeBonus ? " (+" + turret.rangeBonus + "%)" : "");
     // Pulse Scanner: the aura it gives; other towers: the bonus they receive from a scanner
     var pulseBonusText = getPulseBonusText(turret);
-    document.getElementById("pulseBonusRow").style.display = pulseBonusText ? "flex" : "none";
+    /*document.getElementById("pulseBonusRow").style.display = pulseBonusText ? "flex" : "none";
     document.getElementById("pulseBonusLabel").innerText = turret.type === "pulseScanner" ? "Aura" : "Pulse bonus";
-    document.getElementById("pulseBonus").innerText = pulseBonusText;
+    document.getElementById("pulseBonus").innerText = pulseBonusText;*/
     document.getElementById("upgCooldown").innerText = (getTurretShotCooldown(turret.type, turret.level, turret) / 100).toFixed(2) + " s";
     if (turret.type === "stormCannon") {
         var pct = Math.round((turret.overheat / STORM_OVERHEAT_MAX) * 100);

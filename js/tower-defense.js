@@ -2015,6 +2015,8 @@ function anyTurretsInRange(minion, x, y) {
 			if(turretPos[i].type == "stormCannon"){
 				turretPos[i].htmlElement.style.borderTop = "3px solid #0905eb";
 				turretPos[i].htmlElement.style.borderRadius = "20px/20px";
+				// visual only: Chaotic Tempest electrocutes every enemy its discharge hits
+				if (turretPos[i].branch === "chaoticTempest") createElectricShock(minion);
 			}
 			if(turretPos[i].type == "toxic"){
 				turretPos[i].htmlElement.style.borderTop = "3px solid #4CAF50";
@@ -2079,6 +2081,26 @@ function anyTurretsInRange(minion, x, y) {
 		}
 	}
 	return damage + toxicDmg;
+}
+
+// Electric discharge over a minion hit by a Chaotic Tempest shot (visual only, no gameplay effect)
+function createElectricShock(minionEl) {
+	if (minionEl.style.display === "none") return;
+	var shock = document.createElement("div");
+	shock.className = "electric-shock";
+	shock.style.left = ((parseFloat(minionEl.style.left) || 0) + MINION_CENTER) + "px";
+	shock.style.top  = ((parseFloat(minionEl.style.top)  || 0) + MINION_CENTER) + "px";
+	for (var b = 0; b < 4; b++) {
+		var bolt = document.createElement("div");
+		bolt.className = "electric-bolt";
+		bolt.style.setProperty("--bolt-rot", (b * 90 + Math.random() * 60 - 30) + "deg");
+		bolt.style.animationDelay = (Math.random() * 0.12) + "s";
+		shock.appendChild(bolt);
+	}
+	document.body.appendChild(shock);
+	setTimeout(function() {
+		if (shock.parentNode) document.body.removeChild(shock);
+	}, 450);
 }
 
 function createFrostBurst(turretObj) {

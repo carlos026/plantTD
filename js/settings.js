@@ -47,6 +47,7 @@ function applyEffectsVolumeToTurrets() {
 	for (var i = 0; i < turretPos.length; i++) {
 		if (turretPos[i].audioFile)       turretPos[i].audioFile.volume = vol;
 		if (turretPos[i].audioFileImpact) turretPos[i].audioFileImpact.volume = vol;
+		if (turretPos[i].branchAudioFile) turretPos[i].branchAudioFile.volume = vol;
 	}
 }
 
