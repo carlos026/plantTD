@@ -153,8 +153,12 @@ function showShopTurretInfo(type) {
 	document.getElementById("shopInfoDamage").innerText = turretDamage(type);
 	document.getElementById("shopInfoRange").innerText = (turretRange(type) / TILE_W) + " tiles";
 	document.getElementById("shopInfoCooldown").innerText = (getTurretShotCooldown(type, 1) / 100).toFixed(2) + " s";
-	document.getElementById("shopInfoCost").innerText = "$" + turretValue(type);
-	document.getElementById("shopInfoMaxLevel").innerText = MAX_TURRET_LEVEL;
+	if (turretCritChance(type) !== undefined && turretCritChance(type) > 0) {
+		document.getElementById("shopInfoCritChance").innerText = turretCritChance(type) + "%";
+		document.getElementById("shopInfoCritChanceRow").style.display = "flex";
+	} else {
+		document.getElementById("shopInfoCritChanceRow").style.display = "none";
+	}
 	var specialsEl = document.getElementById("shopInfoSpecials");
 	specialsEl.innerHTML = "";
 	turretSpecials(type).forEach(function(line) {

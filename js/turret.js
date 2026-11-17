@@ -9,13 +9,14 @@ const TURRET_DEFS = {
 	machineGun: {
 		name: "Machine Gun",
 		description: "Rapid fire with low damage. Great against swarms of weak enemies.",
-		specials: ["Aircraft take 2x damage", "No critical hits"],
+		specials: ["No critical hits", "Aircraft take 2x damage"],
 		color: "#e0aaff", // Soft Neon Purple
 		image: "url('img/tw/tower0.png')",
 		sound: "sound/MachineGun.wav",
 		value: 20,
 		rangeTiles: 3,
 		damage: 20,
+		critChance: 0,
 		cooldown: function(level) { return 10; },
 		animationCooldown: function(level) { return 0; },
 		upgradeCostMult: function(level) { return level >= 5 ? 6 : 5; },
@@ -54,13 +55,14 @@ const TURRET_DEFS = {
 	laser: {
 		name: "Laser",
 		description: "Sustained beam dealing high damage. Effective against tanky targets.",
-		specials: ["Critical chance: " + LASER_CRIT_CHANCE + "%", "Aircraft take 2x damage"],
+		specials: ["May deal critical damage", "Aircraft take 2x damage"],
 		color: "#ff006e", // Cyber Pink
 		image: "url('img/tw/tower1.png')",
 		sound: "sound/Laser.wav",
 		value: 100,
 		rangeTiles: 7,
 		damage: 150,
+		critChance: LASER_CRIT_CHANCE,
 		cooldown: function(level) { return 152 - (level * 10); },
 		animationCooldown: function(level) { return 0; },
 		upgradeCostMult: function(level) { return 0.8; },
@@ -71,7 +73,7 @@ const TURRET_DEFS = {
 			precision: {
 				name: "Precision Beam",
 				summary: "Huge damage and range, half the fire rate",
-				description: "A focused beam with far more damage and reach, at the cost of a slower fire rate. Single target.",
+				description: "A focused beam with far more damage and reach, at the cost of a slower fire rate.",
 				chooseBonus: { dmg: 2.0, rng: 0.2 },
 				upgrade: function(level) { return { dmg: 1.0, rng: 0.015 }; },
 				cooldownMult: 2,
@@ -98,13 +100,14 @@ const TURRET_DEFS = {
 	flamethrower: {
 		name: "Flamethrower",
 		description: "Short-range bursts of flame. Ideal for chokepoints. Cannot hit aircraft.",
-		specials: ["Fires in bursts", "Fire Tanks are immune"],
+		specials: ["Fires in bursts", "Fire Tanks and aircrafts are immune"],
 		color: "#fb5607", // Intense Orange
 		image: "url('img/tw/tower2.png')",
 		sound: "sound/Flamethrower.wav",
 		value: 400,
 		rangeTiles: 2,
 		damage: 80,
+		critChance: 0,
 		cooldown: function(level) { return 25; },
 		animationCooldown: function(level) { return 0; },
 		upgradeCostMult: function(level) { return 0.3; },
@@ -124,7 +127,7 @@ const TURRET_DEFS = {
 			firestorm: {
 				name: "Firestorm",
 				summary: "Hits 3 enemies and sets them Burning",
-				description: "A wide wave of fire that engulfs up to 3 enemies at once, so the damage is spread out. Damage and range keep their normal growth.",
+				description: "A wide wave of fire that engulfs up to 3 enemies at once, so damage is spread out. Damage and range keep their normal growth.",
 				chooseBonus: { dmg: 0, rng: 0 },
 				upgrade: function(level) { return { dmg: 0.3, rng: 0.02 }; },
 				extraStats: ["Burning: " + BURN_HP_PCT + "% max HP after " + BURN_DURATION / 100 + " s (" + BURN_WEAK_HP_PCT + "% vs weak enemies)"],
@@ -151,6 +154,7 @@ const TURRET_DEFS = {
 		value: 600,
 		rangeTiles: 5,
 		damage: 10,
+		critChance: 0,
 		targeting: false,
 		cooldown: function(level) { return 202 - (level * 20); },
 		animationCooldown: function(level) { return 0; },
@@ -174,7 +178,7 @@ const TURRET_DEFS = {
 			snowKing: {
 				name: "Snow King",
 				summary: "Freeze stacks (" + BLIZZARD_STUN_STACKS + ") stun the enemy",
-				description: "Each freeze adds a stack to the enemy. At " + BLIZZARD_STUN_STACKS + " stacks it is frozen solid and stunned. Range and fire rate stop improving after level 5.",
+				description: "Each freeze adds a stack to the enemy. At " + BLIZZARD_STUN_STACKS + " stacks it is frozen solid and stunned. Range and fire rate stop improving.",
 				chooseBonus: { dmg: 0, rng: 0 },
 				upgrade: function(level) { return { dmg: 0.1, rng: 0 }; },
 				cooldownLevelCap: 5,
@@ -194,13 +198,14 @@ const TURRET_DEFS = {
 	toxic: {
 		name: "Toxic Tower",
 		description: "Long-range shots that leave a lingering poison. Effective against single targets.",
-		specials: ["Critical chance: 20%", "Poison deals damage over time"],
+		specials: ["May deal critical chance", "Poison deals damage over time"],
 		color: "#3a5a40", // Forest Green
 		image: "url('img/tw/Toxic.png')",
 		sound: "sound/Toxic.wav",
 		value: 800,
 		rangeTiles: 7,
 		damage: 400,
+		critChance: 20,
 		cooldown: function(level) { return 201 - (level * 10); },
 		animationCooldown: function(level) { return 0; },
 		upgradeCostMult: function(level) { return 0.15; },
@@ -212,7 +217,7 @@ const TURRET_DEFS = {
 			corrosive: {
 				name: "Corrosive",
 				summary: "Much stronger poison on a single target",
-				description: "A concentrated venom: the poison on a single target hurts far more, and it grows with every tower level.",
+				description: "A concentrated venom: poison on a single target hurts far more and grows with every tower level.",
 				chooseBonus: { dmg: 0, rng: 0 },
 				upgrade: function(level) { return { dmg: 0.50, rng: 0.02 }; },
 				poisonMult: function(level) { return CORROSIVE_POISON_BASE_MULT + (level - 5) * CORROSIVE_POISON_PER_LEVEL; },
@@ -289,13 +294,14 @@ const TURRET_DEFS = {
 	railCannon: {
 		name: "Rail Cannon",
 		description: "Extreme single-target damage with a very slow fire rate. Destroys bosses.",
-		specials: ["Stuns the target", "Critical chance: 30%", "Aircraft take 2x damage"],
+		specials: ["Stuns the target", "Aircraft take 2x damage"],
 		color: "#3a86ff", // Tech Blue
 		image: "url('img/tw/tower5.png')",
 		sound: "sound/RailCannon.wav",
 		value: 1500,
 		rangeTiles: 5,
 		damage: 3250,
+		critChance: 30,
 		rangeScalesWithLevel: false,
 		cooldown: function(level) { return 601 - (level * 30); },
 		animationCooldown: function(level) { return 0; },
@@ -341,13 +347,14 @@ const TURRET_DEFS = {
 	missile: {
 		name: "Missile Turret",
 		description: "Prioritizes aircraft. Fires a missile that detonates on impact, dealing 5x damage to planes.",
-		specials: ["Uses ammo: starts with 5 missiles, reloads cost $" + MISSILE_AMMO_COST, "Critical chance: " + MISSILE_CRIT_CHANCE + "%"],
+		specials: ["Uses ammo: starts with 5 missiles, reloads cost $" + MISSILE_AMMO_COST],
 		color: "#FFD700", // Yellow
 		image: "url('img/tw/missile.png')",
 		sound: "sound/missileLaunch.mp3",
 		value: 2000,
 		rangeTiles: 7,
 		damage: 5000,
+		critChance: MISSILE_CRIT_CHANCE,
 		cooldown: function(level) { return 420 - (level * 20); },
 		animationCooldown: function(level) { return 0; },
 		upgradeCostMult: function(level) { return 0.2; },
@@ -361,7 +368,7 @@ const TURRET_DEFS = {
 			heavyPayload: {
 				name: "Heavy Payload",
 				summary: "Area blast, double damage on the target",
-				description: "Bigger explosions and more damage. The target takes double damage and every enemy caught in the blast takes the turret's normal damage.",
+				description: "Bigger explosions and more damage. Target takes double damage and every enemy caught in the blast receives turret's normal damage.",
 				chooseBonus: { dmg: 0.5, rng: 0 },
 				upgrade: function(level) { return { dmg: 0.5, rng: 0.01 }; },
 				mainDamageMult: HEAVY_PAYLOAD_MAIN_MULT,
@@ -373,7 +380,7 @@ const TURRET_DEFS = {
 			autoReload: {
 				name: "Auto Reload",
 				summary: "Faster reload, bigger magazine, auto-buys missiles",
-				description: "Much faster reloading and a bigger magazine. With the auto-reload button on, an empty turret orders a new missile by itself.",
+				description: "Much faster reloading and a bigger magazine. With auto-reload button on, empty turret orders a new missile by itself.",
 				chooseBonus: { dmg: 0, rng: 0 },
 				upgrade: function(level) { return { dmg: 0.4, rng: 0.01 }; },
 				reloadTicks: AUTO_RELOAD_TICKS,
@@ -398,6 +405,7 @@ const TURRET_DEFS = {
 		value: 250,
 		rangeTiles: 5,
 		damage: 100,
+		critChance: ARCHERY_CRIT_CHANCE,
 		cooldown: function(level) { return 80 - (level * 5); },
 		animationCooldown: function(level) { return 0; },
 		upgradeCostMult: function(level) { return 0.5; },
@@ -408,11 +416,11 @@ const TURRET_DEFS = {
 			hawkeye: {
 				name: "Hawkeye",
 				summary: "Always crits, shorter range, single target",
-				description: "Every arrow is a critical hit and the damage is far higher, but the reach is shorter and the fire rate stops improving after level 5. Single target.",
+				description: "Every arrow is a critical hit and damage is far higher, but reach is shorter and fire rate stops improving. Single target.",
 				chooseBonus: { dmg: 1.0, rng: -HAWKEYE_RANGE_PENALTY },
 				upgrade: function(level) { return { dmg: 0.9, rng: 0.02 }; },
 				cooldownLevelCap: 5,
-				extraStats: ["Range -" + HAWKEYE_RANGE_PENALTY * 100 + "% (once)", "Cooldown fixed at the level 5 value"],
+				extraStats: ["Range -" + HAWKEYE_RANGE_PENALTY * 100 + "% (once)", "Cooldown fixed at level 5 value"],
 				critChance: HAWKEYE_CRIT_CHANCE,
 				targets: 1
 			},
@@ -433,8 +441,8 @@ const TURRET_DEFS = {
 	},
 	pulseScanner: {
 		name: "Pulse Scanner",
-		description: "A rotating antenna that sends out radar pulses to reveal camouflaged enemies. It deals no damage.",
-		specials: ["Deals no damage", "Reveals camouflaged enemies in range", "Range: 1 tile less than the Blizzard Tower", "Level 5: boosts the towers near it"],
+		description: "A rotating antenna that sends out radar pulses to reveal camouflaged enemies.",
+		specials: ["No damage", "Reveals camouflaged enemies in range", "Area buffs on upgrade"],
 		color: "#39d98a", // Radar Green
 		image: "url('img/tw/pulse.png')", // the base (24x24)
 		// drawn centered on the base; this is the only part that spins (18x22 inside the 24x24 base, see .turret-overlay)
@@ -455,9 +463,9 @@ const TURRET_DEFS = {
 		branchLevel: 5,
 		branches: {
 			amplifier: {
-				name: "Pulse Amplifier",
-				summary: "Nearby towers get more range (10% to 20%)",
-				description: "Besides revealing enemies, the pulse amplifies the towers near it, increasing their range. The bonus grows with the scanner's level.",
+				name: "Amplifier Pulse",
+				summary: "Nearby towers range increase (10% to 20%)",
+				description: "The pulse amplifies towers near it, increasing their range. Bonus grows with scanner's level.",
 				chooseBonus: { dmg: 0, rng: 0 },
 				upgrade: function(level) { return { dmg: 0, rng: 0.025 }; },
 				rangeBonus: PULSE_AMPLIFIER_RANGE_BONUS,
@@ -466,9 +474,9 @@ const TURRET_DEFS = {
 				targets: 1
 			},
 			overdrive: {
-				name: "Pulse Overdrive",
-				summary: "Nearby towers get more crit chance (5% to 12%)",
-				description: "Besides revealing enemies, the pulse overdrives the towers near it, increasing their critical hit chance. The bonus grows with the scanner's level.",
+				name: "Scanner Overdrive",
+				summary: "Nearby towers crit chance increase (5% to 12%)",
+				description: "Scanner also points weakspots, increasing nearby towers critical hit chance. Bonus grows with scanner's level.",
 				chooseBonus: { dmg: 0, rng: 0 },
 				upgrade: function(level) { return { dmg: 0, rng: 0.025 }; },
 				critBonus: PULSE_OVERDRIVE_CRIT_BONUS,
@@ -698,6 +706,10 @@ function turretDescription(type) {
 
 function turretUpgradeCosts(type, turretLvl) {
 	return turretLvl * turretValue(type) * TURRET_DEFS[type].upgradeCostMult(turretLvl);
+}
+
+function turretCritChance(type) {
+	return TURRET_DEFS[type].critChance;
 }
 
 // turret (optional): applies the max ammo multiplier of the branch it picked
